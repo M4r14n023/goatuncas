@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GOAT - Gestión Torneo de Tenis</title>
+    <title>GOAT - Interclubes UNCAS</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -1850,6 +1850,125 @@
         function EstadisticasTab({ calcularEstadisticas }) {
             const stats = calcularEstadisticas();
 
+            // Función para obtener el orden de categoría de un jugador
+            const getCategoriaOrden = (nombreJugador) => {
+                const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador);
+                if (!jugador) return 999;
+                
+                const ordenCategorias = {
+                    'damas_a': 1,
+                    'damas_b': 2,
+                    'damas_c': 3,
+                    'caballeros_2da': 4,
+                    'caballeros_3ra': 5,
+                    'caballeros_4ta': 6,
+                    'caballeros_5ta': 7
+                };
+                
+                return ordenCategorias[jugador.categoria] || 999;
+            };
+
+            // Función para obtener el nombre de categoría formateado
+            const getCategoriaNombre = (nombreJugador) => {
+                const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador);
+                if (!jugador) return '';
+                
+                const nombres = {
+                    'damas_a': 'Damas A',
+                    'damas_b': 'Damas B',
+                    'damas_c': 'Damas C',
+                    'caballeros_2da': 'Caballeros 2da',
+                    'caballeros_3ra': 'Caballeros 3ra',
+                    'caballeros_4ta': 'Caballeros 4ta',
+                    'caballeros_5ta': 'Caballeros 5ta'
+                };
+                
+                return nombres[jugador.categoria] || '';
+            };
+
+            // Ordenar jugadores por categoría y luego alfabéticamente
+            const jugadoresOrdenados = Object.entries(stats.jugadores).sort((a, b) => {
+                const ordenA = getCategoriaOrden(a[0]);
+                const ordenB = getCategoriaOrden(b[0]);
+                
+                if (ordenA !== ordenB) {
+                    return ordenA - ordenB;
+                }
+                
+                return a[0].localeCompare(b[0]);
+            });
+
+            // Agrupar jugadores por categoría
+            const jugadoresPorCategoria = {};
+            jugadoresOrdenados.forEach(([nombre, data]) => {
+                const categoria = getCategoriaNombre(nombre);
+                if (!jugadoresPorCategoria[categoria]) {
+                    jugadoresPorCategoria[categoria] = [];
+                }
+                jugadoresPorCategoria[categoria].push([nombre, data]);
+            });
+
+            // Función para obtener el orden de un tipo de partido (para parejas)
+            const getOrdenPartido = (pareja) => {
+                const jugadores = pareja.split(' - ');
+                const categorias = jugadores.map(j => {
+                    const jugador = Object.values(JUGADORES_GOAT).flat().find(jg => jg.nombre === j);
+                    return jugador ? jugador.categoria : '';
+                });
+                
+                // Determinar el tipo de partido
+                const cat1 = categorias[0];
+                const cat2 = categorias[1];
+                
+                // Damas puras
+                if (cat1.startsWith('damas') && cat2.startsWith('damas')) {
+                    if (cat1 === 'damas_a' && cat2 === 'damas_a') return 1;
+                    if ((cat1 === 'damas_a' && cat2 === 'damas_b') || (cat1 === 'damas_b' && cat2 === 'damas_a')) return 2;
+                    if (cat1 === 'damas_b' && cat2 === 'damas_b') return 3;
+                    if ((cat1 === 'damas_b' && cat2 === 'damas_c') || (cat1 === 'damas_c' && cat2 === 'damas_b')) return 4;
+                    if (cat1 === 'damas_c' && cat2 === 'damas_c') return 5;
+                }
+                
+                // Mixtos
+                if ((cat1.startsWith('damas') && cat2.startsWith('caballeros')) || 
+                    (cat1.startsWith('caballeros') && cat2.startsWith('damas'))) {
+                    // Ordenar por dama primero
+                    const dama = cat1.startsWith('damas') ? cat1 : cat2;
+                    const caballero = cat1.startsWith('caballeros') ? cat1 : cat2;
+                    
+                    if (dama === 'damas_a' && caballero === 'caballeros_2da') return 10; // Mixto D
+                    if (dama === 'damas_a' && caballero === 'caballeros_3ra') return 11; // Mixto A
+                    if (dama === 'damas_b' && caballero === 'caballeros_4ta') return 12; // Mixto B
+                    if (dama === 'damas_b' && caballero === 'caballeros_5ta') return 13; // Mixto E
+                    if (dama === 'damas_c' && caballero === 'caballeros_5ta') return 14; // Mixto C
+                }
+                
+                // Caballeros puros
+                if (cat1.startsWith('caballeros') && cat2.startsWith('caballeros')) {
+                    if (cat1 === 'caballeros_2da' && cat2 === 'caballeros_2da') return 20;
+                    if (cat1 === 'caballeros_3ra' && cat2 === 'caballeros_3ra') return 21;
+                    if (cat1 === 'caballeros_4ta' && cat2 === 'caballeros_4ta') return 22;
+                    if (cat1 === 'caballeros_5ta' && cat2 === 'caballeros_5ta') return 23;
+                    
+                    // Combinaciones
+                    if ((cat1 === 'caballeros_2da' && cat2 === 'caballeros_3ra') || 
+                        (cat1 === 'caballeros_3ra' && cat2 === 'caballeros_2da')) return 30;
+                    if ((cat1 === 'caballeros_3ra' && cat2 === 'caballeros_4ta') || 
+                        (cat1 === 'caballeros_4ta' && cat2 === 'caballeros_3ra')) return 31;
+                    if ((cat1 === 'caballeros_4ta' && cat2 === 'caballeros_5ta') || 
+                        (cat1 === 'caballeros_5ta' && cat2 === 'caballeros_4ta')) return 32;
+                }
+                
+                return 999;
+            };
+
+            // Ordenar parejas según el orden de los partidos
+            const parejasOrdenadas = Object.entries(stats.parejas).sort((a, b) => {
+                const ordenA = getOrdenPartido(a[0]);
+                const ordenB = getOrdenPartido(b[0]);
+                return ordenA - ordenB;
+            });
+
             return (
                 <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Estadísticas del Equipo</h2>
@@ -1859,6 +1978,7 @@
                         <table className="stats-table">
                             <thead>
                                 <tr>
+                                    <th>Categoría</th>
                                     <th>Jugador</th>
                                     <th>Singles G/P</th>
                                     <th>Dobles G/P</th>
@@ -1867,18 +1987,22 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(stats.jugadores)
-                                    .sort((a, b) => {
-                                        const totalA = a[1].total.ganados + a[1].total.perdidos;
-                                        const totalB = b[1].total.ganados + b[1].total.perdidos;
-                                        return totalB - totalA;
-                                    })
-                                    .map(([nombre, data]) => {
+                                {Object.entries(jugadoresPorCategoria).map(([categoria, jugadores]) => (
+                                    jugadores.map(([nombre, data], idx) => {
                                         const total = data.total.ganados + data.total.perdidos;
                                         const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1) : 0;
                                         
                                         return (
                                             <tr key={nombre}>
+                                                {idx === 0 && (
+                                                    <td rowSpan={jugadores.length} style={{
+                                                        fontWeight: '700',
+                                                        background: '#f0f9ff',
+                                                        verticalAlign: 'middle'
+                                                    }}>
+                                                        {categoria}
+                                                    </td>
+                                                )}
                                                 <td><strong>{nombre}</strong></td>
                                                 <td>{data.singles.ganados} / {data.singles.perdidos}</td>
                                                 <td>{data.dobles.ganados} / {data.dobles.perdidos}</td>
@@ -1886,7 +2010,8 @@
                                                 <td>{porcentaje}%</td>
                                             </tr>
                                         );
-                                    })}
+                                    })
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -1904,28 +2029,26 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {Object.entries(stats.parejas)
-                                    .sort((a, b) => (b[1].ganados + b[1].perdidos) - (a[1].ganados + a[1].perdidos))
-                                    .map(([pareja, data]) => {
-                                        const total = data.ganados + data.perdidos;
-                                        const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1) : 0;
-                                        
-                                        return (
-                                            <tr key={pareja}>
-                                                <td><strong>{pareja}</strong></td>
-                                                <td>{data.ganados}</td>
-                                                <td>{data.perdidos}</td>
-                                                <td>{porcentaje}%</td>
-                                                <td>
-                                                    {data.fechas.map((f, idx) => (
-                                                        <div key={idx} style={{fontSize: '12px', color: '#666'}}>
-                                                            F{f.fecha} vs {f.rival}: {f.tipo} ({f.resultado ? '✓' : '✗'})
-                                                        </div>
-                                                    ))}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
+                                {parejasOrdenadas.map(([pareja, data]) => {
+                                    const total = data.ganados + data.perdidos;
+                                    const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1) : 0;
+                                    
+                                    return (
+                                        <tr key={pareja}>
+                                            <td><strong>{pareja}</strong></td>
+                                            <td>{data.ganados}</td>
+                                            <td>{data.perdidos}</td>
+                                            <td>{porcentaje}%</td>
+                                            <td>
+                                                {data.fechas.map((f, idx) => (
+                                                    <div key={idx} style={{fontSize: '12px', color: '#666'}}>
+                                                        F{f.fecha} vs {f.rival}: {f.tipo} ({f.resultado ? '✓' : '✗'})
+                                                    </div>
+                                                ))}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
