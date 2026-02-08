@@ -431,7 +431,7 @@
             ]
         };
 
-        function App() {
+function App() {
             const [activeTab, setActiveTab] = useState('configuracion');
             const [numEquipos, setNumEquipos] = useState(10);
             const [equipos, setEquipos] = useState([]);
@@ -439,8 +439,11 @@
             const [showFinalModal, setShowFinalModal] = useState(false);
             const [posiciones, setPosiciones] = useState({});
             const [resultados, setResultados] = useState({});
+            
+            // NUEVO: Bandera para saber si ya se cargaron los datos del navegador
+            const [datosCargados, setDatosCargados] = useState(false);
 
-            // Cargar datos al iniciar
+            // 1. Cargar datos al iniciar
             useEffect(() => {
                 const datosGuardados = localStorage.getItem('goat_torneo_data');
                 if (datosGuardados) {
@@ -455,25 +458,30 @@
                         console.error('Error al cargar datos:', e);
                     }
                 }
+                // Marcamos que la carga terminó para habilitar el guardado
+                setDatosCargados(true);
             }, []);
 
-            // Guardar datos cuando cambian
+            // 2. Guardar datos cuando cambian (SOLO SI YA SE CARGARON)
             useEffect(() => {
-                const datos = {
-                    numEquipos,
-                    equipos,
-                    fechas,
-                    resultados,
-                    posiciones
-                };
-                localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
-            }, [numEquipos, equipos, fechas, resultados, posiciones]);
+                if (datosCargados) {
+                    const datos = {
+                        numEquipos,
+                        equipos,
+                        fechas,
+                        resultados,
+                        posiciones
+                    };
+                    localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
+                }
+            }, [numEquipos, equipos, fechas, resultados, posiciones, datosCargados]);
 
+            // 3. Inicializar GOAT si no hay equipos (SOLO SI YA CARGAMOS Y LA LISTA SIGUE VACÍA)
             useEffect(() => {
-                if (numEquipos === 10 && equipos.length === 0) {
+                if (datosCargados && numEquipos === 10 && equipos.length === 0) {
                     setEquipos([{ nombre: 'GOAT', esGoat: true }]);
                 }
-            }, [numEquipos]);
+            }, [numEquipos, equipos, datosCargados]);
 
             const agregarEquipos = (texto) => {
                 const lineas = texto.split('\n').filter(l => l.trim());
@@ -1117,7 +1125,8 @@
                         { dia: 'domingo', hora: '10:30' },
                         { dia: 'domingo', hora: '12:00' },
                         { dia: 'domingo', hora: '13:30' },
-                        { dia: 'domingo', hora: '15:00' }
+                        { dia: 'domingo', hora: '15:00' },
+                        { dia: 'domingo', hora: '16:30' }
                     ];
 
                     const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
@@ -1254,7 +1263,8 @@
                                     { dia: 'domingo', hora: '10:30' },
                                     { dia: 'domingo', hora: '12:00' },
                                     { dia: 'domingo', hora: '13:30' },
-                                    { dia: 'domingo', hora: '15:00' }
+                                    { dia: 'domingo', hora: '15:00' },
+                                    { dia: 'domingo', hora: '16:30' }
                                 ];
 
                                 const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
