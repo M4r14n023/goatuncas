@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOAT - Gestión Torneo de Tenis</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            background: #e0e0e0;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #d0d0d0;
+        }
+
+        .tab.active {
+            background: white;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 30px;
+            min-height: 500px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            min-height: 150px;
+            font-family: monospace;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .team-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .team-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .team-card.goat {
+            border-left-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .match-grid {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .match-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+
+        .match-card.bonus {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .match-type {
+            font-weight: 700;
+            color: #1e3c72;
+            font-size: 16px;
+        }
+
+        .match-time {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .player-select {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .stats-section {
+            margin-bottom: 30px;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .stats-table th,
+        .stats-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .stats-table th {
+            background: #f5f5f5;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        .stats-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .warning {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #92400e;
+            font-weight: 600;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #1e3c72;
+        }
+
+        .phase-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .date-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .date-header {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e3c72;
+            margin-bottom: 15px;
+        }
+
+        .player-count-warning {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            color: #065f46;
+            font-weight: 600;
+        }
+
+        .captain-badge {
+            background: #f59e0b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const PARTIDOS = [
+            { id: 1, tipo: "Dobles Damas C-1", categorias: ["damas_c"], numJugadores: 2 },
+            { id: 2, tipo: "Dobles Caballeros 3ra/4ta", categorias: ["caballeros_3ra", "caballeros_4ta"], numJugadores: 2 },
+            { id: 3, tipo: "Dobles Caballeros 5ta/5ta", categorias: ["caballeros_5ta"], numJugadores: 2 },
+            { id: 4, tipo: "Mixto D (Dama A + Caballero 2da)", categorias: ["damas_a", "caballeros_2da"], numJugadores: 2, mixto: true },
+            { id: 5, tipo: "Dobles Caballeros 3ra/3ra", categorias: ["caballeros_3ra"], numJugadores: 2 },
+            { id: 6, tipo: "Single Caballero 4ta", categorias: ["caballeros_4ta"], numJugadores: 1 },
+            { id: 7, tipo: "Dobles Caballeros 2da/2da", categorias: ["caballeros_2da"], numJugadores: 2 },
+            { id: 8, tipo: "Mixto C (Dama C + Caballero 5ta)", categorias: ["damas_c", "caballeros_5ta"], numJugadores: 2, mixto: true },
+            { id: 9, tipo: "Dobles Damas A/B", categorias: ["damas_a", "damas_b"], numJugadores: 2 },
+            { id: 10, tipo: "Single Caballero 3ra", categorias: ["caballeros_3ra"], numJugadores: 1 },
+            { id: 11, tipo: "Mixto E (Dama B + Caballero 5ta)", categorias: ["damas_b", "caballeros_5ta"], numJugadores: 2, mixto: true },
+            { id: 12, tipo: "Dobles Caballeros 4ta/4ta", categorias: ["caballeros_4ta"], numJugadores: 2 },
+            { id: 13, tipo: "Dobles Caballeros 5ta", categorias: ["caballeros_5ta"], numJugadores: 2 },
+            { id: 14, tipo: "Mixto A (Dama A + Caballero 3ra)", categorias: ["damas_a", "caballeros_3ra"], numJugadores: 2, mixto: true },
+            { id: 15, tipo: "Dobles Caballeros 2da", categorias: ["caballeros_2da"], numJugadores: 2 },
+            { id: 16, tipo: "Dobles Damas B", categorias: ["damas_b"], numJugadores: 2 },
+            { id: 17, tipo: "Dobles Caballeros 4ta/5ta", categorias: ["caballeros_4ta", "caballeros_5ta"], numJugadores: 2 },
+            { id: 18, tipo: "Dobles Caballeros 3ra", categorias: ["caballeros_3ra"], numJugadores: 2 },
+            { id: 19, tipo: "Mixto B (Dama B + Caballero 4ta)", categorias: ["damas_b", "caballeros_4ta"], numJugadores: 2, mixto: true },
+            { id: 20, tipo: "Single Caballero 2da", categorias: ["caballeros_2da"], numJugadores: 1 },
+            { id: 21, tipo: "Dobles Damas A", categorias: ["damas_a"], numJugadores: 2 },
+            { id: 22, tipo: "Dobles Damas C-2", categorias: ["damas_c"], numJugadores: 2 },
+            { id: 23, tipo: "Dobles Caballeros 4ta", categorias: ["caballeros_4ta"], numJugadores: 2 },
+            { id: 24, tipo: "Single Caballero 5ta", categorias: ["caballeros_5ta"], numJugadores: 1 },
+            { id: 25, tipo: "Caballeros 2da/3ra", categorias: ["caballeros_2da", "caballeros_3ra"], numJugadores: 2 },
+            { id: 26, tipo: "Dobles Damas B/C", categorias: ["damas_b", "damas_c"], numJugadores: 2 }
+        ];
+
+        const JUGADORES_GOAT = {
+            caballeros_2da: [
+                { nombre: "Maxi", categoria: "caballeros_2da" },
+                { nombre: "Hernan", categoria: "caballeros_2da" },
+                { nombre: "Walter", categoria: "caballeros_2da", capitan: true },
+                { nombre: "Charly", categoria: "caballeros_2da" }
+            ],
+            caballeros_3ra: [
+                { nombre: "Mariano", categoria: "caballeros_3ra" },
+                { nombre: "Tomy", categoria: "caballeros_3ra" },
+                { nombre: "Nico", categoria: "caballeros_3ra" },
+                { nombre: "Chicho", categoria: "caballeros_3ra" }
+            ],
+            caballeros_4ta: [
+                { nombre: "Rodri", categoria: "caballeros_4ta" },
+                { nombre: "Marce", categoria: "caballeros_4ta" },
+                { nombre: "Facu", categoria: "caballeros_4ta" },
+                { nombre: "Santi", categoria: "caballeros_4ta" }
+            ],
+            caballeros_5ta: [
+                { nombre: "Toto", categoria: "caballeros_5ta" },
+                { nombre: "Tibu", categoria: "caballeros_5ta" },
+                { nombre: "Bocha", categoria: "caballeros_5ta" },
+                { nombre: "Peka", categoria: "caballeros_5ta" },
+                { nombre: "Nacho", categoria: "caballeros_5ta" }
+            ],
+            damas_a: [
+                { nombre: "Caro Demaría", categoria: "damas_a" },
+                { nombre: "Kari", categoria: "damas_a" },
+                { nombre: "Grace", categoria: "damas_a" }
+            ],
+            damas_b: [
+                { nombre: "Mariela", categoria: "damas_b" },
+                { nombre: "Mariana", categoria: "damas_b" },
+                { nombre: "Caro Razquin", categoria: "damas_b" },
+                { nombre: "Beltra", categoria: "damas_b" }
+            ],
+            damas_c: [
+                { nombre: "Nelly", categoria: "damas_c" },
+                { nombre: "Marina", categoria: "damas_c" },
+                { nombre: "Lulu", categoria: "damas_c" },
+                { nombre: "Caro Sorbi", categoria: "damas_c" }
+            ]
+        };
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('configuracion');
+            const [numEquipos, setNumEquipos] = useState(10);
+            const [equipos, setEquipos] = useState([]);
+            const [fechas, setFechas] = useState([]);
+            const [showFinalModal, setShowFinalModal] = useState(false);
+            const [posiciones, setPosiciones] = useState({});
+            const [resultados, setResultados] = useState({});
+
+            // Cargar datos al iniciar
+            useEffect(() => {
+                const datosGuardados = localStorage.getItem('goat_torneo_data');
+                if (datosGuardados) {
+                    try {
+                        const datos = JSON.parse(datosGuardados);
+                        setNumEquipos(datos.numEquipos || 10);
+                        setEquipos(datos.equipos || []);
+                        setFechas(datos.fechas || []);
+                        setResultados(datos.resultados || {});
+                        setPosiciones(datos.posiciones || {});
+                    } catch (e) {
+                        console.error('Error al cargar datos:', e);
+                    }
+                }
+            }, []);
+
+            // Guardar datos cuando cambian
+            useEffect(() => {
+                const datos = {
+                    numEquipos,
+                    equipos,
+                    fechas,
+                    resultados,
+                    posiciones
+                };
+                localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
+            }, [numEquipos, equipos, fechas, resultados, posiciones]);
+
+            useEffect(() => {
+                if (numEquipos === 10 && equipos.length === 0) {
+                    setEquipos([{ nombre: 'GOAT', esGoat: true }]);
+                }
+            }, [numEquipos]);
+
+            const agregarEquipos = (texto) => {
+                const lineas = texto.split('\n').filter(l => l.trim());
+                const nuevosEquipos = lineas.map(linea => ({
+                    nombre: linea.trim(),
+                    esGoat: false
+                }));
+                setEquipos([{ nombre: 'GOAT', esGoat: true }, ...nuevosEquipos]);
+            };
+
+            const agregarFecha = (numFecha, rival) => {
+                const nuevaFecha = {
+                    numero: numFecha,
+                    rival: rival,
+                    partidos: PARTIDOS.map(p => ({
+                        ...p,
+                        jugadores: [],
+                        horario: '',
+                        dia: 'sabado',
+                        ganado: false
+                    })),
+                    partidoBonus: null
+                };
+                
+                const nuevasFechas = [...fechas];
+                nuevasFechas[numFecha - 1] = nuevaFecha;
+                setFechas(nuevasFechas);
+            };
+
+            const procesarHorarios = (fechaIndex, texto) => {
+                const lineas = texto.split('\n').filter(l => l.trim());
+                const fechaActual = {...fechas[fechaIndex]};
+                
+                lineas.forEach(linea => {
+                    const match = linea.match(/(\d+)\s*[-.:]\s*(.+)/);
+                    if (match) {
+                        const numPartido = parseInt(match[1]);
+                        const info = match[2].trim();
+                        
+                        const horarioMatch = info.match(/(\d{1,2}):(\d{2})/);
+                        const diaMatch = info.toLowerCase().includes('dom') ? 'domingo' : 'sabado';
+                        
+                        const partidoIndex = fechaActual.partidos.findIndex(p => p.id === numPartido);
+                        if (partidoIndex !== -1) {
+                            fechaActual.partidos[partidoIndex].horario = horarioMatch ? `${horarioMatch[1]}:${horarioMatch[2]}` : '';
+                            fechaActual.partidos[partidoIndex].dia = diaMatch;
+                        }
+                    }
+                });
+                
+                const nuevasFechas = [...fechas];
+                nuevasFechas[fechaIndex] = fechaActual;
+                setFechas(nuevasFechas);
+            };
+
+            const actualizarJugadores = (fechaIndex, partidoId, jugadores) => {
+                const nuevasFechas = [...fechas];
+                const partidoIndex = nuevasFechas[fechaIndex].partidos.findIndex(p => p.id === partidoId);
+                
+                if (partidoIndex !== -1) {
+                    nuevasFechas[fechaIndex].partidos[partidoIndex].jugadores = jugadores;
+                }
+                
+                setFechas(nuevasFechas);
+            };
+
+            const contarPartidosJugador = (fechaIndex, nombreJugador) => {
+                const fecha = fechas[fechaIndex];
+                let count = 0;
+                fecha.partidos.forEach(partido => {
+                    if (partido.jugadores.some(j => j === nombreJugador)) {
+                        count++;
+                    }
+                });
+                return count;
+            };
+
+            const toggleResultado = (fechaIndex, partidoId) => {
+                const key = `${fechaIndex}-${partidoId}`;
+                setResultados(prev => ({
+                    ...prev,
+                    [key]: !prev[key]
+                }));
+            };
+
+            const generarPDF = (fechaIndex) => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const fecha = fechas[fechaIndex];
+                
+                doc.setFontSize(20);
+                doc.text(`GOAT - Fecha ${fecha.numero}`, 105, 20, { align: 'center' });
+                doc.setFontSize(14);
+                doc.text(`vs ${fecha.rival}`, 105, 30, { align: 'center' });
+                
+                // Calcular partidos por jugador
+                const partidosPorJugador = {};
+                fecha.partidos.forEach(partido => {
+                    partido.jugadores.forEach(jugador => {
+                        partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1;
+                    });
+                });
+                
+                // Mostrar resumen de jugadores
+                let y = 45;
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                doc.text('RESUMEN DE CONVOCATORIA', 20, y);
+                y += 7;
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                
+                Object.entries(partidosPorJugador)
+                    .sort((a, b) => b[1] - a[1])
+                    .forEach(([jugador, cantidad]) => {
+                        const jugadorObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jugador);
+                        const esCapitan = jugadorObj?.capitan ? ' (CAPITAN)' : '';
+                        const advertencia = cantidad > 3 ? ' *** EXCEDE LIMITE ***' : '';
+                        doc.text(`${jugador}${esCapitan}: ${cantidad} partido${cantidad > 1 ? 's' : ''}${advertencia}`, 25, y);
+                        y += 5;
+                    });
+                
+                y += 5;
+                doc.setFontSize(10);
+                
+                const partidosPorDia = {
+                    sabado: fecha.partidos.filter(p => p.dia === 'sabado').sort((a, b) => a.horario.localeCompare(b.horario)),
+                    domingo: fecha.partidos.filter(p => p.dia === 'domingo').sort((a, b) => a.horario.localeCompare(b.horario))
+                };
+                
+                ['sabado', 'domingo'].forEach(dia => {
+                    if (partidosPorDia[dia].length > 0) {
+                        if (y > 250) {
+                            doc.addPage();
+                            y = 20;
+                        }
+                        
+                        doc.setFontSize(12);
+                        doc.setFont(undefined, 'bold');
+                        doc.text(dia.toUpperCase(), 20, y);
+                        y += 7;
+                        doc.setFont(undefined, 'normal');
+                        doc.setFontSize(10);
+                        
+                        partidosPorDia[dia].forEach(partido => {
+                            const esBonus = fecha.partidoBonus === partido.id;
+                            const jugadoresTexto = partido.jugadores.length > 0 
+                                ? partido.jugadores.join(' / ') 
+                                : 'Sin asignar';
+                            
+                            const texto = `${partido.horario} - ${partido.tipo}${esBonus ? ' (BONUS 20pts)' : ''}: ${jugadoresTexto}`;
+                            
+                            if (y > 270) {
+                                doc.addPage();
+                                y = 20;
+                            }
+                            
+                            doc.text(texto, 20, y);
+                            y += 6;
+                        });
+                        y += 5;
+                    }
+                });
+                
+                doc.save(`GOAT-Fecha${fecha.numero}-vs-${fecha.rival}.pdf`);
+            };
+
+            const calcularEstadisticas = () => {
+                const stats = {
+                    jugadores: {},
+                    parejas: {}
+                };
+                
+                const todosJugadores = Object.values(JUGADORES_GOAT).flat();
+                todosJugadores.forEach(jugador => {
+                    stats.jugadores[jugador.nombre] = {
+                        singles: { ganados: 0, perdidos: 0 },
+                        dobles: { ganados: 0, perdidos: 0 },
+                        total: { ganados: 0, perdidos: 0 }
+                    };
+                });
+                
+                fechas.forEach((fecha, fechaIdx) => {
+                    fecha.partidos.forEach(partido => {
+                        if (partido.jugadores.length > 0) {
+                            const key = `${fechaIdx}-${partido.id}`;
+                            const ganado = resultados[key] || false;
+                            const esSingle = partido.numJugadores === 1;
+                            
+                            partido.jugadores.forEach(jugador => {
+                                if (stats.jugadores[jugador]) {
+                                    if (esSingle) {
+                                        stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
+                                    } else {
+                                        stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
+                                    }
+                                    stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
+                                }
+                            });
+                            
+                            if (!esSingle && partido.jugadores.length === 2) {
+                                const parejaKey = [...partido.jugadores].sort().join(' - ');
+                                if (!stats.parejas[parejaKey]) {
+                                    stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [] };
+                                }
+                                stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
+                                stats.parejas[parejaKey].fechas.push({
+                                    fecha: fecha.numero,
+                                    rival: fecha.rival,
+                                    tipo: partido.tipo,
+                                    resultado: ganado
+                                });
+                            }
+                        }
+                    });
+                });
+                
+                return stats;
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>🎾 GOAT - Gestión Torneo de Tenis</h1>
+                        <p>Sistema completo de seguimiento y armado de fechas</p>
+                    </div>
+
+                    <div className="tabs">
+                        <button 
+                            className={`tab ${activeTab === 'configuracion' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('configuracion')}
+                        >
+                            Configuración
+                        </button>
+                        <button 
+                            className={`tab ${activeTab === 'fechas' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('fechas')}
+                        >
+                            Fechas
+                        </button>
+                        <button 
+                            className={`tab ${activeTab === 'resultados' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('resultados')}
+                        >
+                            Resultados
+                        </button>
+                        <button 
+                            className={`tab ${activeTab === 'estadisticas' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('estadisticas')}
+                        >
+                            Estadísticas
+                        </button>
+                    </div>
+
+                    <div className="content">
+                        {activeTab === 'configuracion' && (
+                            <ConfiguracionTab 
+                                numEquipos={numEquipos}
+                                setNumEquipos={setNumEquipos}
+                                equipos={equipos}
+                                agregarEquipos={agregarEquipos}
+                                agregarFecha={agregarFecha}
+                                fechas={fechas}
+                            />
+                        )}
+
+                        {activeTab === 'fechas' && (
+                            <FechasTab 
+                                fechas={fechas}
+                                procesarHorarios={procesarHorarios}
+                                actualizarJugadores={actualizarJugadores}
+                                contarPartidosJugador={contarPartidosJugador}
+                                generarPDF={generarPDF}
+                                setFechas={setFechas}
+                            />
+                        )}
+
+                        {activeTab === 'resultados' && (
+                            <ResultadosTab 
+                                fechas={fechas}
+                                resultados={resultados}
+                                toggleResultado={toggleResultado}
+                            />
+                        )}
+
+                        {activeTab === 'estadisticas' && (
+                            <EstadisticasTab 
+                                calcularEstadisticas={calcularEstadisticas}
+                            />
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function ConfiguracionTab({ numEquipos, setNumEquipos, equipos, agregarEquipos, agregarFecha, fechas }) {
+            const [textoEquipos, setTextoEquipos] = useState('');
+            const [rivalFecha1, setRivalFecha1] = useState('');
+            const [rivalFecha2, setRivalFecha2] = useState('');
+            const [rivalFecha3, setRivalFecha3] = useState('');
+            const [rivalFecha4, setRivalFecha4] = useState('');
+
+            return (
+                <div>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Configuración del Torneo</h2>
+                    
+                    <div className="form-group">
+                        <label>Número total de equipos</label>
+                        <input 
+                            type="number" 
+                            value={numEquipos}
+                            onChange={(e) => setNumEquipos(parseInt(e.target.value))}
+                            min="2"
+                            max="20"
+                        />
+                    </div>
+
+                    {numEquipos === 10 && equipos.length < 10 && (
+                        <div className="form-group">
+                            <label>Pegar lista de equipos rivales (uno por línea)</label>
+                            <textarea 
+                                value={textoEquipos}
+                                onChange={(e) => setTextoEquipos(e.target.value)}
+                                placeholder="Equipo 1&#10;Equipo 2&#10;Equipo 3&#10;..."
+                            />
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    agregarEquipos(textoEquipos);
+                                    setTextoEquipos('');
+                                }}
+                            >
+                                Cargar Equipos
+                            </button>
+                        </div>
+                    )}
+
+                    {equipos.length > 0 && (
+                        <div>
+                            <h3 style={{marginTop: '30px', marginBottom: '15px'}}>Equipos Registrados</h3>
+                            <div className="team-list">
+                                {equipos.map((eq, idx) => (
+                                    <div key={idx} className={`team-card ${eq.esGoat ? 'goat' : ''}`}>
+                                        <strong>{eq.nombre}</strong>
+                                        {eq.esGoat && <span> ⭐ (Nuestro Equipo)</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {equipos.length === 10 && (
+                        <div style={{marginTop: '40px'}}>
+                            <h3 style={{marginBottom: '20px'}}>Configurar Fechas</h3>
+                            
+                            {[1, 2, 3, 4].map(numFecha => (
+                                <div key={numFecha} className="form-group">
+                                    <label>Rival Fecha {numFecha}</label>
+                                    <select 
+                                        value={fechas[numFecha-1]?.rival || ''}
+                                        onChange={(e) => {
+                                            if (numFecha === 1) setRivalFecha1(e.target.value);
+                                            if (numFecha === 2) setRivalFecha2(e.target.value);
+                                            if (numFecha === 3) setRivalFecha3(e.target.value);
+                                            if (numFecha === 4) setRivalFecha4(e.target.value);
+                                            if (e.target.value) {
+                                                agregarFecha(numFecha, e.target.value);
+                                            }
+                                        }}
+                                    >
+                                        <option value="">Seleccionar rival...</option>
+                                        {equipos.filter(eq => !eq.esGoat).map((eq, idx) => (
+                                            <option key={idx} value={eq.nombre}>{eq.nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            ))}
+
+                            {fechas.length === 4 && (
+                                <div className="success-message">
+                                    ✓ Todas las fechas configuradas. Ir a la pestaña "Fechas" para armar los equipos.
+                                </div>
+                            )}
+
+                            <div style={{marginTop: '30px', paddingTop: '30px', borderTop: '2px solid #ddd'}}>
+                                <button 
+                                    className="btn btn-danger"
+                                    onClick={() => {
+                                        if (confirm('¿Estás seguro de que querés borrar todos los datos? Esta acción no se puede deshacer.')) {
+                                            localStorage.removeItem('goat_torneo_data');
+                                            window.location.reload();
+                                        }
+                                    }}
+                                >
+                                    🗑️ Resetear todos los datos
+                                </button>
+                                <p style={{marginTop: '10px', fontSize: '12px', color: '#666'}}>
+                                    Los datos se guardan automáticamente en tu navegador
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function FechasTab({ fechas, procesarHorarios, actualizarJugadores, contarPartidosJugador, generarPDF, setFechas }) {
+            const [fechaSeleccionada, setFechaSeleccionada] = useState(0);
+            const [textoHorarios, setTextoHorarios] = useState('');
+            const [partidoBonus, setPartidoBonus] = useState('');
+
+            if (fechas.length === 0) {
+                return (
+                    <div className="warning">
+                        Por favor, configure primero los equipos y las fechas en la pestaña "Configuración".
+                    </div>
+                );
+            }
+
+            const fecha = fechas[fechaSeleccionada];
+
+            return (
+                <div>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Armado de Fechas</h2>
+                    
+                    <div className="form-group">
+                        <label>Seleccionar Fecha</label>
+                        <select 
+                            value={fechaSeleccionada}
+                            onChange={(e) => setFechaSeleccionada(parseInt(e.target.value))}
+                        >
+                            {fechas.map((f, idx) => (
+                                <option key={idx} value={idx}>
+                                    Fecha {f.numero} - vs {f.rival}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div className="date-section">
+                        <div className="date-header">Fecha {fecha.numero} - vs {fecha.rival}</div>
+                        
+                        <div className="form-group">
+                            <label>Pegar horarios y partidos</label>
+                            <textarea 
+                                value={textoHorarios}
+                                onChange={(e) => setTextoHorarios(e.target.value)}
+                                placeholder="1 - 9:00 Sábado&#10;2 - 10:30 Sábado&#10;..."
+                            />
+                            <button 
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    procesarHorarios(fechaSeleccionada, textoHorarios);
+                                    setTextoHorarios('');
+                                }}
+                            >
+                                Cargar Horarios
+                            </button>
+                        </div>
+
+                        <div className="form-group">
+                            <label>Partido Bonus (vale 20 puntos)</label>
+                            <select 
+                                value={fecha.partidoBonus || ''}
+                                onChange={(e) => {
+                                    const nuevasFechas = [...fechas];
+                                    nuevasFechas[fechaSeleccionada].partidoBonus = e.target.value ? parseInt(e.target.value) : null;
+                                    setFechas(nuevasFechas);
+                                }}
+                            >
+                                <option value="">Seleccionar partido bonus...</option>
+                                {PARTIDOS.map(p => (
+                                    <option key={p.id} value={p.id}>{p.id} - {p.tipo}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <button 
+                            className="btn btn-success"
+                            onClick={() => generarPDF(fechaSeleccionada)}
+                            style={{marginTop: '20px'}}
+                        >
+                            📄 Exportar PDF
+                        </button>
+                    </div>
+
+                    <div className="match-grid">
+                        {fecha.partidos
+                            .sort((a, b) => {
+                                if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
+                                return a.horario.localeCompare(b.horario);
+                            })
+                            .map(partido => (
+                            <PartidoCard 
+                                key={partido.id}
+                                partido={partido}
+                                fechaIndex={fechaSeleccionada}
+                                actualizarJugadores={actualizarJugadores}
+                                contarPartidosJugador={contarPartidosJugador}
+                                esBonus={fecha.partidoBonus === partido.id}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function PartidoCard({ partido, fechaIndex, actualizarJugadores, contarPartidosJugador, esBonus }) {
+            const [jugadoresSeleccionados, setJugadoresSeleccionados] = useState(partido.jugadores || []);
+            
+            useEffect(() => {
+                setJugadoresSeleccionados(partido.jugadores || []);
+            }, [partido.jugadores]);
+
+            const jugadoresDisponibles = partido.categorias.flatMap(cat => 
+                JUGADORES_GOAT[cat] || []
+            );
+
+            const agregarJugador = (nombreJugador) => {
+                if (jugadoresSeleccionados.length >= partido.numJugadores) {
+                    alert(`Este partido solo permite ${partido.numJugadores} jugador(es)`);
+                    return;
+                }
+
+                const countPartidos = contarPartidosJugador(fechaIndex, nombreJugador);
+                if (countPartidos >= 3) {
+                    alert(`${nombreJugador} ya está convocado para 3 partidos. No puede jugar más.`);
+                    return;
+                }
+
+                const nuevosJugadores = [...jugadoresSeleccionados, nombreJugador];
+                setJugadoresSeleccionados(nuevosJugadores);
+                actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+            };
+
+            const eliminarJugador = (index) => {
+                const nuevosJugadores = jugadoresSeleccionados.filter((_, i) => i !== index);
+                setJugadoresSeleccionados(nuevosJugadores);
+                actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+            };
+
+            return (
+                <div className={`match-card ${esBonus ? 'bonus' : ''}`}>
+                    <div className="match-header">
+                        <div>
+                            <div className="match-type">
+                                {partido.id}. {partido.tipo}
+                            </div>
+                            {esBonus && <div style={{color: '#f59e0b', fontSize: '14px', fontWeight: '600'}}>⭐ PARTIDO BONUS (20 pts)</div>}
+                        </div>
+                        {partido.horario && (
+                            <div className="match-time">
+                                {partido.horario} - {partido.dia === 'sabado' ? 'Sáb' : 'Dom'}
+                            </div>
+                        )}
+                    </div>
+
+                    <div style={{marginBottom: '10px'}}>
+                        <strong>Jugadores asignados:</strong>
+                        {jugadoresSeleccionados.length === 0 && <span style={{color: '#999'}}> Ninguno</span>}
+                        <div style={{marginTop: '8px'}}>
+                            {jugadoresSeleccionados.map((jugador, idx) => {
+                                const jugadorObj = jugadoresDisponibles.find(j => j.nombre === jugador);
+                                return (
+                                    <div key={idx} style={{
+                                        display: 'inline-block',
+                                        background: '#667eea',
+                                        color: 'white',
+                                        padding: '5px 12px',
+                                        borderRadius: '6px',
+                                        marginRight: '8px',
+                                        marginBottom: '8px'
+                                    }}>
+                                        {jugador}
+                                        {jugadorObj?.capitan && <span className="captain-badge">CAPITÁN</span>}
+                                        <button 
+                                            onClick={() => eliminarJugador(idx)}
+                                            style={{
+                                                marginLeft: '8px',
+                                                background: 'rgba(255,255,255,0.3)',
+                                                border: 'none',
+                                                color: 'white',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                                padding: '2px 6px'
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {jugadoresSeleccionados.length < partido.numJugadores && (
+                        <div className="form-group" style={{marginBottom: '0'}}>
+                            <label>Agregar jugador:</label>
+                            <select 
+                                onChange={(e) => {
+                                    if (e.target.value) {
+                                        agregarJugador(e.target.value);
+                                        e.target.value = '';
+                                    }
+                                }}
+                                defaultValue=""
+                            >
+                                <option value="">Seleccionar...</option>
+                                {jugadoresDisponibles
+                                    .filter(j => !jugadoresSeleccionados.includes(j.nombre))
+                                    .map((j, idx) => {
+                                        const count = contarPartidosJugador(fechaIndex, j.nombre);
+                                        return (
+                                            <option key={idx} value={j.nombre}>
+                                                {j.nombre} {j.capitan ? '(CAPITÁN)' : ''} - {count}/3 partidos
+                                            </option>
+                                        );
+                                    })}
+                            </select>
+                        </div>
+                    )}
+
+                    {jugadoresSeleccionados.some(j => {
+                        const count = contarPartidosJugador(fechaIndex, j);
+                        return count > 3;
+                    }) && (
+                        <div className="player-count-warning">
+                            ⚠️ Advertencia: Algún jugador supera el límite de 3 partidos
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function ResultadosTab({ fechas, resultados, toggleResultado }) {
+            if (fechas.length === 0) {
+                return (
+                    <div className="warning">
+                        No hay fechas configuradas todavía.
+                    </div>
+                );
+            }
+
+            return (
+                <div>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Resultados de Partidos</h2>
+                    
+                    {fechas.map((fecha, fechaIdx) => (
+                        <div key={fechaIdx} className="date-section">
+                            <div className="date-header">
+                                Fecha {fecha.numero} - vs {fecha.rival}
+                            </div>
+                            
+                            {fecha.partidos.map(partido => {
+                                if (partido.jugadores.length === 0) return null;
+                                
+                                const key = `${fechaIdx}-${partido.id}`;
+                                const ganado = resultados[key] || false;
+                                const esBonus = fecha.partidoBonus === partido.id;
+                                
+                                return (
+                                    <div key={partido.id} style={{
+                                        background: ganado ? '#d1fae5' : '#fee2e2',
+                                        padding: '15px',
+                                        borderRadius: '8px',
+                                        marginBottom: '10px',
+                                        border: esBonus ? '2px solid #f59e0b' : '2px solid transparent'
+                                    }}>
+                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                            <div>
+                                                <strong>{partido.tipo}</strong>
+                                                {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS</span>}
+                                                <div style={{fontSize: '14px', marginTop: '5px'}}>
+                                                    {partido.jugadores.join(' / ')}
+                                                </div>
+                                            </div>
+                                            <div className="checkbox-container">
+                                                <input 
+                                                    type="checkbox"
+                                                    checked={ganado}
+                                                    onChange={() => toggleResultado(fechaIdx, partido.id)}
+                                                />
+                                                <label style={{margin: 0}}>
+                                                    {ganado ? 'GANADO ✓' : 'PERDIDO'}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ))}
+                </div>
+            );
+        }
+
+        function EstadisticasTab({ calcularEstadisticas }) {
+            const stats = calcularEstadisticas();
+
+            return (
+                <div>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Estadísticas del Equipo</h2>
+                    
+                    <div className="stats-section">
+                        <h3>Estadísticas Individuales</h3>
+                        <table className="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Jugador</th>
+                                    <th>Singles G/P</th>
+                                    <th>Dobles G/P</th>
+                                    <th>Total G/P</th>
+                                    <th>% Victorias</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.entries(stats.jugadores)
+                                    .sort((a, b) => {
+                                        const totalA = a[1].total.ganados + a[1].total.perdidos;
+                                        const totalB = b[1].total.ganados + b[1].total.perdidos;
+                                        return totalB - totalA;
+                                    })
+                                    .map(([nombre, data]) => {
+                                        const total = data.total.ganados + data.total.perdidos;
+                                        const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1) : 0;
+                                        
+                                        return (
+                                            <tr key={nombre}>
+                                                <td><strong>{nombre}</strong></td>
+                                                <td>{data.singles.ganados} / {data.singles.perdidos}</td>
+                                                <td>{data.dobles.ganados} / {data.dobles.perdidos}</td>
+                                                <td>{data.total.ganados} / {data.total.perdidos}</td>
+                                                <td>{porcentaje}%</td>
+                                            </tr>
+                                        );
+                                    })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="stats-section">
+                        <h3>Estadísticas de Parejas</h3>
+                        <table className="stats-table">
+                            <thead>
+                                <tr>
+                                    <th>Pareja</th>
+                                    <th>Ganados</th>
+                                    <th>Perdidos</th>
+                                    <th>% Victorias</th>
+                                    <th>Partidos Jugados</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {Object.entries(stats.parejas)
+                                    .sort((a, b) => (b[1].ganados + b[1].perdidos) - (a[1].ganados + a[1].perdidos))
+                                    .map(([pareja, data]) => {
+                                        const total = data.ganados + data.perdidos;
+                                        const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1) : 0;
+                                        
+                                        return (
+                                            <tr key={pareja}>
+                                                <td><strong>{pareja}</strong></td>
+                                                <td>{data.ganados}</td>
+                                                <td>{data.perdidos}</td>
+                                                <td>{porcentaje}%</td>
+                                                <td>
+                                                    {data.fechas.map((f, idx) => (
+                                                        <div key={idx} style={{fontSize: '12px', color: '#666'}}>
+                                                            F{f.fecha} vs {f.rival}: {f.tipo} ({f.resultado ? '✓' : '✗'})
+                                                        </div>
+                                                    ))}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
