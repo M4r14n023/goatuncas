@@ -349,32 +349,41 @@
         const { useState, useEffect } = React;
 
         const PARTIDOS = [
-            { id: 1, tipo: "Dobles Damas C-1", categorias: ["damas_c"], numJugadores: 2 },
-            { id: 2, tipo: "Dobles Caballeros 3ra/4ta", categorias: ["caballeros_3ra", "caballeros_4ta"], numJugadores: 2 },
-            { id: 3, tipo: "Dobles Caballeros 5ta/5ta", categorias: ["caballeros_5ta"], numJugadores: 2 },
-            { id: 4, tipo: "Mixto D (Dama A + Caballero 2da)", categorias: ["damas_a", "caballeros_2da"], numJugadores: 2, mixto: true },
-            { id: 5, tipo: "Dobles Caballeros 3ra/3ra", categorias: ["caballeros_3ra"], numJugadores: 2 },
-            { id: 6, tipo: "Single Caballero 4ta", categorias: ["caballeros_4ta"], numJugadores: 1 },
-            { id: 7, tipo: "Dobles Caballeros 2da/2da", categorias: ["caballeros_2da"], numJugadores: 2 },
-            { id: 8, tipo: "Mixto C (Dama C + Caballero 5ta)", categorias: ["damas_c", "caballeros_5ta"], numJugadores: 2, mixto: true },
-            { id: 9, tipo: "Dobles Damas A/B", categorias: ["damas_a", "damas_b"], numJugadores: 2 },
-            { id: 10, tipo: "Single Caballero 3ra", categorias: ["caballeros_3ra"], numJugadores: 1 },
-            { id: 11, tipo: "Mixto E (Dama B + Caballero 5ta)", categorias: ["damas_b", "caballeros_5ta"], numJugadores: 2, mixto: true },
-            { id: 12, tipo: "Dobles Caballeros 4ta/4ta", categorias: ["caballeros_4ta"], numJugadores: 2 },
-            { id: 13, tipo: "Dobles Caballeros 5ta", categorias: ["caballeros_5ta"], numJugadores: 2 },
-            { id: 14, tipo: "Mixto A (Dama A + Caballero 3ra)", categorias: ["damas_a", "caballeros_3ra"], numJugadores: 2, mixto: true },
-            { id: 15, tipo: "Dobles Caballeros 2da", categorias: ["caballeros_2da"], numJugadores: 2 },
-            { id: 16, tipo: "Dobles Damas B", categorias: ["damas_b"], numJugadores: 2 },
-            { id: 17, tipo: "Dobles Caballeros 4ta/5ta", categorias: ["caballeros_4ta", "caballeros_5ta"], numJugadores: 2 },
-            { id: 18, tipo: "Dobles Caballeros 3ra", categorias: ["caballeros_3ra"], numJugadores: 2 },
-            { id: 19, tipo: "Mixto B (Dama B + Caballero 4ta)", categorias: ["damas_b", "caballeros_4ta"], numJugadores: 2, mixto: true },
-            { id: 20, tipo: "Single Caballero 2da", categorias: ["caballeros_2da"], numJugadores: 1 },
-            { id: 21, tipo: "Dobles Damas A", categorias: ["damas_a"], numJugadores: 2 },
-            { id: 22, tipo: "Dobles Damas C-2", categorias: ["damas_c"], numJugadores: 2 },
-            { id: 23, tipo: "Dobles Caballeros 4ta", categorias: ["caballeros_4ta"], numJugadores: 2 },
-            { id: 24, tipo: "Single Caballero 5ta", categorias: ["caballeros_5ta"], numJugadores: 1 },
-            { id: 25, tipo: "Caballeros 2da/3ra", categorias: ["caballeros_2da", "caballeros_3ra"], numJugadores: 2 },
-            { id: 26, tipo: "Dobles Damas B/C", categorias: ["damas_b", "damas_c"], numJugadores: 2 }
+            // DAMAS
+            { id: 9, tipo: "Dobles Damas A/B", categorias: ["damas_a", "damas_b"], numJugadores: 2, grupo: "damas" },
+            { id: 21, tipo: "Dobles Damas A", categorias: ["damas_a"], numJugadores: 2, grupo: "damas" },
+            { id: 16, tipo: "Dobles Damas B", categorias: ["damas_b"], numJugadores: 2, grupo: "damas" },
+            { id: 26, tipo: "Dobles Damas B/C", categorias: ["damas_b", "damas_c"], numJugadores: 2, grupo: "damas" },
+            { id: 1, tipo: "Dobles Damas C-1", categorias: ["damas_c"], numJugadores: 2, grupo: "damas" },
+            { id: 22, tipo: "Dobles Damas C-2", categorias: ["damas_c"], numJugadores: 2, grupo: "damas" },
+            
+            // MIXTOS
+            { id: 4, tipo: "Mixto D (Dama A + Caballero 2da)", categorias: ["damas_a", "caballeros_2da"], numJugadores: 2, mixto: true, grupo: "mixtos" },
+            { id: 14, tipo: "Mixto A (Dama A + Caballero 3ra)", categorias: ["damas_a", "caballeros_3ra"], numJugadores: 2, mixto: true, grupo: "mixtos" },
+            { id: 19, tipo: "Mixto B (Dama B + Caballero 4ta)", categorias: ["damas_b", "caballeros_4ta"], numJugadores: 2, mixto: true, grupo: "mixtos" },
+            { id: 11, tipo: "Mixto E (Dama B + Caballero 5ta)", categorias: ["damas_b", "caballeros_5ta"], numJugadores: 2, mixto: true, grupo: "mixtos" },
+            { id: 8, tipo: "Mixto C (Dama C + Caballero 5ta)", categorias: ["damas_c", "caballeros_5ta"], numJugadores: 2, mixto: true, grupo: "mixtos" },
+            
+            // SINGLES CABALLEROS
+            { id: 20, tipo: "Single Caballero 2da", categorias: ["caballeros_2da"], numJugadores: 1, grupo: "singles" },
+            { id: 10, tipo: "Single Caballero 3ra", categorias: ["caballeros_3ra"], numJugadores: 1, grupo: "singles" },
+            { id: 6, tipo: "Single Caballero 4ta", categorias: ["caballeros_4ta"], numJugadores: 1, grupo: "singles" },
+            { id: 24, tipo: "Single Caballero 5ta", categorias: ["caballeros_5ta"], numJugadores: 1, grupo: "singles" },
+            
+            // DOBLES CABALLEROS PUROS
+            { id: 7, tipo: "Dobles Caballeros 2da/2da", categorias: ["caballeros_2da"], numJugadores: 2, grupo: "dobles_puros" },
+            { id: 15, tipo: "Dobles Caballeros 2da", categorias: ["caballeros_2da"], numJugadores: 2, grupo: "dobles_puros" },
+            { id: 5, tipo: "Dobles Caballeros 3ra/3ra", categorias: ["caballeros_3ra"], numJugadores: 2, grupo: "dobles_puros" },
+            { id: 18, tipo: "Dobles Caballeros 3ra", categorias: ["caballeros_3ra"], numJugadores: 2, grupo: "dobles_puros" },
+            { id: 12, tipo: "Dobles Caballeros 4ta/4ta", categorias: ["caballeros_4ta"], numJugadores: 2, grupo: "dobles_puros" },
+            { id: 23, tipo: "Dobles Caballeros 4ta", categorias: ["caballeros_4ta"], numJugadores: 2, grupo: "dobles_puros" },
+            { id: 3, tipo: "Dobles Caballeros 5ta/5ta", categorias: ["caballeros_5ta"], numJugadores: 2, grupo: "dobles_puros" },
+            { id: 13, tipo: "Dobles Caballeros 5ta", categorias: ["caballeros_5ta"], numJugadores: 2, grupo: "dobles_puros" },
+            
+            // DOBLES CABALLEROS COMBINADOS
+            { id: 25, tipo: "Caballeros 2da/3ra", categorias: ["caballeros_2da", "caballeros_3ra"], numJugadores: 2, grupo: "dobles_combinados" },
+            { id: 2, tipo: "Dobles Caballeros 3ra/4ta", categorias: ["caballeros_3ra", "caballeros_4ta"], numJugadores: 2, grupo: "dobles_combinados" },
+            { id: 17, tipo: "Dobles Caballeros 4ta/5ta", categorias: ["caballeros_4ta", "caballeros_5ta"], numJugadores: 2, grupo: "dobles_combinados" }
         ];
 
         const JUGADORES_GOAT = {
@@ -560,37 +569,7 @@
                 doc.setFontSize(14);
                 doc.text(`vs ${fecha.rival}`, 105, 30, { align: 'center' });
                 
-                // Calcular partidos por jugador
-                const partidosPorJugador = {};
-                fecha.partidos.forEach(partido => {
-                    if (partido.horario) {
-                        partido.jugadores.forEach(jugador => {
-                            partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1;
-                        });
-                    }
-                });
-                
-                // Mostrar resumen de jugadores
                 let y = 45;
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
-                doc.text('RESUMEN DE CONVOCATORIA', 20, y);
-                y += 7;
-                doc.setFont(undefined, 'normal');
-                doc.setFontSize(9);
-                
-                Object.entries(partidosPorJugador)
-                    .sort((a, b) => b[1] - a[1])
-                    .forEach(([jugador, cantidad]) => {
-                        const jugadorObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jugador);
-                        const esCapitan = jugadorObj?.capitan ? ' (CAPITAN)' : '';
-                        const advertencia = cantidad > 3 ? ' *** EXCEDE LIMITE ***' : '';
-                        doc.text(`${jugador}${esCapitan}: ${cantidad} partido${cantidad > 1 ? 's' : ''}${advertencia}`, 25, y);
-                        y += 5;
-                    });
-                
-                y += 5;
-                doc.setFontSize(10);
                 
                 // Agrupar por día y horario
                 const partidosPorHorario = {};
@@ -617,6 +596,7 @@
                 horariosPorDia.sabado.sort((a, b) => a.hora.localeCompare(b.hora));
                 horariosPorDia.domingo.sort((a, b) => a.hora.localeCompare(b.hora));
                 
+                // MOSTRAR CONVOCATORIA COMPLETA
                 ['sabado', 'domingo'].forEach(dia => {
                     if (horariosPorDia[dia].length > 0) {
                         if (y > 250) {
@@ -624,10 +604,10 @@
                             y = 20;
                         }
                         
-                        doc.setFontSize(12);
+                        doc.setFontSize(14);
                         doc.setFont(undefined, 'bold');
                         doc.text(dia.toUpperCase(), 20, y);
-                        y += 7;
+                        y += 8;
                         doc.setFont(undefined, 'normal');
                         doc.setFontSize(10);
                         
@@ -641,21 +621,72 @@
                                     ? partido.jugadores.join(' / ') 
                                     : 'Sin asignar';
                                 
-                                const texto = `${horario.hora} - Partido ${partido.posicion} - ${partido.tipo}${esBonus ? ' (BONUS 20pts)' : ''}: ${jugadoresTexto}`;
+                                const texto = `${horario.hora} - P${partido.posicion} - ${partido.tipo}${esBonus ? ' ★BONUS★' : ''}: ${jugadoresTexto}`;
                                 
-                                if (y > 270) {
+                                if (y > 275) {
                                     doc.addPage();
                                     y = 20;
                                 }
                                 
+                                if (esBonus) {
+                                    doc.setFont(undefined, 'bold');
+                                }
                                 doc.text(texto, 20, y);
+                                if (esBonus) {
+                                    doc.setFont(undefined, 'normal');
+                                }
                                 y += 6;
                             });
-                            y += 3;
+                            y += 2;
                         });
                         y += 5;
                     }
                 });
+                
+                // MOSTRAR RESUMEN DE JUGADORES AL FINAL
+                // Calcular partidos por jugador
+                const partidosPorJugador = {};
+                fecha.partidos.forEach(partido => {
+                    if (partido.horario) {
+                        partido.jugadores.forEach(jugador => {
+                            partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1;
+                        });
+                    }
+                });
+                
+                if (Object.keys(partidosPorJugador).length > 0) {
+                    // Verificar si necesitamos nueva página
+                    if (y + (Object.keys(partidosPorJugador).length * 5) + 20 > 280) {
+                        doc.addPage();
+                        y = 20;
+                    } else {
+                        y += 10;
+                    }
+                    
+                    doc.setFontSize(12);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('RESUMEN DE CONVOCATORIA', 20, y);
+                    y += 8;
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(9);
+                    
+                    Object.entries(partidosPorJugador)
+                        .sort((a, b) => b[1] - a[1])
+                        .forEach(([jugador, cantidad]) => {
+                            const jugadorObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jugador);
+                            const esCapitan = jugadorObj?.capitan ? ' (CAPITAN)' : '';
+                            const advertencia = cantidad > 3 ? ' *** EXCEDE LIMITE ***' : '';
+                            
+                            if (cantidad > 3) {
+                                doc.setFont(undefined, 'bold');
+                            }
+                            doc.text(`${jugador}${esCapitan}: ${cantidad} partido${cantidad > 1 ? 's' : ''}${advertencia}`, 25, y);
+                            if (cantidad > 3) {
+                                doc.setFont(undefined, 'normal');
+                            }
+                            y += 5;
+                        });
+                }
                 
                 doc.save(`GOAT-Fecha${fecha.numero}-vs-${fecha.rival}.pdf`);
             };
@@ -915,11 +946,29 @@
 
             const fecha = fechas[fechaSeleccionada];
 
-            const partidosDisponibles = PARTIDOS.filter(p => {
-                const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id);
-                return !partidoAsignado.horario || 
-                       (editandoHorario && (partidoAsignado.horario === editandoHorario.horario && partidoAsignado.dia === editandoHorario.dia));
-            });
+            const getPartidosDisponibles = (excluirPartido = null) => {
+                return PARTIDOS.filter(p => {
+                    // Si estamos editando, permitir los partidos del horario actual
+                    if (editandoHorario) {
+                        const partidoDelHorario = fecha.partidos.find(fp => 
+                            fp.id === p.id && 
+                            fp.horario === editandoHorario.horario && 
+                            fp.dia === editandoHorario.dia
+                        );
+                        if (partidoDelHorario) return true;
+                    }
+                    
+                    // Excluir el partido ya seleccionado en partido1
+                    if (excluirPartido && p.id === excluirPartido) return false;
+                    
+                    // Verificar si el partido ya está asignado
+                    const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id);
+                    return !partidoAsignado.horario;
+                });
+            };
+
+            const partidosDisponiblesP1 = getPartidosDisponibles();
+            const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
 
             const agregarHorario = () => {
                 if (!horarioActual.partido1 || !horarioActual.partido2) {
@@ -929,6 +978,16 @@
 
                 const nuevasFechas = [...fechas];
                 const fechaIdx = fechaSeleccionada;
+
+                // Si estamos editando, limpiar los partidos anteriores del horario
+                if (editandoHorario) {
+                    nuevasFechas[fechaIdx].partidos = nuevasFechas[fechaIdx].partidos.map(p => {
+                        if (p.dia === editandoHorario.dia && p.horario === editandoHorario.horario) {
+                            return { ...p, dia: 'sabado', horario: '', posicion: undefined };
+                        }
+                        return p;
+                    });
+                }
 
                 // Asignar partido 1
                 const idx1 = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === parseInt(horarioActual.partido1));
@@ -947,9 +1006,61 @@
                 }
 
                 setFechas(nuevasFechas);
-                setShowHorarioModal(false);
-                setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                
+                // Resetear estado
                 setEditandoHorario(null);
+                
+                // Verificar si quedan partidos por asignar
+                const partidosSinAsignar = PARTIDOS.filter(p => {
+                    const partidoAsignado = nuevasFechas[fechaIdx].partidos.find(fp => fp.id === p.id);
+                    return !partidoAsignado.horario;
+                });
+
+                if (partidosSinAsignar.length >= 2) {
+                    // Calcular siguiente horario
+                    const horariosUsados = {};
+                    nuevasFechas[fechaIdx].partidos.forEach(p => {
+                        if (p.horario) {
+                            const key = `${p.dia}-${p.horario}`;
+                            horariosUsados[key] = true;
+                        }
+                    });
+
+                    const horariosPosibles = [
+                        { dia: 'sabado', hora: '09:00' },
+                        { dia: 'sabado', hora: '10:30' },
+                        { dia: 'sabado', hora: '12:00' },
+                        { dia: 'sabado', hora: '13:30' },
+                        { dia: 'sabado', hora: '15:00' },
+                        { dia: 'sabado', hora: '16:30' },
+                        { dia: 'domingo', hora: '09:00' },
+                        { dia: 'domingo', hora: '10:30' },
+                        { dia: 'domingo', hora: '12:00' },
+                        { dia: 'domingo', hora: '13:30' },
+                        { dia: 'domingo', hora: '15:00' }
+                    ];
+
+                    const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+
+                    if (siguienteHorario) {
+                        setHorarioActual({
+                            dia: siguienteHorario.dia,
+                            hora: siguienteHorario.hora,
+                            partido1: '',
+                            partido2: ''
+                        });
+                        // Mantener el modal abierto para el siguiente horario
+                    } else {
+                        setShowHorarioModal(false);
+                        setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                    }
+                } else {
+                    setShowHorarioModal(false);
+                    setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                    if (partidosSinAsignar.length === 0) {
+                        alert('¡Todos los partidos han sido asignados!');
+                    }
+                }
             };
 
             const eliminarHorario = (dia, hora) => {
@@ -993,6 +1104,11 @@
                 }
             });
 
+            const partidosSinAsignar = PARTIDOS.filter(p => {
+                const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id);
+                return !partidoAsignado.horario;
+            });
+
             return (
                 <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Armado de Fechas</h2>
@@ -1014,11 +1130,49 @@
                     <div className="date-section">
                         <div className="date-header">Fecha {fecha.numero} - vs {fecha.rival}</div>
                         
+                        <div style={{marginBottom: '15px', padding: '12px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #0ea5e9'}}>
+                            <strong>Partidos sin asignar: {partidosSinAsignar.length} de 26</strong>
+                        </div>
+
                         <button 
                             className="btn btn-primary"
                             onClick={() => {
                                 setEditandoHorario(null);
-                                setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                                // Buscar primer horario disponible
+                                const horariosUsados = {};
+                                fecha.partidos.forEach(p => {
+                                    if (p.horario) {
+                                        const key = `${p.dia}-${p.horario}`;
+                                        horariosUsados[key] = true;
+                                    }
+                                });
+
+                                const horariosPosibles = [
+                                    { dia: 'sabado', hora: '09:00' },
+                                    { dia: 'sabado', hora: '10:30' },
+                                    { dia: 'sabado', hora: '12:00' },
+                                    { dia: 'sabado', hora: '13:30' },
+                                    { dia: 'sabado', hora: '15:00' },
+                                    { dia: 'sabado', hora: '16:30' },
+                                    { dia: 'domingo', hora: '09:00' },
+                                    { dia: 'domingo', hora: '10:30' },
+                                    { dia: 'domingo', hora: '12:00' },
+                                    { dia: 'domingo', hora: '13:30' },
+                                    { dia: 'domingo', hora: '15:00' }
+                                ];
+
+                                const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+
+                                if (siguienteHorario) {
+                                    setHorarioActual({ 
+                                        dia: siguienteHorario.dia, 
+                                        hora: siguienteHorario.hora, 
+                                        partido1: '', 
+                                        partido2: '' 
+                                    });
+                                } else {
+                                    setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                                }
                                 setShowHorarioModal(true);
                             }}
                         >
@@ -1037,7 +1191,7 @@
                             >
                                 <option value="">Seleccionar partido bonus...</option>
                                 {PARTIDOS.map(p => (
-                                    <option key={p.id} value={p.id}>{p.id} - {p.tipo}</option>
+                                    <option key={p.id} value={p.id}>{p.tipo}</option>
                                 ))}
                             </select>
                         </div>
@@ -1052,10 +1206,16 @@
                     </div>
 
                     {showHorarioModal && (
-                        <div className="modal" onClick={() => setShowHorarioModal(false)}>
+                        <div className="modal" onClick={() => {
+                            if (confirm('¿Cerrar sin guardar?')) {
+                                setShowHorarioModal(false);
+                                setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                                setEditandoHorario(null);
+                            }
+                        }}>
                             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                                 <div className="modal-header">
-                                    {editandoHorario ? 'Editar Horario' : 'Agregar Horario'}
+                                    {editandoHorario ? 'Editar Horario' : `Agregar Horario (${partidosSinAsignar.length} partidos restantes)`}
                                 </div>
 
                                 <div className="form-group">
@@ -1081,7 +1241,6 @@
                                         <option value="13:30">13:30</option>
                                         <option value="15:00">15:00</option>
                                         <option value="16:30">16:30</option>
-                                        <option value="18:00">18:00</option>
                                     </select>
                                 </div>
 
@@ -1092,8 +1251,8 @@
                                         onChange={(e) => setHorarioActual({...horarioActual, partido1: e.target.value})}
                                     >
                                         <option value="">Seleccionar partido...</option>
-                                        {partidosDisponibles.map(p => (
-                                            <option key={p.id} value={p.id}>{p.id} - {p.tipo}</option>
+                                        {partidosDisponiblesP1.map(p => (
+                                            <option key={p.id} value={p.id}>{p.tipo}</option>
                                         ))}
                                     </select>
                                 </div>
@@ -1103,17 +1262,18 @@
                                     <select 
                                         value={horarioActual.partido2}
                                         onChange={(e) => setHorarioActual({...horarioActual, partido2: e.target.value})}
+                                        disabled={!horarioActual.partido1}
                                     >
                                         <option value="">Seleccionar partido...</option>
-                                        {partidosDisponibles.filter(p => p.id !== parseInt(horarioActual.partido1)).map(p => (
-                                            <option key={p.id} value={p.id}>{p.id} - {p.tipo}</option>
+                                        {partidosDisponiblesP2.map(p => (
+                                            <option key={p.id} value={p.id}>{p.tipo}</option>
                                         ))}
                                     </select>
                                 </div>
 
                                 <div style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
                                     <button className="btn btn-primary" onClick={agregarHorario}>
-                                        {editandoHorario ? 'Actualizar' : 'Agregar'}
+                                        {editandoHorario ? 'Actualizar' : partidosSinAsignar.length > 2 ? 'Guardar y Continuar' : 'Guardar'}
                                     </button>
                                     <button className="btn btn-danger" onClick={() => {
                                         setShowHorarioModal(false);
