@@ -381,7 +381,7 @@
             { id: 13, tipo: "Dobles Caballeros 5ta", categorias: ["caballeros_5ta"], numJugadores: 2, grupo: "dobles_puros" },
             
             // DOBLES CABALLEROS COMBINADOS
-            { id: 25, tipo: "Dobles Caballeros 2da/3ra", categorias: ["caballeros_2da", "caballeros_3ra"], numJugadores: 2, grupo: "dobles_combinados" },
+            { id: 25, tipo: "Caballeros 2da/3ra", categorias: ["caballeros_2da", "caballeros_3ra"], numJugadores: 2, grupo: "dobles_combinados" },
             { id: 2, tipo: "Dobles Caballeros 3ra/4ta", categorias: ["caballeros_3ra", "caballeros_4ta"], numJugadores: 2, grupo: "dobles_combinados" },
             { id: 17, tipo: "Dobles Caballeros 4ta/5ta", categorias: ["caballeros_4ta", "caballeros_5ta"], numJugadores: 2, grupo: "dobles_combinados" }
         ];
@@ -431,7 +431,7 @@
             ]
         };
 
-function App() {
+        function App() {
             const [activeTab, setActiveTab] = useState('configuracion');
             const [numEquipos, setNumEquipos] = useState(10);
             const [equipos, setEquipos] = useState([]);
@@ -439,11 +439,8 @@ function App() {
             const [showFinalModal, setShowFinalModal] = useState(false);
             const [posiciones, setPosiciones] = useState({});
             const [resultados, setResultados] = useState({});
-            
-            // NUEVO: Bandera para saber si ya se cargaron los datos del navegador
-            const [datosCargados, setDatosCargados] = useState(false);
 
-            // 1. Cargar datos al iniciar
+            // Cargar datos al iniciar
             useEffect(() => {
                 const datosGuardados = localStorage.getItem('goat_torneo_data');
                 if (datosGuardados) {
@@ -458,30 +455,25 @@ function App() {
                         console.error('Error al cargar datos:', e);
                     }
                 }
-                // Marcamos que la carga terminó para habilitar el guardado
-                setDatosCargados(true);
             }, []);
 
-            // 2. Guardar datos cuando cambian (SOLO SI YA SE CARGARON)
+            // Guardar datos cuando cambian
             useEffect(() => {
-                if (datosCargados) {
-                    const datos = {
-                        numEquipos,
-                        equipos,
-                        fechas,
-                        resultados,
-                        posiciones
-                    };
-                    localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
-                }
-            }, [numEquipos, equipos, fechas, resultados, posiciones, datosCargados]);
+                const datos = {
+                    numEquipos,
+                    equipos,
+                    fechas,
+                    resultados,
+                    posiciones
+                };
+                localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
+            }, [numEquipos, equipos, fechas, resultados, posiciones]);
 
-            // 3. Inicializar GOAT si no hay equipos (SOLO SI YA CARGAMOS Y LA LISTA SIGUE VACÍA)
             useEffect(() => {
-                if (datosCargados && numEquipos === 10 && equipos.length === 0) {
+                if (numEquipos === 10 && equipos.length === 0) {
                     setEquipos([{ nombre: 'GOAT', esGoat: true }]);
                 }
-            }, [numEquipos, equipos, datosCargados]);
+            }, [numEquipos]);
 
             const agregarEquipos = (texto) => {
                 const lineas = texto.split('\n').filter(l => l.trim());
@@ -1125,8 +1117,7 @@ function App() {
                         { dia: 'domingo', hora: '10:30' },
                         { dia: 'domingo', hora: '12:00' },
                         { dia: 'domingo', hora: '13:30' },
-                        { dia: 'domingo', hora: '15:00' },
-                        { dia: 'domingo', hora: '16:30' }
+                        { dia: 'domingo', hora: '15:00' }
                     ];
 
                     const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
@@ -1263,8 +1254,7 @@ function App() {
                                     { dia: 'domingo', hora: '10:30' },
                                     { dia: 'domingo', hora: '12:00' },
                                     { dia: 'domingo', hora: '13:30' },
-                                    { dia: 'domingo', hora: '15:00' },
-                                    { dia: 'domingo', hora: '16:30' }
+                                    { dia: 'domingo', hora: '15:00' }
                                 ];
 
                                 const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
@@ -1804,55 +1794,112 @@ function App() {
                 );
             }
 
+            // Función para calcular el resultado de una fecha
+            const calcularResultadoFecha = (fechaIdx) => {
+                const fecha = fechas[fechaIdx];
+                let ganados = 0;
+                let perdidos = 0;
+                let puntosGanados = 0;
+                let puntosPerdidos = 0;
+
+                fecha.partidos.forEach(partido => {
+                    if (partido.jugadores.length > 0) {
+                        const key = `${fechaIdx}-${partido.id}`;
+                        const ganado = resultados[key] || false;
+                        const esBonus = fecha.partidoBonus === partido.id;
+                        const puntos = esBonus ? 20 : 10;
+
+                        if (ganado) {
+                            ganados++;
+                            puntosGanados += puntos;
+                        } else {
+                            perdidos++;
+                            puntosPerdidos += puntos;
+                        }
+                    }
+                });
+
+                return { ganados, perdidos, puntosGanados, puntosPerdidos };
+            };
+
             return (
                 <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Resultados de Partidos</h2>
                     
-                    {fechas.map((fecha, fechaIdx) => (
-                        <div key={fechaIdx} className="date-section">
-                            <div className="date-header">
-                                Fecha {fecha.numero} - vs {fecha.rival}
-                            </div>
-                            
-                            {fecha.partidos.map(partido => {
-                                if (partido.jugadores.length === 0) return null;
-                                
-                                const key = `${fechaIdx}-${partido.id}`;
-                                const ganado = resultados[key] || false;
-                                const esBonus = fecha.partidoBonus === partido.id;
-                                
-                                return (
-                                    <div key={partido.id} style={{
-                                        background: ganado ? '#d1fae5' : '#fee2e2',
-                                        padding: '15px',
-                                        borderRadius: '8px',
-                                        marginBottom: '10px',
-                                        border: esBonus ? '2px solid #f59e0b' : '2px solid transparent'
-                                    }}>
-                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                                            <div>
-                                                <strong>{partido.tipo}</strong>
-                                                {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS</span>}
-                                                <div style={{fontSize: '14px', marginTop: '5px'}}>
-                                                    {partido.jugadores.join(' / ')}
-                                                </div>
+                    {fechas.map((fecha, fechaIdx) => {
+                        const resultado = calcularResultadoFecha(fechaIdx);
+                        const total = resultado.ganados + resultado.perdidos;
+                        const puntosTotal = resultado.puntosGanados + resultado.puntosPerdidos;
+
+                        return (
+                            <div key={fechaIdx} className="date-section">
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px'}}>
+                                    <div className="date-header" style={{marginBottom: 0}}>
+                                        Fecha {fecha.numero} - vs {fecha.rival}
+                                    </div>
+                                    {total > 0 && (
+                                        <div style={{
+                                            background: resultado.puntosGanados > resultado.puntosPerdidos ? '#d1fae5' : 
+                                                       resultado.puntosGanados < resultado.puntosPerdidos ? '#fee2e2' : '#fef3c7',
+                                            padding: '10px 20px',
+                                            borderRadius: '8px',
+                                            border: `2px solid ${resultado.puntosGanados > resultado.puntosPerdidos ? '#10b981' : 
+                                                                  resultado.puntosGanados < resultado.puntosPerdidos ? '#ef4444' : '#f59e0b'}`,
+                                            fontWeight: '700',
+                                            fontSize: '16px',
+                                            textAlign: 'center'
+                                        }}>
+                                            <div style={{color: '#1e3c72', marginBottom: '5px'}}>
+                                                Partidos: {resultado.ganados} - {resultado.perdidos}
                                             </div>
-                                            <div className="checkbox-container">
-                                                <input 
-                                                    type="checkbox"
-                                                    checked={ganado}
-                                                    onChange={() => toggleResultado(fechaIdx, partido.id)}
-                                                />
-                                                <label style={{margin: 0}}>
-                                                    {ganado ? 'GANADO ✓' : 'PERDIDO'}
-                                                </label>
+                                            <div style={{color: '#1e3c72', fontSize: '18px'}}>
+                                                Puntos: {resultado.puntosGanados} - {resultado.puntosPerdidos}
                                             </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    ))}
+                                    )}
+                                </div>
+                                
+                                {fecha.partidos.map(partido => {
+                                    if (partido.jugadores.length === 0) return null;
+                                    
+                                    const key = `${fechaIdx}-${partido.id}`;
+                                    const ganado = resultados[key] || false;
+                                    const esBonus = fecha.partidoBonus === partido.id;
+                                    
+                                    return (
+                                        <div key={partido.id} style={{
+                                            background: ganado ? '#d1fae5' : '#fee2e2',
+                                            padding: '15px',
+                                            borderRadius: '8px',
+                                            marginBottom: '10px',
+                                            border: esBonus ? '2px solid #f59e0b' : '2px solid transparent'
+                                        }}>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                <div>
+                                                    <strong>{partido.tipo}</strong>
+                                                    {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS (20 pts)</span>}
+                                                    {!esBonus && <span style={{color: '#666', marginLeft: '10px', fontSize: '14px'}}>(10 pts)</span>}
+                                                    <div style={{fontSize: '14px', marginTop: '5px'}}>
+                                                        {partido.jugadores.join(' / ')}
+                                                    </div>
+                                                </div>
+                                                <div className="checkbox-container">
+                                                    <input 
+                                                        type="checkbox"
+                                                        checked={ganado}
+                                                        onChange={() => toggleResultado(fechaIdx, partido.id)}
+                                                    />
+                                                    <label style={{margin: 0}}>
+                                                        {ganado ? 'GANADO ✓' : 'PERDIDO'}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        );
+                    })}
                 </div>
             );
         }
