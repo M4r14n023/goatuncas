@@ -464,6 +464,7 @@
             const [resultados, setResultados] = useState({});
             const [crucesFinales, setCrucesFinales] = useState([]);
             const [zonasConfig, setZonasConfig] = useState({ zona1: [], zona2: [] });
+            const [playoffAvances, setPlayoffAvances] = useState({}); // Novedad: guarda los ticks de playoff
 
             // Cargar datos al iniciar
             useEffect(() => {
@@ -478,6 +479,7 @@
                         setPosiciones(datos.posiciones || {});
                         setCrucesFinales(datos.crucesFinales || []);
                         setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] });
+                        setPlayoffAvances(datos.playoffAvances || {});
                     } catch (e) {
                         console.error('Error al cargar datos:', e);
                     }
@@ -493,10 +495,11 @@
                     resultados,
                     posiciones,
                     crucesFinales,
-                    zonasConfig
+                    zonasConfig,
+                    playoffAvances
                 };
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
-            }, [numEquipos, equipos, fechas, resultados, posiciones, crucesFinales, zonasConfig]);
+            }, [numEquipos, equipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances]);
 
             // Exponer función para actualizar cruces desde el modal
             useEffect(() => {
@@ -871,6 +874,10 @@
                                 fechas={fechas}
                                 resultados={resultados}
                                 toggleResultado={toggleResultado}
+                                zonasConfig={zonasConfig}
+                                crucesFinales={crucesFinales}
+                                playoffAvances={playoffAvances}
+                                setPlayoffAvances={setPlayoffAvances}
                             />
                         )}
 
@@ -2602,7 +2609,7 @@
             );
         }
 
-        function ResultadosTab({ fechas, resultados, toggleResultado }) {
+        function ResultadosTab({ fechas, resultados, toggleResultado, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances }) {
             const [showPlayOffModal, setShowPlayOffModal] = useState(false);
 
             if (fechas.length === 0) {
@@ -2657,6 +2664,10 @@
                         <PlayOffModal 
                             fechas={fechas}
                             resultados={resultados}
+                            zonasConfig={zonasConfig}
+                            crucesFinales={crucesFinales}
+                            playoffAvances={playoffAvances}
+                            setPlayoffAvances={setPlayoffAvances}
                             onClose={() => setShowPlayOffModal(false)}
                         />
                     )}
@@ -2747,145 +2758,225 @@
             );
         }
 
-        function PlayOffModal({ fechas, resultados, onClose }) {
-            // Calcular tabla general proyectada
-            const calcularTablaProyectada = () => {
+        // Componente auxiliar para pintar cada fila del fixture
+        const MatchRow = ({ label, eq1, eq2, matchKey, selected, onAdvance }) => {
+            return (
+                <div style={{ display: 'flex', alignItems: 'center', background: '#f8f9fa', padding: '10px', borderRadius: '8px', marginBottom: '8px', border: '1px solid #e5e7eb' }}>
+                    <div style={{ width: '80px', fontSize: '11px', fontWeight: 'bold', color: '#1e3c72', textTransform: 'uppercase' }}>{label}</div>
+                    
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                        <span style={{ fontWeight: selected === eq1 && eq1 ? 'bold' : 'normal', color: eq1 && !eq1.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq1 || 'TBD'}</span>
+                        <button 
+                            onClick={() => eq1 && !eq1.startsWith('Ganador') ? onAdvance(matchKey, eq1) : null}
+                            style={{ background: 'none', border: 'none', cursor: eq1 && !eq1.startsWith('Ganador') ? 'pointer' : 'default', fontSize: '18px', opacity: eq1 && !eq1.startsWith('Ganador') ? 1 : 0.3 }}
+                            title="Avanzar equipo"
+                        >
+                            {selected === eq1 && eq1 ? '✅' : '⬜'}
+                        </button>
+                    </div>
+
+                    <div style={{ padding: '0 15px', color: '#d4af37', fontWeight: 'bold', fontSize: '12px' }}>VS</div>
+
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button 
+                            onClick={() => eq2 && !eq2.startsWith('Ganador') ? onAdvance(matchKey, eq2) : null}
+                            style={{ background: 'none', border: 'none', cursor: eq2 && !eq2.startsWith('Ganador') ? 'pointer' : 'default', fontSize: '18px', opacity: eq2 && !eq2.startsWith('Ganador') ? 1 : 0.3 }}
+                            title="Avanzar equipo"
+                        >
+                            {selected === eq2 && eq2 ? '✅' : '⬜'}
+                        </button>
+                        <span style={{ fontWeight: selected === eq2 && eq2 ? 'bold' : 'normal', color: eq2 && !eq2.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq2 || 'TBD'}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        function PlayOffModal({ fechas, resultados, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances, onClose }) {
+            // Reutilizamos la lógica exacta de TablasTab para calcular posiciones por zona
+            const calcularTablaZona = (zona) => {
+                const equiposZona = zona === 1 ? zonasConfig.zona1 : zonasConfig.zona2;
                 const tabla = {};
-                
-                // Inicializar con todos los equipos disponibles
-                const todosEquipos = ['GOAT', ...fechas.map(f => f.rival)];
-                todosEquipos.forEach(equipo => {
-                    tabla[equipo] = {
-                        puntosTotales: 0,
-                        diferencia: 0,
-                        puntosFavor: 0,
-                        puntosContra: 0
-                    };
+
+                equiposZona.forEach((equipo, index) => {
+                    if (equipo) {
+                        tabla[equipo] = {
+                            nombre: equipo,
+                            partidos: 0, ganados: 0, perdidos: 0,
+                            puntosFavor: 0, puntosContra: 0,
+                            diferencia: 0, puntosTotales: 0,
+                            originalIndex: index // Para desempate base si todo está en cero
+                        };
+                    }
                 });
 
-                // Calcular resultados de las 4 fechas
+                // Resultados de las fechas
                 fechas.forEach((fecha, fechaIdx) => {
                     const rival = fecha.rival;
-                    let puntosGOAT = 0;
-                    let puntosRival = 0;
-
-                    fecha.partidos.forEach(partido => {
-                        if (partido.jugadores.length > 0) {
-                            const key = `${fechaIdx}-${partido.id}`;
-                            const ganado = resultados[key] || false;
-                            const esBonus = fecha.partidoBonus === partido.id;
-                            const puntos = esBonus ? 20 : 10;
-
-                            if (ganado) {
-                                puntosGOAT += puntos;
-                            } else {
-                                puntosRival += puntos;
+                    if (tabla['GOAT'] && tabla[rival]) {
+                        let puntosGOAT = 0;
+                        let puntosRival = 0;
+                        fecha.partidos.forEach(partido => {
+                            if (partido.jugadores.length > 0) {
+                                const key = `${fechaIdx}-${partido.id}`;
+                                const ganado = resultados[key] || false;
+                                const esBonus = fecha.partidoBonus === partido.id;
+                                const puntos = esBonus ? 20 : 10;
+                                if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                             }
+                        });
+
+                        if (tabla['GOAT']) {
+                            tabla['GOAT'].partidos++;
+                            tabla['GOAT'].puntosFavor += puntosGOAT;
+                            tabla['GOAT'].puntosContra += puntosRival;
+                            tabla['GOAT'].puntosTotales += puntosGOAT;
+                            if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++;
+                            else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++;
+                            tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
                         }
-                    });
 
-                    if (tabla['GOAT']) {
-                        tabla['GOAT'].puntosFavor += puntosGOAT;
-                        tabla['GOAT'].puntosContra += puntosRival;
-                        tabla['GOAT'].puntosTotales += puntosGOAT;
-                        tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
-                    }
-
-                    if (tabla[rival]) {
-                        tabla[rival].puntosFavor += puntosRival;
-                        tabla[rival].puntosContra += puntosGOAT;
-                        tabla[rival].puntosTotales += puntosRival;
-                        tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+                        if (tabla[rival]) {
+                            tabla[rival].partidos++;
+                            tabla[rival].puntosFavor += puntosRival;
+                            tabla[rival].puntosContra += puntosGOAT;
+                            tabla[rival].puntosTotales += puntosRival;
+                            if (puntosRival > puntosGOAT) tabla[rival].ganados++;
+                            else if (puntosRival < puntosGOAT) tabla[rival].perdidos++;
+                            tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+                        }
                     }
                 });
 
-                return Object.entries(tabla)
-                    .sort((a, b) => {
-                        if (b[1].puntosTotales !== a[1].puntosTotales) return b[1].puntosTotales - a[1].puntosTotales;
-                        return b[1].diferencia - a[1].diferencia;
-                    })
-                    .map(([equipo], idx) => ({ equipo, posicion: idx + 1 }));
+                // Resultados de cruces custom
+                crucesFinales.forEach(cruce => {
+                    if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
+                        const pts1 = parseInt(cruce.resultado1) || 0;
+                        const pts2 = parseInt(cruce.resultado2) || 0;
+                        if (pts1 > 0 || pts2 > 0) {
+                            tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosFavor += pts1; tabla[cruce.equipo1].puntosContra += pts2; tabla[cruce.equipo1].puntosTotales += pts1;
+                            tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosFavor += pts2; tabla[cruce.equipo2].puntosContra += pts1; tabla[cruce.equipo2].puntosTotales += pts2;
+                            if (pts1 > pts2) { tabla[cruce.equipo1].ganados++; tabla[cruce.equipo2].perdidos++; }
+                            else if (pts2 > pts1) { tabla[cruce.equipo2].ganados++; tabla[cruce.equipo1].perdidos++; }
+                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra;
+                            tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+                        }
+                    }
+                });
+
+                return Object.values(tabla).sort((a, b) => {
+                    if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales;
+                    if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia;
+                    return a.originalIndex - b.originalIndex;
+                });
             };
 
-            const tablaProyectada = calcularTablaProyectada();
+            const tablaZ1 = calcularTablaZona(1);
+            const tablaZ2 = calcularTablaZona(2);
 
-            // Generar cruces de octavos: 1vs10, 2vs9, 3vs8, 4vs7, 5vs6
-            const crucesOctavos = [
-                { equipo1: tablaProyectada[0]?.equipo, pos1: 1, equipo2: tablaProyectada[9]?.equipo, pos2: 10 },
-                { equipo1: tablaProyectada[1]?.equipo, pos1: 2, equipo2: tablaProyectada[8]?.equipo, pos2: 9 },
-                { equipo1: tablaProyectada[2]?.equipo, pos1: 3, equipo2: tablaProyectada[7]?.equipo, pos2: 8 },
-                { equipo1: tablaProyectada[3]?.equipo, pos1: 4, equipo2: tablaProyectada[6]?.equipo, pos2: 7 },
-                { equipo1: tablaProyectada[4]?.equipo, pos1: 5, equipo2: tablaProyectada[5]?.equipo, pos2: 6 }
-            ];
+            // Validar si las zonas están armadas (5 equipos c/u)
+            if (tablaZ1.length < 5 || tablaZ2.length < 5) {
+                return (
+                    <div className="modal" onClick={onClose}>
+                        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                            <div className="modal-header">🏆 Play-Off Proyectado</div>
+                            <div className="warning">
+                                Por favor, configurá las zonas completas en la pestaña "Configuración" (5 equipos por zona) para poder ver la llave de Play-Offs.
+                            </div>
+                            <button className="btn btn-danger" onClick={onClose}>Cerrar</button>
+                        </div>
+                    </div>
+                );
+            }
+
+            const eqZ1 = tablaZ1.map(t => t.nombre);
+            const eqZ2 = tablaZ2.map(t => t.nombre);
+
+            // ARMADO DE LLAVES
+            const octA_1 = eqZ1[3]; // 4° Zona 1
+            const octA_2 = eqZ2[4]; // 5° Zona 2
+            const octB_1 = eqZ2[3]; // 4° Zona 2
+            const octB_2 = eqZ1[4]; // 5° Zona 1
+
+            // Validación segura: si el tick estaba guardado pero el equipo bajó de posición, se ignora
+            const ganOctA = (playoffAvances.octA === octA_1 || playoffAvances.octA === octA_2) ? playoffAvances.octA : null;
+            const ganOctB = (playoffAvances.octB === octB_1 || playoffAvances.octB === octB_2) ? playoffAvances.octB : null;
+
+            const cua1_1 = eqZ1[0]; // 1° Zona 1
+            const cua1_2 = ganOctB || 'Ganador 8vos B';
+            const cua2_1 = eqZ1[1]; // 2° Zona 1
+            const cua2_2 = eqZ2[2]; // 3° Zona 2
+            const cua3_1 = eqZ1[2]; // 3° Zona 1
+            const cua3_2 = eqZ2[1]; // 2° Zona 2
+            const cua4_1 = ganOctA || 'Ganador 8vos A';
+            const cua4_2 = eqZ2[0]; // 1° Zona 2
+
+            const ganCua1 = (playoffAvances.cua1 === cua1_1 || playoffAvances.cua1 === cua1_2) ? playoffAvances.cua1 : null;
+            const ganCua2 = (playoffAvances.cua2 === cua2_1 || playoffAvances.cua2 === cua2_2) ? playoffAvances.cua2 : null;
+            const ganCua3 = (playoffAvances.cua3 === cua3_1 || playoffAvances.cua3 === cua3_2) ? playoffAvances.cua3 : null;
+            const ganCua4 = (playoffAvances.cua4 === cua4_1 || playoffAvances.cua4 === cua4_2) ? playoffAvances.cua4 : null;
+
+            const semi1_1 = ganCua1 || 'Ganador Cruce 1';
+            const semi1_2 = ganCua3 || 'Ganador Cruce 3';
+            const semi2_1 = ganCua2 || 'Ganador Cruce 2';
+            const semi2_2 = ganCua4 || 'Ganador Cruce 4';
+
+            const ganSemi1 = (playoffAvances.semi1 === semi1_1 || playoffAvances.semi1 === semi1_2) ? playoffAvances.semi1 : null;
+            const ganSemi2 = (playoffAvances.semi2 === semi2_1 || playoffAvances.semi2 === semi2_2) ? playoffAvances.semi2 : null;
+
+            const final_1 = ganSemi1 || 'Ganador Semi 1';
+            const final_2 = ganSemi2 || 'Ganador Semi 2';
+
+            const ganFinal = (playoffAvances.final === final_1 || playoffAvances.final === final_2) ? playoffAvances.final : null;
+
+            const handleAdvance = (matchKey, equipo) => {
+                setPlayoffAvances(prev => {
+                    const isAlreadySelected = prev[matchKey] === equipo;
+                    return { ...prev, [matchKey]: isAlreadySelected ? null : equipo };
+                });
+            };
 
             return (
                 <div className="modal" onClick={onClose}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px'}}>
-                        <div className="modal-header">
-                            🏆 Play-Off Proyectado - Octavos de Final
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '90vh'}}>
+                        <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between'}}>
+                            <span>🏆 Llave de Play-Offs</span>
+                            <button onClick={() => setPlayoffAvances({})} className="btn" style={{padding: '5px 10px', fontSize: '12px', background: '#e0e0e0'}}>Resetear Ticks</button>
                         </div>
 
-                        <p style={{marginBottom: '20px', color: '#666', fontSize: '14px'}}>
-                            Basado en los resultados actuales. La tabla puede cambiar a medida que se completen más resultados.
+                        <p style={{marginBottom: '20px', color: '#666', fontSize: '13px'}}>
+                            Las posiciones iniciales se calculan basándose en la tabla de zonas actual. Utilizá los ✅ para proyectar ganadores hacia la final.
                         </p>
 
-                        <div style={{marginBottom: '30px'}}>
-                            <h4 style={{marginBottom: '15px', color: '#1e3c72'}}>Tabla General Proyectada</h4>
-                            <table className="stats-table">
-                                <thead>
-                                    <tr>
-                                        <th>Pos</th>
-                                        <th>Equipo</th>
-                                        <th>Pts</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tablaProyectada.slice(0, 10).map((item, idx) => (
-                                        <tr key={idx}>
-                                            <td><strong>{item.posicion}</strong></td>
-                                            <td><strong>{item.equipo}</strong></td>
-                                            <td>{item.puntosTotales || 0}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                        <div style={{marginBottom: '20px'}}>
+                            <h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Octavos de Final</h4>
+                            <MatchRow label="8vos A" eq1={octA_1} eq2={octA_2} matchKey="octA" selected={ganOctA} onAdvance={handleAdvance} />
+                            <MatchRow label="8vos B" eq1={octB_1} eq2={octB_2} matchKey="octB" selected={ganOctB} onAdvance={handleAdvance} />
                         </div>
 
-                        <div>
-                            <h4 style={{marginBottom: '15px', color: '#1e3c72'}}>Cruces de Octavos</h4>
-                            {crucesOctavos.map((cruce, idx) => (
-                                <div key={idx} style={{
-                                    background: '#f8f9fa',
-                                    padding: '15px',
-                                    borderRadius: '8px',
-                                    marginBottom: '10px',
-                                    border: '2px solid #d4af37',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center'
-                                }}>
-                                    <div style={{flex: 1, textAlign: 'right', paddingRight: '15px'}}>
-                                        <span style={{fontSize: '12px', color: '#666'}}>#{cruce.pos1}</span>
-                                        {' '}
-                                        <strong>{cruce.equipo1 || 'TBD'}</strong>
-                                    </div>
-                                    <div style={{
-                                        background: '#d4af37',
-                                        color: '#1a1a1a',
-                                        padding: '5px 15px',
-                                        borderRadius: '6px',
-                                        fontWeight: '700'
-                                    }}>
-                                        VS
-                                    </div>
-                                    <div style={{flex: 1, textAlign: 'left', paddingLeft: '15px'}}>
-                                        <strong>{cruce.equipo2 || 'TBD'}</strong>
-                                        {' '}
-                                        <span style={{fontSize: '12px', color: '#666'}}>#{cruce.pos2}</span>
-                                    </div>
-                                </div>
-                            ))}
+                        <div style={{marginBottom: '20px'}}>
+                            <h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Cuartos de Final</h4>
+                            <MatchRow label="Cruce 1" eq1={cua1_1} eq2={cua1_2} matchKey="cua1" selected={ganCua1} onAdvance={handleAdvance} />
+                            <MatchRow label="Cruce 2" eq1={cua2_1} eq2={cua2_2} matchKey="cua2" selected={ganCua2} onAdvance={handleAdvance} />
+                            <MatchRow label="Cruce 3" eq1={cua3_1} eq2={cua3_2} matchKey="cua3" selected={ganCua3} onAdvance={handleAdvance} />
+                            <MatchRow label="Cruce 4" eq1={cua4_1} eq2={cua4_2} matchKey="cua4" selected={ganCua4} onAdvance={handleAdvance} />
                         </div>
+
+                        <div style={{marginBottom: '20px'}}>
+                            <h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Semifinales</h4>
+                            <MatchRow label="Semi 1" eq1={semi1_1} eq2={semi1_2} matchKey="semi1" selected={ganSemi1} onAdvance={handleAdvance} />
+                            <MatchRow label="Semi 2" eq1={semi2_1} eq2={semi2_2} matchKey="semi2" selected={ganSemi2} onAdvance={handleAdvance} />
+                        </div>
+
+                        <div style={{marginBottom: '20px'}}>
+                            <h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Final</h4>
+                            <MatchRow label="Campeonato" eq1={final_1} eq2={final_2} matchKey="final" selected={ganFinal} onAdvance={handleAdvance} />
+                        </div>
+
+                        {ganFinal && (
+                            <div style={{background: '#d4af37', color: '#1a1a1a', padding: '15px', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold', fontSize: '20px'}}>
+                                🏆 CAMPEÓN PROYECTADO: {ganFinal.toUpperCase()} 🏆
+                            </div>
+                        )}
 
                         <div style={{marginTop: '20px'}}>
                             <button className="btn btn-danger" onClick={onClose}>
