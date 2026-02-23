@@ -931,7 +931,48 @@
                 setShowEquiposModal(false);
                 setNombresEquipos(['', '', '', '', '', '', '', '', '']);
             };
+            const exportarDatos = () => {
+                const datos = localStorage.getItem('goat_torneo_data');
+                if (!datos) {
+                    alert('No hay datos guardados para exportar.');
+                    return;
+                }
+                const blob = new Blob([datos], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const fechaStr = new Date().toISOString().split('T')[0];
+                a.download = `goat_backup_${fechaStr}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            };
 
+            const importarDatos = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (evento) => {
+                    try {
+                        const contenido = JSON.parse(evento.target.result);
+                        if (contenido && contenido.equipos) {
+                            if (confirm('¿Estás seguro de sobreescribir los datos actuales con este respaldo?')) {
+                                localStorage.setItem('goat_torneo_data', JSON.stringify(contenido));
+                                alert('Datos importados correctamente. La página se recargará.');
+                                window.location.reload();
+                            }
+                        } else {
+                            alert('El archivo no parece ser un respaldo válido de la app.');
+                        }
+                    } catch (error) {
+                        alert('Error al leer el archivo. Asegurate de que sea un archivo JSON válido.');
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = ''; // Resetea el input para poder volver a cargar el mismo archivo si hace falta
+            };
             return (
                 <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Configuración del Torneo</h2>
@@ -1105,7 +1146,33 @@
                                     </div>
                                 )}
                             </div>
-
+                            <div style={{marginTop: '30px', paddingTop: '30px', borderTop: '2px solid #ddd'}}>
+                                <h3 style={{marginBottom: '20px'}}>💾 Respaldo de Datos</h3>
+                                <p style={{marginBottom: '15px', color: '#666'}}>
+                                    Exportá toda la información para no perderla o importá un archivo previo.
+                                </p>
+                                <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
+                                    <button className="btn btn-success" onClick={exportarDatos}>
+                                        ⬇️ Exportar Datos
+                                    </button>
+                                    
+                                    <div style={{position: 'relative'}}>
+                                        <input 
+                                            type="file" 
+                                            id="importFile" 
+                                            accept=".json"
+                                            style={{display: 'none'}} 
+                                            onChange={importarDatos}
+                                        />
+                                        <button 
+                                            className="btn btn-primary" 
+                                            onClick={() => document.getElementById('importFile').click()}
+                                        >
+                                            ⬆️ Importar Datos
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                             <div style={{marginTop: '30px', paddingTop: '30px', borderTop: '2px solid #ddd'}}>
                                 <button 
                                     className="btn btn-danger"
