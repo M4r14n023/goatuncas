@@ -439,6 +439,8 @@
             const [showFinalModal, setShowFinalModal] = useState(false);
             const [posiciones, setPosiciones] = useState({});
             const [resultados, setResultados] = useState({});
+            const [crucesFinales, setCrucesFinales] = useState([]);
+            const [zonasConfig, setZonasConfig] = useState({ zona1: [], zona2: [] });
 
             // Cargar datos al iniciar
             useEffect(() => {
@@ -451,6 +453,8 @@
                         setFechas(datos.fechas || []);
                         setResultados(datos.resultados || {});
                         setPosiciones(datos.posiciones || {});
+                        setCrucesFinales(datos.crucesFinales || []);
+                        setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] });
                     } catch (e) {
                         console.error('Error al cargar datos:', e);
                     }
@@ -464,10 +468,12 @@
                     equipos,
                     fechas,
                     resultados,
-                    posiciones
+                    posiciones,
+                    crucesFinales,
+                    zonasConfig
                 };
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
-            }, [numEquipos, equipos, fechas, resultados, posiciones]);
+            }, [numEquipos, equipos, fechas, resultados, posiciones, crucesFinales, zonasConfig]);
 
             useEffect(() => {
                 if (numEquipos === 10 && equipos.length === 0) {
@@ -481,7 +487,14 @@
                     nombre: linea.trim(),
                     esGoat: false
                 }));
-                setEquipos([{ nombre: 'GOAT', esGoat: true }, ...nuevosEquipos]);
+                const todosEquipos = [{ nombre: 'GOAT', esGoat: true }, ...nuevosEquipos];
+                setEquipos(todosEquipos);
+                
+                // Guardar equipos en localStorage
+                const datosActuales = localStorage.getItem('goat_torneo_data');
+                const datos = datosActuales ? JSON.parse(datosActuales) : {};
+                datos.equipos = todosEquipos;
+                localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
             };
 
             const agregarFecha = (numFecha, rival) => {
@@ -779,6 +792,12 @@
                             Resultados
                         </button>
                         <button 
+                            className={`tab ${activeTab === 'tablas' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('tablas')}
+                        >
+                            Tablas
+                        </button>
+                        <button 
                             className={`tab ${activeTab === 'estadisticas' ? 'active' : ''}`}
                             onClick={() => setActiveTab('estadisticas')}
                         >
@@ -795,6 +814,8 @@
                                 agregarEquipos={agregarEquipos}
                                 agregarFecha={agregarFecha}
                                 fechas={fechas}
+                                zonasConfig={zonasConfig}
+                                setZonasConfig={setZonasConfig}
                             />
                         )}
 
@@ -817,6 +838,18 @@
                             />
                         )}
 
+                        {activeTab === 'tablas' && (
+                            <TablasTab 
+                                equipos={equipos}
+                                fechas={fechas}
+                                resultados={resultados}
+                                crucesFinales={crucesFinales}
+                                setCrucesFinales={setCrucesFinales}
+                                zonasConfig={zonasConfig}
+                                setZonasConfig={setZonasConfig}
+                            />
+                        )}
+
                         {activeTab === 'estadisticas' && (
                             <EstadisticasTab 
                                 calcularEstadisticas={calcularEstadisticas}
@@ -827,7 +860,7 @@
             );
         }
 
-        function ConfiguracionTab({ numEquipos, setNumEquipos, equipos, agregarEquipos, agregarFecha, fechas }) {
+        function ConfiguracionTab({ numEquipos, setNumEquipos, equipos, agregarEquipos, agregarFecha, fechas, zonasConfig, setZonasConfig }) {
             const [rivalFecha1, setRivalFecha1] = useState('');
             const [rivalFecha2, setRivalFecha2] = useState('');
             const [rivalFecha3, setRivalFecha3] = useState('');
@@ -965,6 +998,57 @@
                                 </div>
                             )}
 
+                            <div style={{marginTop: '40px', paddingTop: '30px', borderTop: '2px solid #ddd'}}>
+                                <h3 style={{marginBottom: '20px'}}>Configurar Zonas</h3>
+                                <p style={{marginBottom: '15px', color: '#666'}}>
+                                    Dividí los 10 equipos en 2 zonas de 5 equipos cada una para la tabla de posiciones
+                                </p>
+
+                                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'}}>
+                                    <div>
+                                        <label><strong>Zona 1</strong></label>
+                                        {[0, 1, 2, 3, 4].map(idx => (
+                                            <div key={idx} className="form-group">
+                                                <select
+                                                    value={zonasConfig.zona1[idx] || ''}
+                                                    onChange={(e) => {
+                                                        const nuevasZonas = {...zonasConfig};
+                                                        nuevasZonas.zona1[idx] = e.target.value;
+                                                        setZonasConfig(nuevasZonas);
+                                                    }}
+                                                >
+                                                    <option value="">Seleccionar equipo...</option>
+                                                    {equipos.map((eq, eqIdx) => (
+                                                        <option key={eqIdx} value={eq.nombre}>{eq.nombre}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <div>
+                                        <label><strong>Zona 2</strong></label>
+                                        {[0, 1, 2, 3, 4].map(idx => (
+                                            <div key={idx} className="form-group">
+                                                <select
+                                                    value={zonasConfig.zona2[idx] || ''}
+                                                    onChange={(e) => {
+                                                        const nuevasZonas = {...zonasConfig};
+                                                        nuevasZonas.zona2[idx] = e.target.value;
+                                                        setZonasConfig(nuevasZonas);
+                                                    }}
+                                                >
+                                                    <option value="">Seleccionar equipo...</option>
+                                                    {equipos.map((eq, eqIdx) => (
+                                                        <option key={eqIdx} value={eq.nombre}>{eq.nombre}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
                             <div style={{marginTop: '30px', paddingTop: '30px', borderTop: '2px solid #ddd'}}>
                                 <button 
                                     className="btn btn-danger"
@@ -981,6 +1065,525 @@
                                     Los datos se guardan automáticamente en tu navegador
                                 </p>
                             </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        function TablasTab({ equipos, fechas, resultados, crucesFinales, setCrucesFinales, zonasConfig, setZonasConfig }) {
+            const [showCruceModal, setShowCruceModal] = useState(false);
+            const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
+            const [editandoCruce, setEditandoCruce] = useState(null);
+
+            if (equipos.length < 10) {
+                return (
+                    <div className="warning">
+                        Por favor, configure primero los equipos en la pestaña "Configuración".
+                    </div>
+                );
+            }
+
+            // Calcular tabla de posiciones por zona
+            const calcularTablaZona = (zona) => {
+                const equiposZona = zona === 1 ? zonasConfig.zona1 : zonasConfig.zona2;
+                const tabla = {};
+
+                equiposZona.forEach(equipo => {
+                    if (equipo) {
+                        tabla[equipo] = {
+                            partidos: 0,
+                            ganados: 0,
+                            perdidos: 0,
+                            puntosFavor: 0,
+                            puntosContra: 0,
+                            diferencia: 0,
+                            puntos: 0
+                        };
+                    }
+                });
+
+                // Calcular resultados de las 4 fechas
+                fechas.forEach((fecha, fechaIdx) => {
+                    const rival = fecha.rival;
+                    
+                    // Solo contar si ambos equipos están en esta zona
+                    if (tabla['GOAT'] && tabla[rival]) {
+                        let puntosGOAT = 0;
+                        let puntosRival = 0;
+
+                        fecha.partidos.forEach(partido => {
+                            if (partido.jugadores.length > 0) {
+                                const key = `${fechaIdx}-${partido.id}`;
+                                const ganado = resultados[key] || false;
+                                const esBonus = fecha.partidoBonus === partido.id;
+                                const puntos = esBonus ? 20 : 10;
+
+                                if (ganado) {
+                                    puntosGOAT += puntos;
+                                } else {
+                                    puntosRival += puntos;
+                                }
+                            }
+                        });
+
+                        if (tabla['GOAT']) {
+                            tabla['GOAT'].partidos++;
+                            tabla['GOAT'].puntosFavor += puntosGOAT;
+                            tabla['GOAT'].puntosContra += puntosRival;
+                            if (puntosGOAT > puntosRival) {
+                                tabla['GOAT'].ganados++;
+                                tabla['GOAT'].puntos += 3;
+                            } else if (puntosGOAT < puntosRival) {
+                                tabla['GOAT'].perdidos++;
+                            } else {
+                                tabla['GOAT'].puntos += 1;
+                            }
+                            tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
+                        }
+
+                        if (tabla[rival]) {
+                            tabla[rival].partidos++;
+                            tabla[rival].puntosFavor += puntosRival;
+                            tabla[rival].puntosContra += puntosGOAT;
+                            if (puntosRival > puntosGOAT) {
+                                tabla[rival].ganados++;
+                                tabla[rival].puntos += 3;
+                            } else if (puntosRival < puntosGOAT) {
+                                tabla[rival].perdidos++;
+                            } else {
+                                tabla[rival].puntos += 1;
+                            }
+                            tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+                        }
+                    }
+                });
+
+                // Agregar resultados de cruces finales
+                crucesFinales.forEach(cruce => {
+                    if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
+                        const pts1 = parseInt(cruce.resultado1) || 0;
+                        const pts2 = parseInt(cruce.resultado2) || 0;
+
+                        if (pts1 > 0 || pts2 > 0) {
+                            tabla[cruce.equipo1].partidos++;
+                            tabla[cruce.equipo1].puntosFavor += pts1;
+                            tabla[cruce.equipo1].puntosContra += pts2;
+
+                            tabla[cruce.equipo2].partidos++;
+                            tabla[cruce.equipo2].puntosFavor += pts2;
+                            tabla[cruce.equipo2].puntosContra += pts1;
+
+                            if (pts1 > pts2) {
+                                tabla[cruce.equipo1].ganados++;
+                                tabla[cruce.equipo1].puntos += 3;
+                                tabla[cruce.equipo2].perdidos++;
+                            } else if (pts2 > pts1) {
+                                tabla[cruce.equipo2].ganados++;
+                                tabla[cruce.equipo2].puntos += 3;
+                                tabla[cruce.equipo1].perdidos++;
+                            } else {
+                                tabla[cruce.equipo1].puntos += 1;
+                                tabla[cruce.equipo2].puntos += 1;
+                            }
+
+                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra;
+                            tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+                        }
+                    }
+                });
+
+                return Object.entries(tabla).sort((a, b) => {
+                    if (b[1].puntos !== a[1].puntos) return b[1].puntos - a[1].puntos;
+                    return b[1].diferencia - a[1].diferencia;
+                });
+            };
+
+            // Calcular tabla general
+            const calcularTablaGeneral = () => {
+                const tabla = {};
+
+                equipos.forEach(equipo => {
+                    tabla[equipo.nombre] = {
+                        partidos: 0,
+                        ganados: 0,
+                        perdidos: 0,
+                        puntosFavor: 0,
+                        puntosContra: 0,
+                        diferencia: 0,
+                        puntos: 0
+                    };
+                });
+
+                // Agregar resultados de las 4 fechas
+                fechas.forEach((fecha, fechaIdx) => {
+                    const rival = fecha.rival;
+                    let puntosGOAT = 0;
+                    let puntosRival = 0;
+
+                    fecha.partidos.forEach(partido => {
+                        if (partido.jugadores.length > 0) {
+                            const key = `${fechaIdx}-${partido.id}`;
+                            const ganado = resultados[key] || false;
+                            const esBonus = fecha.partidoBonus === partido.id;
+                            const puntos = esBonus ? 20 : 10;
+
+                            if (ganado) {
+                                puntosGOAT += puntos;
+                            } else {
+                                puntosRival += puntos;
+                            }
+                        }
+                    });
+
+                    tabla['GOAT'].partidos++;
+                    tabla['GOAT'].puntosFavor += puntosGOAT;
+                    tabla['GOAT'].puntosContra += puntosRival;
+                    if (puntosGOAT > puntosRival) {
+                        tabla['GOAT'].ganados++;
+                        tabla['GOAT'].puntos += 3;
+                    } else if (puntosGOAT < puntosRival) {
+                        tabla['GOAT'].perdidos++;
+                    } else {
+                        tabla['GOAT'].puntos += 1;
+                    }
+                    tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
+
+                    tabla[rival].partidos++;
+                    tabla[rival].puntosFavor += puntosRival;
+                    tabla[rival].puntosContra += puntosGOAT;
+                    if (puntosRival > puntosGOAT) {
+                        tabla[rival].ganados++;
+                        tabla[rival].puntos += 3;
+                    } else if (puntosRival < puntosGOAT) {
+                        tabla[rival].perdidos++;
+                    } else {
+                        tabla[rival].puntos += 1;
+                    }
+                    tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+                });
+
+                // Agregar cruces finales
+                crucesFinales.forEach(cruce => {
+                    const pts1 = parseInt(cruce.resultado1) || 0;
+                    const pts2 = parseInt(cruce.resultado2) || 0;
+
+                    if (pts1 > 0 || pts2 > 0) {
+                        tabla[cruce.equipo1].partidos++;
+                        tabla[cruce.equipo1].puntosFavor += pts1;
+                        tabla[cruce.equipo1].puntosContra += pts2;
+
+                        tabla[cruce.equipo2].partidos++;
+                        tabla[cruce.equipo2].puntosFavor += pts2;
+                        tabla[cruce.equipo2].puntosContra += pts1;
+
+                        if (pts1 > pts2) {
+                            tabla[cruce.equipo1].ganados++;
+                            tabla[cruce.equipo1].puntos += 3;
+                            tabla[cruce.equipo2].perdidos++;
+                        } else if (pts2 > pts1) {
+                            tabla[cruce.equipo2].ganados++;
+                            tabla[cruce.equipo2].puntos += 3;
+                            tabla[cruce.equipo1].perdidos++;
+                        } else {
+                            tabla[cruce.equipo1].puntos += 1;
+                            tabla[cruce.equipo2].puntos += 1;
+                        }
+
+                        tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra;
+                        tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+                    }
+                });
+
+                return Object.entries(tabla).sort((a, b) => {
+                    if (b[1].puntos !== a[1].puntos) return b[1].puntos - a[1].puntos;
+                    return b[1].diferencia - a[1].diferencia;
+                });
+            };
+
+            const agregarCruce = () => {
+                if (!cruceActual.equipo1 || !cruceActual.equipo2 || !cruceActual.tipo) {
+                    alert('Completá todos los campos del cruce');
+                    return;
+                }
+
+                if (editandoCruce !== null) {
+                    const nuevosCruces = [...crucesFinales];
+                    nuevosCruces[editandoCruce] = cruceActual;
+                    setCrucesFinales(nuevosCruces);
+                } else {
+                    setCrucesFinales([...crucesFinales, cruceActual]);
+                }
+
+                setShowCruceModal(false);
+                setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
+                setEditandoCruce(null);
+            };
+
+            const eliminarCruce = (idx) => {
+                if (confirm('¿Eliminar este cruce?')) {
+                    setCrucesFinales(crucesFinales.filter((_, i) => i !== idx));
+                }
+            };
+
+            const tablaZona1 = calcularTablaZona(1);
+            const tablaZona2 = calcularTablaZona(2);
+            const tablaGeneral = calcularTablaGeneral();
+
+            return (
+                <div>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Tablas de Posiciones</h2>
+
+                    {zonasConfig.zona1.filter(e => e).length === 5 && zonasConfig.zona2.filter(e => e).length === 5 ? (
+                        <>
+                            <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '30px', marginBottom: '40px'}}>
+                                <div>
+                                    <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 1</h3>
+                                    <table className="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Pos</th>
+                                                <th>Equipo</th>
+                                                <th>PJ</th>
+                                                <th>PG</th>
+                                                <th>PP</th>
+                                                <th>PF</th>
+                                                <th>PC</th>
+                                                <th>Dif</th>
+                                                <th>Pts</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {tablaZona1.map(([equipo, data], idx) => (
+                                                <tr key={equipo}>
+                                                    <td><strong>{idx + 1}</strong></td>
+                                                    <td><strong>{equipo}</strong></td>
+                                                    <td>{data.partidos}</td>
+                                                    <td>{data.ganados}</td>
+                                                    <td>{data.perdidos}</td>
+                                                    <td>{data.puntosFavor}</td>
+                                                    <td>{data.puntosContra}</td>
+                                                    <td>{data.diferencia}</td>
+                                                    <td><strong>{data.puntos}</strong></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 2</h3>
+                                    <table className="stats-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Pos</th>
+                                                <th>Equipo</th>
+                                                <th>PJ</th>
+                                                <th>PG</th>
+                                                <th>PP</th>
+                                                <th>PF</th>
+                                                <th>PC</th>
+                                                <th>Dif</th>
+                                                <th>Pts</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {tablaZona2.map(([equipo, data], idx) => (
+                                                <tr key={equipo}>
+                                                    <td><strong>{idx + 1}</strong></td>
+                                                    <td><strong>{equipo}</strong></td>
+                                                    <td>{data.partidos}</td>
+                                                    <td>{data.ganados}</td>
+                                                    <td>{data.perdidos}</td>
+                                                    <td>{data.puntosFavor}</td>
+                                                    <td>{data.puntosContra}</td>
+                                                    <td>{data.diferencia}</td>
+                                                    <td><strong>{data.puntos}</strong></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div style={{marginBottom: '40px'}}>
+                                <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Tabla General</h3>
+                                <table className="stats-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Pos</th>
+                                            <th>Equipo</th>
+                                            <th>PJ</th>
+                                            <th>PG</th>
+                                            <th>PP</th>
+                                            <th>PF</th>
+                                            <th>PC</th>
+                                            <th>Dif</th>
+                                            <th>Pts</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {tablaGeneral.map(([equipo, data], idx) => (
+                                            <tr key={equipo}>
+                                                <td><strong>{idx + 1}</strong></td>
+                                                <td><strong>{equipo}</strong></td>
+                                                <td>{data.partidos}</td>
+                                                <td>{data.ganados}</td>
+                                                <td>{data.perdidos}</td>
+                                                <td>{data.puntosFavor}</td>
+                                                <td>{data.puntosContra}</td>
+                                                <td>{data.diferencia}</td>
+                                                <td><strong>{data.puntos}</strong></td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div>
+                                <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Cruces Adicionales</h3>
+                                <button 
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        setEditandoCruce(null);
+                                        setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
+                                        setShowCruceModal(true);
+                                    }}
+                                >
+                                    ➕ Agregar Cruce
+                                </button>
+
+                                {crucesFinales.length > 0 && (
+                                    <div style={{marginTop: '20px'}}>
+                                        {crucesFinales.map((cruce, idx) => (
+                                            <div key={idx} style={{
+                                                background: '#f8f9fa',
+                                                padding: '15px',
+                                                borderRadius: '8px',
+                                                marginBottom: '10px',
+                                                border: '2px solid #ddd'
+                                            }}>
+                                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                    <div>
+                                                        <strong>{cruce.tipo}</strong>
+                                                        <div style={{marginTop: '8px'}}>
+                                                            {cruce.equipo1} <strong>{cruce.resultado1 || '0'}</strong> - <strong>{cruce.resultado2 || '0'}</strong> {cruce.equipo2}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <button 
+                                                            className="btn btn-primary"
+                                                            style={{padding: '6px 12px', fontSize: '14px', marginRight: '8px'}}
+                                                            onClick={() => {
+                                                                setEditandoCruce(idx);
+                                                                setCruceActual(cruce);
+                                                                setShowCruceModal(true);
+                                                            }}
+                                                        >
+                                                            ✏️
+                                                        </button>
+                                                        <button 
+                                                            className="btn btn-danger"
+                                                            style={{padding: '6px 12px', fontSize: '14px'}}
+                                                            onClick={() => eliminarCruce(idx)}
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+
+                            {showCruceModal && (
+                                <div className="modal" onClick={() => {}}>
+                                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                        <div className="modal-header">
+                                            {editandoCruce !== null ? 'Editar Cruce' : 'Agregar Cruce'}
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Tipo de Cruce</label>
+                                            <select 
+                                                value={cruceActual.tipo}
+                                                onChange={(e) => setCruceActual({...cruceActual, tipo: e.target.value})}
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                <option value="Octavos de Final">Octavos de Final</option>
+                                                <option value="Cuartos de Final">Cuartos de Final</option>
+                                                <option value="Semifinal">Semifinal</option>
+                                                <option value="Final">Final</option>
+                                                <option value="Otro">Otro</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Equipo 1</label>
+                                            <select 
+                                                value={cruceActual.equipo1}
+                                                onChange={(e) => setCruceActual({...cruceActual, equipo1: e.target.value})}
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                {equipos.map((eq, idx) => (
+                                                    <option key={idx} value={eq.nombre}>{eq.nombre}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Resultado Equipo 1</label>
+                                            <input 
+                                                type="number"
+                                                value={cruceActual.resultado1}
+                                                onChange={(e) => setCruceActual({...cruceActual, resultado1: e.target.value})}
+                                                placeholder="Puntos"
+                                            />
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Equipo 2</label>
+                                            <select 
+                                                value={cruceActual.equipo2}
+                                                onChange={(e) => setCruceActual({...cruceActual, equipo2: e.target.value})}
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                {equipos.map((eq, idx) => (
+                                                    <option key={idx} value={eq.nombre}>{eq.nombre}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="form-group">
+                                            <label>Resultado Equipo 2</label>
+                                            <input 
+                                                type="number"
+                                                value={cruceActual.resultado2}
+                                                onChange={(e) => setCruceActual({...cruceActual, resultado2: e.target.value})}
+                                                placeholder="Puntos"
+                                            />
+                                        </div>
+
+                                        <div style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
+                                            <button className="btn btn-primary" onClick={agregarCruce}>
+                                                {editandoCruce !== null ? 'Actualizar' : 'Guardar'}
+                                            </button>
+                                            <button className="btn btn-danger" onClick={() => {
+                                                setShowCruceModal(false);
+                                                setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
+                                                setEditandoCruce(null);
+                                            }}>
+                                                Cancelar
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        <div className="warning">
+                            Por favor, configurá las zonas en la pestaña "Configuración" (5 equipos por zona).
                         </div>
                     )}
                 </div>
