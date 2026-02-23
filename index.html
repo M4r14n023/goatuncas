@@ -2844,7 +2844,7 @@
                                         <tr key={idx}>
                                             <td><strong>{item.posicion}</strong></td>
                                             <td><strong>{item.equipo}</strong></td>
-                                            <td>{tabla Proyectada[idx] ? Object.values(tabla)[idx]?.puntosTotales : 0}</td>
+                                            <td>{item.puntosTotales || 0}</td>
                                         </tr>
                                     ))}
                                 </tbody>
