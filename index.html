@@ -475,6 +475,16 @@
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
             }, [numEquipos, equipos, fechas, resultados, posiciones, crucesFinales, zonasConfig]);
 
+            // Exponer función para actualizar cruces desde el modal
+            useEffect(() => {
+                window.actualizarCrucesFinales = (nuevos) => {
+                    setCrucesFinales(nuevos);
+                };
+                return () => {
+                    delete window.actualizarCrucesFinales;
+                };
+            }, []);
+
             useEffect(() => {
                 if (numEquipos === 10 && equipos.length === 0) {
                     setEquipos([{ nombre: 'GOAT', esGoat: true }]);
@@ -867,6 +877,8 @@
             const [rivalFecha4, setRivalFecha4] = useState('');
             const [showEquiposModal, setShowEquiposModal] = useState(false);
             const [nombresEquipos, setNombresEquipos] = useState(['', '', '', '', '', '', '', '', '']);
+            const [showAsignarFechasModal, setShowAsignarFechasModal] = useState(false);
+            const [crucesGenerados, setCrucesGenerados] = useState([]);
 
             const handleCargarEquipos = () => {
                 if (numEquipos === 10) {
@@ -1047,6 +1059,18 @@
                                         ))}
                                     </div>
                                 </div>
+
+                                {zonasConfig.zona1.filter(e => e).length === 5 && 
+                                 zonasConfig.zona2.filter(e => e).length === 5 && (
+                                    <div style={{marginTop: '20px'}}>
+                                        <button 
+                                            className="btn btn-success"
+                                            onClick={() => setShowAsignarFechasModal(true)}
+                                        >
+                                            Generar Cruces de Zonas
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <div style={{marginTop: '30px', paddingTop: '30px', borderTop: '2px solid #ddd'}}>
@@ -1067,6 +1091,187 @@
                             </div>
                         </div>
                     )}
+
+                    {showAsignarFechasModal && (
+                        <AsignarFechasModal 
+                            zonasConfig={zonasConfig}
+                            equipos={equipos}
+                            onClose={() => setShowAsignarFechasModal(false)}
+                            onGenerar={(crucesGenerados) => {
+                                // Obtener los datos actuales del localStorage
+                                const datosActuales = localStorage.getItem('goat_torneo_data');
+                                const datos = datosActuales ? JSON.parse(datosActuales) : {};
+                                
+                                // Actualizar los cruces finales
+                                datos.crucesFinales = crucesGenerados;
+                                localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
+                                
+                                // Notificar al padre (necesitamos pasarle una función desde App)
+                                if (window.actualizarCrucesFinales) {
+                                    window.actualizarCrucesFinales(crucesGenerados);
+                                }
+                                
+                                setShowAsignarFechasModal(false);
+                                alert('Cruces generados exitosamente. Ir a la pestaña "Tablas" para cargar los resultados.');
+                            }}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        function AsignarFechasModal({ zonasConfig, equipos, onClose, onGenerar }) {
+            const [crucesConFechas, setCrucesConFechas] = useState([]);
+
+            useEffect(() => {
+                // Generar todos los cruces posibles dentro de cada zona
+                const generarCruces = () => {
+                    const cruces = [];
+                    
+                    // Zona 1
+                    const zona1 = zonasConfig.zona1.filter(e => e);
+                    for (let i = 0; i < zona1.length; i++) {
+                        for (let j = i + 1; j < zona1.length; j++) {
+                            // Solo agregar si no es un cruce de GOAT (esos ya están en las 4 fechas)
+                            if (zona1[i] !== 'GOAT' && zona1[j] !== 'GOAT') {
+                                cruces.push({
+                                    equipo1: zona1[i],
+                                    equipo2: zona1[j],
+                                    zona: 1,
+                                    fecha: ''
+                                });
+                            }
+                        }
+                    }
+                    
+                    // Zona 2
+                    const zona2 = zonasConfig.zona2.filter(e => e);
+                    for (let i = 0; i < zona2.length; i++) {
+                        for (let j = i + 1; j < zona2.length; j++) {
+                            // Solo agregar si no es un cruce de GOAT (esos ya están en las 4 fechas)
+                            if (zona2[i] !== 'GOAT' && zona2[j] !== 'GOAT') {
+                                cruces.push({
+                                    equipo1: zona2[i],
+                                    equipo2: zona2[j],
+                                    zona: 2,
+                                    fecha: ''
+                                });
+                            }
+                        }
+                    }
+                    
+                    setCrucesConFechas(cruces);
+                };
+                
+                generarCruces();
+            }, []);
+
+            const actualizarFecha = (idx, fecha) => {
+                const nuevos = [...crucesConFechas];
+                nuevos[idx].fecha = fecha;
+                setCrucesConFechas(nuevos);
+            };
+
+            const guardarCruces = () => {
+                if (crucesConFechas.some(c => !c.fecha)) {
+                    alert('Por favor asigná una fecha a todos los cruces');
+                    return;
+                }
+                
+                // Convertir a formato de cruces finales
+                const crucesFinales = crucesConFechas.map(c => ({
+                    tipo: c.fecha,
+                    equipo1: c.equipo1,
+                    equipo2: c.equipo2,
+                    resultado1: '',
+                    resultado2: ''
+                }));
+                
+                onGenerar(crucesFinales);
+            };
+
+            return (
+                <div className="modal" onClick={() => {}}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '80vh', overflow: 'auto'}}>
+                        <div className="modal-header">
+                            Asignar Fechas a los Cruces
+                        </div>
+
+                        <p style={{marginBottom: '20px', color: '#666'}}>
+                            Asigná a qué fecha corresponde cada cruce entre equipos de la misma zona
+                        </p>
+
+                        <div style={{marginBottom: '30px'}}>
+                            <h4 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 1</h4>
+                            {crucesConFechas.filter(c => c.zona === 1).map((cruce, idx) => {
+                                const realIdx = crucesConFechas.findIndex(c => c === cruce);
+                                return (
+                                    <div key={realIdx} style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: '10px',
+                                        background: '#f8f9fa',
+                                        marginBottom: '8px',
+                                        borderRadius: '6px'
+                                    }}>
+                                        <span><strong>{cruce.equipo1}</strong> vs <strong>{cruce.equipo2}</strong></span>
+                                        <select 
+                                            value={cruce.fecha}
+                                            onChange={(e) => actualizarFecha(realIdx, e.target.value)}
+                                            style={{width: '150px'}}
+                                        >
+                                            <option value="">Seleccionar...</option>
+                                            <option value="Fecha 1">Fecha 1</option>
+                                            <option value="Fecha 2">Fecha 2</option>
+                                            <option value="Fecha 3">Fecha 3</option>
+                                            <option value="Fecha 4">Fecha 4</option>
+                                        </select>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div>
+                            <h4 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 2</h4>
+                            {crucesConFechas.filter(c => c.zona === 2).map((cruce, idx) => {
+                                const realIdx = crucesConFechas.findIndex(c => c === cruce);
+                                return (
+                                    <div key={realIdx} style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: '10px',
+                                        background: '#f8f9fa',
+                                        marginBottom: '8px',
+                                        borderRadius: '6px'
+                                    }}>
+                                        <span><strong>{cruce.equipo1}</strong> vs <strong>{cruce.equipo2}</strong></span>
+                                        <select 
+                                            value={cruce.fecha}
+                                            onChange={(e) => actualizarFecha(realIdx, e.target.value)}
+                                            style={{width: '150px'}}
+                                        >
+                                            <option value="">Seleccionar...</option>
+                                            <option value="Fecha 1">Fecha 1</option>
+                                            <option value="Fecha 2">Fecha 2</option>
+                                            <option value="Fecha 3">Fecha 3</option>
+                                            <option value="Fecha 4">Fecha 4</option>
+                                        </select>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div style={{display: 'flex', gap: '10px', marginTop: '30px'}}>
+                            <button className="btn btn-primary" onClick={guardarCruces}>
+                                Generar Cruces
+                            </button>
+                            <button className="btn btn-danger" onClick={onClose}>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -1511,11 +1716,14 @@
                                                 onChange={(e) => setCruceActual({...cruceActual, tipo: e.target.value})}
                                             >
                                                 <option value="">Seleccionar...</option>
+                                                <option value="Fecha 1">Fecha 1</option>
+                                                <option value="Fecha 2">Fecha 2</option>
+                                                <option value="Fecha 3">Fecha 3</option>
+                                                <option value="Fecha 4">Fecha 4</option>
                                                 <option value="Octavos de Final">Octavos de Final</option>
                                                 <option value="Cuartos de Final">Cuartos de Final</option>
                                                 <option value="Semifinal">Semifinal</option>
                                                 <option value="Final">Final</option>
-                                                <option value="Otro">Otro</option>
                                             </select>
                                         </div>
 
