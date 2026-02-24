@@ -445,13 +445,13 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Configuración de Firebase (misma del Hub)
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDWut5pII90tdvaB_AwkvdQ6Oq3TgM5wKY",
-            authDomain: "hub-claudeai.firebaseapp.com",
-            databaseURL: "https://hub-claudeai-default-rtdb.firebaseio.com",
-            projectId: "hub-claudeai",
-            storageBucket: "hub-claudeai.firebasestorage.app",
+            authDomain: "hub-universitario.firebaseapp.com",
+            databaseURL: "https://hub-universitario-default-rtdb.firebaseio.com",
+            projectId: "hub-universitario",
+            storageBucket: "hub-universitario.firebasestorage.app",
             messagingSenderId: "642915679228",
             appId: "1:642915679228:web:e6e48b25869d74c14cfe87"
         };
@@ -765,6 +765,8 @@
                 const doc = new jsPDF();
                 const fecha = fechas[fechaIndex];
                 
+                if (!fecha) return;
+
                 doc.setFontSize(20);
                 doc.text(`GOAT - Fecha ${fecha.numero}`, 105, 20, { align: 'center' });
                 doc.setFontSize(14);
@@ -772,11 +774,14 @@
                 
                 let y = 45;
                 const partidosPorHorario = {};
-                fecha.partidos.filter(p => p.horario).forEach(partido => {
-                    const key = `${partido.dia}-${partido.horario}`;
-                    if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: partido.dia, hora: partido.horario, partidos: [] };
-                    partidosPorHorario[key].partidos.push(partido);
-                });
+                
+                if (fecha.partidos) {
+                    fecha.partidos.filter(p => p.horario).forEach(partido => {
+                        const key = `${partido.dia}-${partido.horario}`;
+                        if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: partido.dia, hora: partido.horario, partidos: [] };
+                        partidosPorHorario[key].partidos.push(partido);
+                    });
+                }
                 
                 const horariosPorDia = { sabado: [], domingo: [] };
                 Object.values(partidosPorHorario).forEach(horario => horariosPorDia[horario.dia].push(horario));
@@ -793,7 +798,10 @@
                             horario.partidos.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
                             horario.partidos.forEach(partido => {
                                 const esBonus = fecha.partidoBonus === partido.id;
-                                const jugadoresTexto = partido.jugadores.length > 0 ? partido.jugadores.join(' / ') : 'Sin asignar';
+                                
+                                // --- AQUÍ ESTÁ EL SEGURO CONTRA EL ERROR ---
+                                const jugadoresTexto = (partido.jugadores && partido.jugadores.length > 0) ? partido.jugadores.join(' / ') : 'Sin asignar';
+                                
                                 const texto = `${horario.hora} - P${partido.posicion} - ${partido.tipo}${esBonus ? ' ★BONUS★' : ''}: ${jugadoresTexto}`;
                                 if (y > 275) { doc.addPage(); y = 20; }
                                 if (esBonus) doc.setFont(undefined, 'bold');
@@ -808,11 +816,16 @@
                 });
                 
                 const partidosPorJugador = {};
-                fecha.partidos.forEach(partido => {
-                    if (partido.horario && partido.jugadores) {
-                        partido.jugadores.forEach(jugador => { partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1; });
-                    }
-                });
+                if (fecha.partidos) {
+                    fecha.partidos.forEach(partido => {
+                        // --- AQUÍ ESTÁ EL SEGUNDO SEGURO ---
+                        if (partido.horario && partido.jugadores) {
+                            partido.jugadores.forEach(jugador => { 
+                                partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1; 
+                            });
+                        }
+                    });
+                }
                 
                 if (Object.keys(partidosPorJugador).length > 0) {
                     if (y + (Object.keys(partidosPorJugador).length * 5) + 20 > 280) { doc.addPage(); y = 20; } else { y += 10; }
