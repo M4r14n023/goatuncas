@@ -834,25 +834,37 @@
                 });
                 
                 fechas.forEach((fecha, fechaIdx) => {
+                    if (!fecha || !fecha.partidos) return;
+                    
                     fecha.partidos.forEach(partido => {
-                        if (partido.jugadores.length > 0) {
+                        if (partido.jugadores && partido.jugadores.length > 0) {
                             const key = `${fechaIdx}-${partido.id}`;
                             const ganado = resultados[key] || false;
                             const esSingle = partido.numJugadores === 1;
                             
                             partido.jugadores.forEach(jugador => {
                                 if (stats.jugadores[jugador]) {
-                                    if (esSingle) stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
-                                    else stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
+                                    if (esSingle) {
+                                        stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
+                                    } else {
+                                        stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
+                                    }
                                     stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
                                 }
                             });
                             
                             if (!esSingle && partido.jugadores.length === 2) {
                                 const parejaKey = [...partido.jugadores].sort().join(' - ');
-                                if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [] };
+                                if (!stats.parejas[parejaKey]) {
+                                    stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [] };
+                                }
                                 stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
-                                stats.parejas[parejaKey].fechas.push({ fecha: fecha.numero, rival: fecha.rival, tipo: partido.tipo, resultado: ganado });
+                                stats.parejas[parejaKey].fechas.push({
+                                    fecha: fecha.numero,
+                                    rival: fecha.rival,
+                                    tipo: partido.tipo,
+                                    resultado: ganado
+                                });
                             }
                         }
                     });
@@ -1339,13 +1351,25 @@
                 equiposZona.forEach(equipo => { if (equipo) tabla[equipo] = { partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0 }; });
 
                 fechas.forEach((fecha, fechaIdx) => {
+                    if (!fecha || !fecha.partidos) return;
+                    
                     const rival = fecha.rival;
                     if (tabla['GOAT'] && tabla[rival]) {
-                        let puntosGOAT = 0; let puntosRival = 0;
+                        let puntosGOAT = 0;
+                        let puntosRival = 0;
+                        
                         fecha.partidos.forEach(partido => {
-                            if (partido.jugadores.length > 0) {
-                                const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
-                                if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                            if (partido.jugadores && partido.jugadores.length > 0) {
+                                const key = `${fechaIdx}-${partido.id}`;
+                                const ganado = resultados[key] || false;
+                                const esBonus = fecha.partidoBonus === partido.id;
+                                const puntos = esBonus ? 20 : 10;
+                                
+                                if (ganado) {
+                                    puntosGOAT += puntos;
+                                } else {
+                                    puntosRival += puntos;
+                                }
                             }
                         });
                         if (tabla['GOAT']) { tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra; }
@@ -1372,11 +1396,24 @@
                 equipos.forEach(equipo => { tabla[equipo.nombre] = { partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0 }; });
 
                 fechas.forEach((fecha, fechaIdx) => {
-                    const rival = fecha.rival; let puntosGOAT = 0; let puntosRival = 0;
+                    if (!fecha || !fecha.partidos) return;
+                    
+                    const rival = fecha.rival;
+                    let puntosGOAT = 0;
+                    let puntosRival = 0;
+                    
                     fecha.partidos.forEach(partido => {
-                        if (partido.jugadores.length > 0) {
-                            const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
-                            if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                        if (partido.jugadores && partido.jugadores.length > 0) {
+                            const key = `${fechaIdx}-${partido.id}`;
+                            const ganado = resultados[key] || false;
+                            const esBonus = fecha.partidoBonus === partido.id;
+                            const puntos = esBonus ? 20 : 10;
+                            
+                            if (ganado) {
+                                puntosGOAT += puntos;
+                            } else {
+                                puntosRival += puntos;
+                            }
                         }
                     });
                     tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
@@ -1868,13 +1905,32 @@
 
             const calcularResultadoFecha = (fechaIdx) => {
                 const fecha = fechas[fechaIdx];
-                let ganados = 0; let perdidos = 0; let puntosGanados = 0; let puntosPerdidos = 0;
+                if (!fecha || !fecha.partidos) {
+                    return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
+                }
+                
+                let ganados = 0;
+                let perdidos = 0;
+                let puntosGanados = 0;
+                let puntosPerdidos = 0;
+                
                 fecha.partidos.forEach(partido => {
-                    if (partido.jugadores.length > 0) {
-                        const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
-                        if (ganado) { ganados++; puntosGanados += puntos; } else { perdidos++; puntosPerdidos += puntos; }
+                    if (partido.jugadores && partido.jugadores.length > 0) {
+                        const key = `${fechaIdx}-${partido.id}`;
+                        const ganado = resultados[key] || false;
+                        const esBonus = fecha.partidoBonus === partido.id;
+                        const puntos = esBonus ? 20 : 10;
+                        
+                        if (ganado) {
+                            ganados++;
+                            puntosGanados += puntos;
+                        } else {
+                            perdidos++;
+                            puntosPerdidos += puntos;
+                        }
                     }
                 });
+                
                 return { ganados, perdidos, puntosGanados, puntosPerdidos };
             };
 
