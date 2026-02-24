@@ -914,8 +914,11 @@
                     <div className="content">
                         {activeTab === 'configuracion' && (
                             <ConfiguracionTab 
-                                numEquipos={numEquipos} setNumEquipos={setNumEquipos} equipos={equipos} baseEquipos={baseEquipos} setBaseEquipos={setBaseEquipos}
+                                numEquipos={numEquipos} setNumEquipos={setNumEquipos} equipos={equipos} setEquipos={setEquipos} baseEquipos={baseEquipos} setBaseEquipos={setBaseEquipos}
                                 guardarEquiposSeleccionados={guardarEquiposSeleccionados} agregarFecha={agregarFecha} fechas={fechas} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig}
+                                syncStatus={syncStatus} setSyncStatus={setSyncStatus} lastSync={lastSync} setLastSync={setLastSync}
+                                resultados={resultados} posiciones={posiciones} crucesFinales={crucesFinales} playoffAvances={playoffAvances}
+                                setFechas={setFechas} setResultados={setResultados} setPosiciones={setPosiciones} setCrucesFinales={setCrucesFinales} setPlayoffAvances={setPlayoffAvances}
                             />
                         )}
                         {activeTab === 'fechas' && (
@@ -944,7 +947,12 @@
             );
         }
 
-        function ConfiguracionTab({ numEquipos, setNumEquipos, equipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, agregarFecha, fechas, zonasConfig, setZonasConfig }) {
+        function ConfiguracionTab({ 
+            numEquipos, setNumEquipos, equipos, setEquipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, 
+            agregarFecha, fechas, zonasConfig, setZonasConfig, syncStatus, setSyncStatus, lastSync, setLastSync,
+            resultados, posiciones, crucesFinales, playoffAvances,
+            setFechas, setResultados, setPosiciones, setCrucesFinales, setPlayoffAvances
+        }) {
             const [showEquiposModal, setShowEquiposModal] = useState(false);
             const [showAsignarFechasModal, setShowAsignarFechasModal] = useState(false);
 
