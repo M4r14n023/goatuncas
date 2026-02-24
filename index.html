@@ -453,7 +453,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Configuración de Firebase - ¡AQUÍ ESTÁ CORREGIDA PARA EL HUB UNIVERSITARIO!
+        // Configuración de Firebase - Hub Universitario
         const firebaseConfig = {
             apiKey: "AIzaSyDWut5pII90tdvaB_AwkvdQ6Oq3TgM5wKY",
             authDomain: "hub-universitario.firebaseapp.com",
@@ -539,7 +539,7 @@
 
         function App() {
             const [activeTab, setActiveTab] = useState('configuracion');
-            const [isAdmin, setIsAdmin] = useState(false); // ESTADO PARA LA PESTAÑA ADMIN SECRETA
+            const [isAdmin, setIsAdmin] = useState(false); 
             const [numEquipos, setNumEquipos] = useState(10);
             const [equipos, setEquipos] = useState([]);
             const [baseEquipos, setBaseEquipos] = useState(EQUIPOS_POR_DEFECTO); 
@@ -632,6 +632,12 @@
             const activarAdmin = () => {
                 setIsAdmin(true);
                 setActiveTab('admin');
+            };
+
+            // Función nueva para cerrar la sesión de Admin
+            const cerrarAdmin = () => {
+                setIsAdmin(false);
+                setActiveTab('configuracion');
             };
 
             const guardarEquiposSeleccionados = (nombresRivales) => {
@@ -851,6 +857,7 @@
                                 numEquipos={numEquipos} equipos={equipos} baseEquipos={baseEquipos} fechas={fechas} resultados={resultados} posiciones={posiciones} crucesFinales={crucesFinales} zonasConfig={zonasConfig} playoffAvances={playoffAvances}
                                 setNumEquipos={setNumEquipos} setEquipos={setEquipos} setBaseEquipos={setBaseEquipos} setFechas={setFechas} setResultados={setResultados} setPosiciones={setPosiciones} setCrucesFinales={setCrucesFinales} setZonasConfig={setZonasConfig} setPlayoffAvances={setPlayoffAvances}
                                 syncStatus={syncStatus} setSyncStatus={setSyncStatus} lastSync={lastSync} setLastSync={setLastSync} guardarEnFirebase={guardarEnFirebase} cargarDesdeFirebase={cargarDesdeFirebase}
+                                cerrarAdmin={cerrarAdmin} // <-- Pasamos la función al componente
                             />
                         )}
                     </div>
@@ -862,7 +869,7 @@
         function AdminTab({ 
             numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances,
             setNumEquipos, setEquipos, setBaseEquipos, setFechas, setResultados, setPosiciones, setCrucesFinales, setZonasConfig, setPlayoffAvances,
-            syncStatus, setSyncStatus, lastSync, setLastSync, guardarEnFirebase, cargarDesdeFirebase
+            syncStatus, setSyncStatus, lastSync, setLastSync, guardarEnFirebase, cargarDesdeFirebase, cerrarAdmin
         }) {
             const exportarDatos = () => {
                 const datos = localStorage.getItem('goat_torneo_data');
@@ -895,7 +902,11 @@
 
             return (
                 <div>
-                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>⚙️ Panel de Control Administrador</h2>
+                    {/* ENCABEZADO CON BOTÓN DE CERRAR ADMIN */}
+                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px'}}>
+                        <h2 style={{color: '#1e3c72', margin: 0}}>⚙️ Panel de Control Administrador</h2>
+                        <button className="btn btn-danger btn-responsive" onClick={cerrarAdmin} style={{margin: 0}}>🔒 Cerrar Sesión Admin</button>
+                    </div>
                     
                     <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid #e2e8f0'}}>
                         <h3 style={{marginBottom: '10px', color: '#0f172a'}}>💾 Respaldo y Nube</h3>
@@ -1000,7 +1011,7 @@
         function ConfiguracionTab({ numEquipos, setNumEquipos, equipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, agregarFecha, fechas, zonasConfig, setZonasConfig, activarAdmin }) {
             const [showEquiposModal, setShowEquiposModal] = useState(false);
             const [showAsignarFechasModal, setShowAsignarFechasModal] = useState(false);
-            const [showDevModal, setShowDevModal] = useState(false); // Estado para abrir modal de clave
+            const [showDevModal, setShowDevModal] = useState(false);
 
             return (
                 <div>
@@ -1096,21 +1107,12 @@
                         />
                     )}
 
-                    {/* BOTÓN SECRETO AL FINAL DE TODO */}
                     <div style={{marginTop: '60px', borderTop: '1px dashed #eee', paddingTop: '20px', textAlign: 'right'}}>
-                        <button 
-                            style={{background: 'none', border: 'none', color: '#cbd5e1', fontSize: '12px', cursor: 'pointer'}}
-                            onClick={() => setShowDevModal(true)}
-                        >
-                            🔒 Acceso Desarrollador
-                        </button>
+                        <button style={{background: 'none', border: 'none', color: '#cbd5e1', fontSize: '12px', cursor: 'pointer'}} onClick={() => setShowDevModal(true)}>🔒 Acceso Desarrollador</button>
                     </div>
 
                     {showDevModal && (
-                        <DevModal 
-                            onClose={() => setShowDevModal(false)} 
-                            onSuccess={() => { setShowDevModal(false); activarAdmin(); }} 
-                        />
+                        <DevModal onClose={() => setShowDevModal(false)} onSuccess={() => { setShowDevModal(false); activarAdmin(); }} />
                     )}
                 </div>
             );
