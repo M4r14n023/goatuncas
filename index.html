@@ -747,7 +747,11 @@
 
             const contarPartidosJugador = (fechaIndex, nombreJugador) => {
                 let count = 0;
-                fechas[fechaIndex].partidos.forEach(partido => { if (partido.jugadores.some(j => j === nombreJugador)) count++; });
+                if (fechas[fechaIndex] && fechas[fechaIndex].partidos) {
+                    fechas[fechaIndex].partidos.forEach(partido => { 
+                        if (partido.jugadores && partido.jugadores.some(j => j === nombreJugador)) count++; 
+                    });
+                }
                 return count;
             };
 
@@ -805,7 +809,9 @@
                 
                 const partidosPorJugador = {};
                 fecha.partidos.forEach(partido => {
-                    if (partido.horario) partido.jugadores.forEach(jugador => { partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1; });
+                    if (partido.horario && partido.jugadores) {
+                        partido.jugadores.forEach(jugador => { partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1; });
+                    }
                 });
                 
                 if (Object.keys(partidosPorJugador).length > 0) {
