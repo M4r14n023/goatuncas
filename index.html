@@ -473,11 +473,13 @@
         const database = firebase.database();
         const FIREBASE_PATH = 'goat_torneo';
 
-        const guardarEnFirebase = (datos) => {
-            return database.ref(FIREBASE_PATH).set({
+        const guardarEnFirebase = async (datos) => {
+            const syncTime = new Date().toISOString();
+            await database.ref(FIREBASE_PATH).set({
                 ...datos,
-                ultimaActualizacion: new Date().toISOString()
+                ultimaActualizacion: syncTime
             });
+            return syncTime; // Retornamos el tiempo exacto para evitar desfasajes
         };
 
         const cargarDesdeFirebase = () => {
@@ -553,6 +555,9 @@
             const [syncStatus, setSyncStatus] = useState('local');
             const [lastSync, setLastSync] = useState(null);
 
+            // ESCUDO ANTI-BUCLES INFINITOS
+            const isReceivingData = React.useRef(false);
+
             useEffect(() => {
                 const cargarDatos = async () => {
                     const datosGuardados = localStorage.getItem('goat_torneo_data');
@@ -575,6 +580,8 @@
                         setSyncStatus('syncing');
                         const datosFirebase = await cargarDesdeFirebase();
                         if (datosFirebase) {
+                            isReceivingData.current = true; // Subimos el escudo
+                            
                             setNumEquipos(datosFirebase.numEquipos || 10);
                             setEquipos(datosFirebase.equipos || []);
                             setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO);
@@ -587,11 +594,12 @@
                             setLastSync(datosFirebase.ultimaActualizacion);
                             setSyncStatus('synced');
                             localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
+                            
+                            setTimeout(() => { isReceivingData.current = false; }, 1000); // Bajamos el escudo
                         } else {
                             setSyncStatus('local');
                         }
                     } catch (e) {
-                        console.error('Error al sincronizar con Firebase:', e);
                         setSyncStatus('local');
                     }
                 };
@@ -600,6 +608,8 @@
 
                 const unsubscribe = escucharCambiosFirebase((datos) => {
                     if (datos && datos.ultimaActualizacion !== lastSync) {
+                        isReceivingData.current = true; // Subimos el escudo
+                        
                         setNumEquipos(datos.numEquipos || 10);
                         setEquipos(datos.equipos || []);
                         setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO);
@@ -612,20 +622,29 @@
                         setLastSync(datos.ultimaActualizacion);
                         setSyncStatus('synced');
                         localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
+                        
+                        setTimeout(() => { isReceivingData.current = false; }, 1000); // Bajamos el escudo
                     }
                 });
 
                 return () => { if (unsubscribe) unsubscribe(); };
             }, []);
 
+            // EFECTO DE GUARDADO EN NUBE
             useEffect(() => {
+                // Si la actualización vino de Firebase, abortamos para evitar el bucle infinito
+                if (isReceivingData.current) return;
+
                 const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
                 
                 if (equipos.length > 0 || fechas.length > 0) {
                     setSyncStatus('syncing');
                     guardarEnFirebase(datos)
-                        .then(() => { setSyncStatus('synced'); setLastSync(new Date().toISOString()); })
+                        .then((tiempoExacto) => { 
+                            setSyncStatus('synced'); 
+                            setLastSync(tiempoExacto); // Usamos el tiempo exacto que generó Firebase
+                        })
                         .catch((error) => { console.error('Error al sincronizar:', error); setSyncStatus('error'); });
                 }
             }, [numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances]);
