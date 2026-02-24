@@ -380,11 +380,15 @@
             margin-left: 8px;
         }
 
-        /* CLASES UTILITARIAS GRID PARA RESPONSIVE */
+       /* CLASES UTILITARIAS GRID PARA RESPONSIVE */
         .grid-2 {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
+        }
+        
+        .grid-2 > div {
+            min-width: 0; /* Esta línea es la magia que habilita el scroll */
         }
 
         /* REGLAS EXCLUSIVAS PARA CELULARES */
