@@ -19,7 +19,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -85,7 +84,7 @@
             display: flex;
             background: #f5f5f5;
             border-bottom: 2px solid #ddd;
-            overflow-x: auto; /* Permite scroll horizontal */
+            overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
         
@@ -99,7 +98,7 @@
         }
 
         .tab {
-            flex: 1 0 auto; /* Evita que las pestañas se aplasten demasiado */
+            flex: 1 0 auto; 
             min-width: 130px; 
             padding: 15px;
             text-align: center;
@@ -120,6 +119,17 @@
             border-bottom: 3px solid #d4af37;
         }
 
+        .tab.admin-tab {
+            background: #1e293b;
+            color: white;
+            border-bottom: none;
+        }
+
+        .tab.admin-tab.active {
+            background: #0f172a;
+            border-bottom: 3px solid #ef4444;
+        }
+
         .content {
             padding: 30px;
             min-height: 500px;
@@ -137,6 +147,7 @@
         }
 
         input[type="text"],
+        input[type="password"],
         input[type="number"],
         textarea,
         select {
@@ -272,10 +283,9 @@
             cursor: pointer;
         }
 
-        /* CONTENEDOR DE TABLAS RESPONSIVE */
         .table-container {
             width: 100%;
-            overflow-x: auto; /* Permite scroll horizontal */
+            overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -285,7 +295,7 @@
         .stats-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px; /* Evita que la tabla se colapse demasiado */
+            min-width: 600px;
         }
 
         .stats-table th,
@@ -385,7 +395,6 @@
             margin-left: 8px;
         }
 
-       /* CLASES UTILITARIAS GRID PARA RESPONSIVE */
         .grid-2 {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -393,10 +402,9 @@
         }
         
         .grid-2 > div {
-            min-width: 0; /* Esta línea es la magia que habilita el scroll */
+            min-width: 0;
         }
 
-        /* REGLAS EXCLUSIVAS PARA CELULARES */
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -413,7 +421,7 @@
                 padding: 15px;
             }
             .grid-2 {
-                grid-template-columns: 1fr; /* Pasa de 2 columnas a 1 columna */
+                grid-template-columns: 1fr;
                 gap: 15px;
             }
             .flex-mobile-col {
@@ -445,7 +453,7 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Configuración de Firebase
+        // Configuración de Firebase - ¡AQUÍ ESTÁ CORREGIDA PARA EL HUB UNIVERSITARIO!
         const firebaseConfig = {
             apiKey: "AIzaSyDWut5pII90tdvaB_AwkvdQ6Oq3TgM5wKY",
             authDomain: "hub-universitario.firebaseapp.com",
@@ -464,7 +472,6 @@
         const database = firebase.database();
         const FIREBASE_PATH = 'goat_torneo';
 
-        // Funciones de sincronización con Firebase
         const guardarEnFirebase = (datos) => {
             return database.ref(FIREBASE_PATH).set({
                 ...datos,
@@ -490,28 +497,21 @@
         };
 
         const PARTIDOS = [
-            // DAMAS
             { id: 9, tipo: "Dobles Damas A/B", categorias: ["damas_a", "damas_b"], numJugadores: 2, grupo: "damas" },
             { id: 21, tipo: "Dobles Damas A", categorias: ["damas_a"], numJugadores: 2, grupo: "damas" },
             { id: 16, tipo: "Dobles Damas B", categorias: ["damas_b"], numJugadores: 2, grupo: "damas" },
             { id: 26, tipo: "Dobles Damas B/C", categorias: ["damas_b", "damas_c"], numJugadores: 2, grupo: "damas" },
             { id: 1, tipo: "Dobles Damas C-1", categorias: ["damas_c"], numJugadores: 2, grupo: "damas" },
             { id: 22, tipo: "Dobles Damas C-2", categorias: ["damas_c"], numJugadores: 2, grupo: "damas" },
-            
-            // MIXTOS
             { id: 4, tipo: "Mixto D (Dama A + Caballero 2da)", categorias: ["damas_a", "caballeros_2da"], numJugadores: 2, mixto: true, grupo: "mixtos" },
             { id: 14, tipo: "Mixto A (Dama A + Caballero 3ra)", categorias: ["damas_a", "caballeros_3ra"], numJugadores: 2, mixto: true, grupo: "mixtos" },
             { id: 19, tipo: "Mixto B (Dama B + Caballero 4ta)", categorias: ["damas_b", "caballeros_4ta"], numJugadores: 2, mixto: true, grupo: "mixtos" },
             { id: 11, tipo: "Mixto E (Dama B + Caballero 5ta)", categorias: ["damas_b", "caballeros_5ta"], numJugadores: 2, mixto: true, grupo: "mixtos" },
             { id: 8, tipo: "Mixto C (Dama C + Caballero 5ta)", categorias: ["damas_c", "caballeros_5ta"], numJugadores: 2, mixto: true, grupo: "mixtos" },
-            
-            // SINGLES CABALLEROS
             { id: 20, tipo: "Single Caballero 2da", categorias: ["caballeros_2da"], numJugadores: 1, grupo: "singles" },
             { id: 10, tipo: "Single Caballero 3ra", categorias: ["caballeros_3ra"], numJugadores: 1, grupo: "singles" },
             { id: 6, tipo: "Single Caballero 4ta", categorias: ["caballeros_4ta"], numJugadores: 1, grupo: "singles" },
             { id: 24, tipo: "Single Caballero 5ta", categorias: ["caballeros_5ta"], numJugadores: 1, grupo: "singles" },
-            
-            // DOBLES CABALLEROS PUROS
             { id: 7, tipo: "Dobles Caballeros 2da/2da", categorias: ["caballeros_2da"], numJugadores: 2, grupo: "dobles_puros" },
             { id: 15, tipo: "Dobles Caballeros 2da", categorias: ["caballeros_2da"], numJugadores: 2, grupo: "dobles_puros" },
             { id: 5, tipo: "Dobles Caballeros 3ra/3ra", categorias: ["caballeros_3ra"], numJugadores: 2, grupo: "dobles_puros" },
@@ -520,65 +520,26 @@
             { id: 23, tipo: "Dobles Caballeros 4ta", categorias: ["caballeros_4ta"], numJugadores: 2, grupo: "dobles_puros" },
             { id: 3, tipo: "Dobles Caballeros 5ta/5ta", categorias: ["caballeros_5ta"], numJugadores: 2, grupo: "dobles_puros" },
             { id: 13, tipo: "Dobles Caballeros 5ta", categorias: ["caballeros_5ta"], numJugadores: 2, grupo: "dobles_puros" },
-            
-            // DOBLES CABALLEROS COMBINADOS
             { id: 25, tipo: "Dobles Caballeros 2da/3ra", categorias: ["caballeros_2da", "caballeros_3ra"], numJugadores: 2, grupo: "dobles_combinados" },
             { id: 2, tipo: "Dobles Caballeros 3ra/4ta", categorias: ["caballeros_3ra", "caballeros_4ta"], numJugadores: 2, grupo: "dobles_combinados" },
             { id: 17, tipo: "Dobles Caballeros 4ta/5ta", categorias: ["caballeros_4ta", "caballeros_5ta"], numJugadores: 2, grupo: "dobles_combinados" }
         ];
 
         const JUGADORES_GOAT = {
-            caballeros_2da: [
-                { nombre: "Maxi", categoria: "caballeros_2da" },
-                { nombre: "Hernan", categoria: "caballeros_2da" },
-                { nombre: "Walter", categoria: "caballeros_2da", capitan: true },
-                { nombre: "Charly", categoria: "caballeros_2da" }
-            ],
-            caballeros_3ra: [
-                { nombre: "Mariano", categoria: "caballeros_3ra" },
-                { nombre: "Tomy", categoria: "caballeros_3ra" },
-                { nombre: "Nico", categoria: "caballeros_3ra" },
-                { nombre: "Chicho", categoria: "caballeros_3ra" }
-            ],
-            caballeros_4ta: [
-                { nombre: "Rodri", categoria: "caballeros_4ta" },
-                { nombre: "Marce", categoria: "caballeros_4ta" },
-                { nombre: "Facu", categoria: "caballeros_4ta" },
-                { nombre: "Santi", categoria: "caballeros_4ta" }
-            ],
-            caballeros_5ta: [
-                { nombre: "Toto", categoria: "caballeros_5ta" },
-                { nombre: "Tibu", categoria: "caballeros_5ta" },
-                { nombre: "Bocha", categoria: "caballeros_5ta" },
-                { nombre: "Peka", categoria: "caballeros_5ta" },
-                { nombre: "Nacho", categoria: "caballeros_5ta" }
-            ],
-            damas_a: [
-                { nombre: "Caro Demaría", categoria: "damas_a" },
-                { nombre: "Kari", categoria: "damas_a" },
-                { nombre: "Grace", categoria: "damas_a" }
-            ],
-            damas_b: [
-                { nombre: "Mariela", categoria: "damas_b" },
-                { nombre: "Mariana", categoria: "damas_b" },
-                { nombre: "Caro Razquin", categoria: "damas_b" },
-                { nombre: "Beltra", categoria: "damas_b" }
-            ],
-            damas_c: [
-                { nombre: "Nelly", categoria: "damas_c" },
-                { nombre: "Marina", categoria: "damas_c" },
-                { nombre: "Lulu", categoria: "damas_c" },
-                { nombre: "Caro Sorbi", categoria: "damas_c" }
-            ]
+            caballeros_2da: [ { nombre: "Maxi", categoria: "caballeros_2da" }, { nombre: "Hernan", categoria: "caballeros_2da" }, { nombre: "Walter", categoria: "caballeros_2da", capitan: true }, { nombre: "Charly", categoria: "caballeros_2da" } ],
+            caballeros_3ra: [ { nombre: "Mariano", categoria: "caballeros_3ra" }, { nombre: "Tomy", categoria: "caballeros_3ra" }, { nombre: "Nico", categoria: "caballeros_3ra" }, { nombre: "Chicho", categoria: "caballeros_3ra" } ],
+            caballeros_4ta: [ { nombre: "Rodri", categoria: "caballeros_4ta" }, { nombre: "Marce", categoria: "caballeros_4ta" }, { nombre: "Facu", categoria: "caballeros_4ta" }, { nombre: "Santi", categoria: "caballeros_4ta" } ],
+            caballeros_5ta: [ { nombre: "Toto", categoria: "caballeros_5ta" }, { nombre: "Tibu", categoria: "caballeros_5ta" }, { nombre: "Bocha", categoria: "caballeros_5ta" }, { nombre: "Peka", categoria: "caballeros_5ta" }, { nombre: "Nacho", categoria: "caballeros_5ta" } ],
+            damas_a: [ { nombre: "Caro Demaría", categoria: "damas_a" }, { nombre: "Kari", categoria: "damas_a" }, { nombre: "Grace", categoria: "damas_a" } ],
+            damas_b: [ { nombre: "Mariela", categoria: "damas_b" }, { nombre: "Mariana", categoria: "damas_b" }, { nombre: "Caro Razquin", categoria: "damas_b" }, { nombre: "Beltra", categoria: "damas_b" } ],
+            damas_c: [ { nombre: "Nelly", categoria: "damas_c" }, { nombre: "Marina", categoria: "damas_c" }, { nombre: "Lulu", categoria: "damas_c" }, { nombre: "Caro Sorbi", categoria: "damas_c" } ]
         };
 
-        const EQUIPOS_POR_DEFECTO = [
-            'Uncas', 'El Rojo', 'Ferro', 'Tercer Tiempo', 'Tres Arroyos', 
-            'Head', 'La Cardoneta', 'La Sede', 'Tiro Federal'
-        ];
+        const EQUIPOS_POR_DEFECTO = [ 'Uncas', 'El Rojo', 'Ferro', 'Tercer Tiempo', 'Tres Arroyos', 'Head', 'La Cardoneta', 'La Sede', 'Tiro Federal' ];
 
         function App() {
             const [activeTab, setActiveTab] = useState('configuracion');
+            const [isAdmin, setIsAdmin] = useState(false); // ESTADO PARA LA PESTAÑA ADMIN SECRETA
             const [numEquipos, setNumEquipos] = useState(10);
             const [equipos, setEquipos] = useState([]);
             const [baseEquipos, setBaseEquipos] = useState(EQUIPOS_POR_DEFECTO); 
@@ -593,7 +554,6 @@
 
             useEffect(() => {
                 const cargarDatos = async () => {
-                    // Primero cargar desde localStorage
                     const datosGuardados = localStorage.getItem('goat_torneo_data');
                     if (datosGuardados) {
                         try {
@@ -607,12 +567,9 @@
                             setCrucesFinales(datos.crucesFinales || []);
                             setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] });
                             setPlayoffAvances(datos.playoffAvances || {});
-                        } catch (e) {
-                            console.error('Error al cargar datos:', e);
-                        }
+                        } catch (e) { console.error('Error al cargar datos:', e); }
                     }
 
-                    // Luego intentar sincronizar con Firebase
                     try {
                         setSyncStatus('syncing');
                         const datosFirebase = await cargarDesdeFirebase();
@@ -628,9 +585,9 @@
                             setPlayoffAvances(datosFirebase.playoffAvances || {});
                             setLastSync(datosFirebase.ultimaActualizacion);
                             setSyncStatus('synced');
-                            
-                            // Actualizar localStorage
                             localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
+                        } else {
+                            setSyncStatus('local');
                         }
                     } catch (e) {
                         console.error('Error al sincronizar con Firebase:', e);
@@ -640,7 +597,6 @@
 
                 cargarDatos();
 
-                // Escuchar cambios en tiempo real
                 const unsubscribe = escucharCambiosFirebase((datos) => {
                     if (datos && datos.ultimaActualizacion !== lastSync) {
                         setNumEquipos(datos.numEquipos || 10);
@@ -658,46 +614,25 @@
                     }
                 });
 
-                return () => {
-                    if (unsubscribe) unsubscribe();
-                };
+                return () => { if (unsubscribe) unsubscribe(); };
             }, []);
 
             useEffect(() => {
-                const datos = {
-                    numEquipos,
-                    equipos,
-                    baseEquipos,
-                    fechas,
-                    resultados,
-                    posiciones,
-                    crucesFinales,
-                    zonasConfig,
-                    playoffAvances
-                };
-                
-                // Guardar en localStorage
+                const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
                 
-                // Guardar en Firebase
                 if (equipos.length > 0 || fechas.length > 0) {
                     setSyncStatus('syncing');
                     guardarEnFirebase(datos)
-                        .then(() => {
-                            setSyncStatus('synced');
-                            setLastSync(new Date().toISOString());
-                        })
-                        .catch((error) => {
-                            console.error('Error al sincronizar con Firebase:', error);
-                            setSyncStatus('error');
-                        });
+                        .then(() => { setSyncStatus('synced'); setLastSync(new Date().toISOString()); })
+                        .catch((error) => { console.error('Error al sincronizar:', error); setSyncStatus('error'); });
                 }
             }, [numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances]);
 
-            useEffect(() => {
-                window.actualizarCrucesFinales = (nuevos) => { setCrucesFinales(nuevos); };
-                return () => { delete window.actualizarCrucesFinales; };
-            }, []);
+            const activarAdmin = () => {
+                setIsAdmin(true);
+                setActiveTab('admin');
+            };
 
             const guardarEquiposSeleccionados = (nombresRivales) => {
                 const nuevosEquipos = nombresRivales.map(nombre => ({ nombre: nombre, esGoat: false }));
@@ -709,13 +644,10 @@
                 const nuevaFecha = {
                     numero: numFecha, rival: rival,
                     partidos: PARTIDOS.map(p => ({ ...p, jugadores: [], horario: '', dia: 'sabado', ganado: false })),
-                    partidoBonus: null,
-                    categoriasHabilitadas: { caballeros_5ta_en_4ta: false, caballeros_4ta_en_3ra: false, caballeros_3ra_en_2da: false, damas_c_en_b: false, damas_b_en_a: false },
+                    partidoBonus: null, categoriasHabilitadas: { caballeros_5ta_en_4ta: false, caballeros_4ta_en_3ra: false, caballeros_3ra_en_2da: false, damas_c_en_b: false, damas_b_en_a: false },
                     jugadoresHabilitados: []
                 };
-                const nuevasFechas = [...fechas];
-                nuevasFechas[numFecha - 1] = nuevaFecha;
-                setFechas(nuevasFechas);
+                const nuevasFechas = [...fechas]; nuevasFechas[numFecha - 1] = nuevaFecha; setFechas(nuevasFechas);
             };
 
             const procesarHorarios = (fechaIndex, texto) => {
@@ -724,23 +656,17 @@
                 lineas.forEach(linea => {
                     const match = linea.match(/(\d+)\s*[-.:]\s*(.+)/);
                     if (match) {
-                        const numPartido = parseInt(match[1]);
-                        const info = match[2].trim();
-                        const horarioMatch = info.match(/(\d{1,2}):(\d{2})/);
-                        const diaMatch = info.toLowerCase().includes('dom') ? 'domingo' : 'sabado';
+                        const numPartido = parseInt(match[1]); const info = match[2].trim();
+                        const horarioMatch = info.match(/(\d{1,2}):(\d{2})/); const diaMatch = info.toLowerCase().includes('dom') ? 'domingo' : 'sabado';
                         const partidoIndex = fechaActual.partidos.findIndex(p => p.id === numPartido);
-                        if (partidoIndex !== -1) {
-                            fechaActual.partidos[partidoIndex].horario = horarioMatch ? `${horarioMatch[1]}:${horarioMatch[2]}` : '';
-                            fechaActual.partidos[partidoIndex].dia = diaMatch;
-                        }
+                        if (partidoIndex !== -1) { fechaActual.partidos[partidoIndex].horario = horarioMatch ? `${horarioMatch[1]}:${horarioMatch[2]}` : ''; fechaActual.partidos[partidoIndex].dia = diaMatch; }
                     }
                 });
                 const nuevasFechas = [...fechas]; nuevasFechas[fechaIndex] = fechaActual; setFechas(nuevasFechas);
             };
 
             const actualizarJugadores = (fechaIndex, partidoId, jugadores) => {
-                const nuevasFechas = [...fechas];
-                const partidoIndex = nuevasFechas[fechaIndex].partidos.findIndex(p => p.id === partidoId);
+                const nuevasFechas = [...fechas]; const partidoIndex = nuevasFechas[fechaIndex].partidos.findIndex(p => p.id === partidoId);
                 if (partidoIndex !== -1) nuevasFechas[fechaIndex].partidos[partidoIndex].jugadores = jugadores;
                 setFechas(nuevasFechas);
             };
@@ -756,8 +682,7 @@
             };
 
             const toggleResultado = (fechaIndex, partidoId) => {
-                const key = `${fechaIndex}-${partidoId}`;
-                setResultados(prev => ({ ...prev, [key]: !prev[key] }));
+                const key = `${fechaIndex}-${partidoId}`; setResultados(prev => ({ ...prev, [key]: !prev[key] }));
             };
 
             const generarPDF = (fechaIndex) => {
@@ -798,10 +723,7 @@
                             horario.partidos.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
                             horario.partidos.forEach(partido => {
                                 const esBonus = fecha.partidoBonus === partido.id;
-                                
-                                // --- AQUÍ ESTÁ EL SEGURO CONTRA EL ERROR ---
                                 const jugadoresTexto = (partido.jugadores && partido.jugadores.length > 0) ? partido.jugadores.join(' / ') : 'Sin asignar';
-                                
                                 const texto = `${horario.hora} - P${partido.posicion} - ${partido.tipo}${esBonus ? ' ★BONUS★' : ''}: ${jugadoresTexto}`;
                                 if (y > 275) { doc.addPage(); y = 20; }
                                 if (esBonus) doc.setFont(undefined, 'bold');
@@ -818,7 +740,6 @@
                 const partidosPorJugador = {};
                 if (fecha.partidos) {
                     fecha.partidos.forEach(partido => {
-                        // --- AQUÍ ESTÁ EL SEGUNDO SEGURO ---
                         if (partido.horario && partido.jugadores) {
                             partido.jugadores.forEach(jugador => { 
                                 partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1; 
@@ -854,36 +775,21 @@
                 
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
-                    
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
-                            const key = `${fechaIdx}-${partido.id}`;
-                            const ganado = resultados[key] || false;
-                            const esSingle = partido.numJugadores === 1;
-                            
+                            const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esSingle = partido.numJugadores === 1;
                             partido.jugadores.forEach(jugador => {
                                 if (stats.jugadores[jugador]) {
-                                    if (esSingle) {
-                                        stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
-                                    } else {
-                                        stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
-                                    }
+                                    if (esSingle) stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
+                                    else stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
                                     stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
                                 }
                             });
-                            
                             if (!esSingle && partido.jugadores.length === 2) {
                                 const parejaKey = [...partido.jugadores].sort().join(' - ');
-                                if (!stats.parejas[parejaKey]) {
-                                    stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [] };
-                                }
+                                if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [] };
                                 stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
-                                stats.parejas[parejaKey].fechas.push({
-                                    fecha: fecha.numero,
-                                    rival: fecha.rival,
-                                    tipo: partido.tipo,
-                                    resultado: ganado
-                                });
+                                stats.parejas[parejaKey].fechas.push({ fecha: fecha.numero, rival: fecha.rival, tipo: partido.tipo, resultado: ganado });
                             }
                         }
                     });
@@ -898,39 +804,14 @@
                         <div className="header-text">
                             <h1>GOAT - Interclubes UNCAS</h1>
                             <p>Sistema completo de seguimiento y armado de fechas</p>
-                            <div style={{
-                                marginTop: '8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                fontSize: '12px',
-                                color: '#c5a572'
-                            }}>
-                                {syncStatus === 'synced' && (
-                                    <>
-                                        <span style={{color: '#10b981'}}>●</span>
-                                        <span>Sincronizado con Firebase</span>
-                                    </>
-                                )}
-                                {syncStatus === 'syncing' && (
-                                    <>
-                                        <span style={{color: '#f59e0b'}}>●</span>
-                                        <span>Sincronizando...</span>
-                                    </>
-                                )}
-                                {syncStatus === 'local' && (
-                                    <>
-                                        <span style={{color: '#6b7280'}}>●</span>
-                                        <span>Solo local</span>
-                                    </>
-                                )}
-                                {syncStatus === 'error' && (
-                                    <>
-                                        <span style={{color: '#ef4444'}}>●</span>
-                                        <span>Error de sincronización</span>
-                                    </>
-                                )}
-                            </div>
+                            {isAdmin && (
+                                <div style={{marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#c5a572'}}>
+                                    {syncStatus === 'synced' && <><span style={{color: '#10b981'}}>●</span><span>Sincronizado con Firebase</span></>}
+                                    {syncStatus === 'syncing' && <><span style={{color: '#f59e0b'}}>●</span><span>Sincronizando...</span></>}
+                                    {syncStatus === 'local' && <><span style={{color: '#6b7280'}}>●</span><span>Solo local</span></>}
+                                    {syncStatus === 'error' && <><span style={{color: '#ef4444'}}>●</span><span>Error de sincronización</span></>}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -940,53 +821,49 @@
                         <button className={`tab ${activeTab === 'resultados' ? 'active' : ''}`} onClick={() => setActiveTab('resultados')}>Resultados</button>
                         <button className={`tab ${activeTab === 'tablas' ? 'active' : ''}`} onClick={() => setActiveTab('tablas')}>Tablas</button>
                         <button className={`tab ${activeTab === 'estadisticas' ? 'active' : ''}`} onClick={() => setActiveTab('estadisticas')}>Estadísticas</button>
+                        {isAdmin && (
+                            <button className={`tab admin-tab ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => setActiveTab('admin')}>⚙️ Admin</button>
+                        )}
                     </div>
 
                     <div className="content">
                         {activeTab === 'configuracion' && (
                             <ConfiguracionTab 
-                                numEquipos={numEquipos} setNumEquipos={setNumEquipos} equipos={equipos} setEquipos={setEquipos} baseEquipos={baseEquipos} setBaseEquipos={setBaseEquipos}
+                                numEquipos={numEquipos} setNumEquipos={setNumEquipos} equipos={equipos} baseEquipos={baseEquipos} setBaseEquipos={setBaseEquipos}
                                 guardarEquiposSeleccionados={guardarEquiposSeleccionados} agregarFecha={agregarFecha} fechas={fechas} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig}
-                                syncStatus={syncStatus} setSyncStatus={setSyncStatus} lastSync={lastSync} setLastSync={setLastSync}
-                                resultados={resultados} posiciones={posiciones} crucesFinales={crucesFinales} playoffAvances={playoffAvances}
-                                setFechas={setFechas} setResultados={setResultados} setPosiciones={setPosiciones} setCrucesFinales={setCrucesFinales} setPlayoffAvances={setPlayoffAvances}
+                                activarAdmin={activarAdmin}
                             />
                         )}
                         {activeTab === 'fechas' && (
-                            <FechasTab 
-                                fechas={fechas} procesarHorarios={procesarHorarios} actualizarJugadores={actualizarJugadores}
-                                contarPartidosJugador={contarPartidosJugador} generarPDF={generarPDF} setFechas={setFechas}
-                            />
+                            <FechasTab fechas={fechas} procesarHorarios={procesarHorarios} actualizarJugadores={actualizarJugadores} contarPartidosJugador={contarPartidosJugador} generarPDF={generarPDF} setFechas={setFechas} />
                         )}
                         {activeTab === 'resultados' && (
-                            <ResultadosTab 
-                                fechas={fechas} resultados={resultados} toggleResultado={toggleResultado} zonasConfig={zonasConfig}
-                                crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances}
-                            />
+                            <ResultadosTab fechas={fechas} resultados={resultados} toggleResultado={toggleResultado} zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} />
                         )}
                         {activeTab === 'tablas' && (
-                            <TablasTab 
-                                equipos={equipos} fechas={fechas} resultados={resultados} crucesFinales={crucesFinales}
-                                setCrucesFinales={setCrucesFinales} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig}
-                            />
+                            <TablasTab equipos={equipos} fechas={fechas} resultados={resultados} crucesFinales={crucesFinales} setCrucesFinales={setCrucesFinales} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig} />
                         )}
                         {activeTab === 'estadisticas' && (
                             <EstadisticasTab calcularEstadisticas={calcularEstadisticas} />
+                        )}
+                        {activeTab === 'admin' && isAdmin && (
+                            <AdminTab 
+                                numEquipos={numEquipos} equipos={equipos} baseEquipos={baseEquipos} fechas={fechas} resultados={resultados} posiciones={posiciones} crucesFinales={crucesFinales} zonasConfig={zonasConfig} playoffAvances={playoffAvances}
+                                setNumEquipos={setNumEquipos} setEquipos={setEquipos} setBaseEquipos={setBaseEquipos} setFechas={setFechas} setResultados={setResultados} setPosiciones={setPosiciones} setCrucesFinales={setCrucesFinales} setZonasConfig={setZonasConfig} setPlayoffAvances={setPlayoffAvances}
+                                syncStatus={syncStatus} setSyncStatus={setSyncStatus} lastSync={lastSync} setLastSync={setLastSync} guardarEnFirebase={guardarEnFirebase} cargarDesdeFirebase={cargarDesdeFirebase}
+                            />
                         )}
                     </div>
                 </div>
             );
         }
 
-        function ConfiguracionTab({ 
-            numEquipos, setNumEquipos, equipos, setEquipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, 
-            agregarFecha, fechas, zonasConfig, setZonasConfig, syncStatus, setSyncStatus, lastSync, setLastSync,
-            resultados, posiciones, crucesFinales, playoffAvances,
-            setFechas, setResultados, setPosiciones, setCrucesFinales, setPlayoffAvances
+        // COMPONENTE NUEVO: PESTAÑA DE ADMINISTRADOR (Secreta)
+        function AdminTab({ 
+            numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances,
+            setNumEquipos, setEquipos, setBaseEquipos, setFechas, setResultados, setPosiciones, setCrucesFinales, setZonasConfig, setPlayoffAvances,
+            syncStatus, setSyncStatus, lastSync, setLastSync, guardarEnFirebase, cargarDesdeFirebase
         }) {
-            const [showEquiposModal, setShowEquiposModal] = useState(false);
-            const [showAsignarFechasModal, setShowAsignarFechasModal] = useState(false);
-
             const exportarDatos = () => {
                 const datos = localStorage.getItem('goat_torneo_data');
                 if (!datos) { alert('No hay datos guardados para exportar.'); return; }
@@ -1018,87 +895,115 @@
 
             return (
                 <div>
-                    <div style={{marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #ddd'}}>
-                        <h3 style={{marginBottom: '10px'}}>💾 Respaldo de Datos</h3>
-                        <p style={{marginBottom: '15px', color: '#666', fontSize: '14px'}}>Exportá o importá toda la información del torneo, incluyendo la base de clubes y las fechas.</p>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>⚙️ Panel de Control Administrador</h2>
+                    
+                    <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid #e2e8f0'}}>
+                        <h3 style={{marginBottom: '10px', color: '#0f172a'}}>💾 Respaldo y Nube</h3>
+                        <p style={{marginBottom: '20px', color: '#64748b', fontSize: '14px'}}>Sincronizá el estado actual del torneo o exportá copias manuales de seguridad.</p>
+                        
                         <div className="flex-mobile-col" style={{display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap'}}>
-                            <button className="btn btn-success btn-responsive" onClick={exportarDatos}>⬇️ Exportar Datos</button>
+                            <button className="btn btn-success btn-responsive" onClick={exportarDatos}>⬇️ Exportar JSON</button>
                             <div style={{position: 'relative'}}>
                                 <input type="file" id="importFile" accept=".json" style={{display: 'none'}} onChange={importarDatos} />
-                                <button className="btn btn-primary btn-responsive" onClick={() => document.getElementById('importFile').click()}>⬆️ Importar Datos</button>
+                                <button className="btn btn-primary btn-responsive" onClick={() => document.getElementById('importFile').click()} style={{background: '#475569', color: 'white'}}>⬆️ Importar JSON</button>
                             </div>
+                            
+                            <div style={{width: '2px', height: '30px', background: '#cbd5e1', margin: '0 10px'}} className="hidden-mobile"></div>
+
                             <button 
-                                className="btn btn-primary btn-responsive" 
+                                className="btn btn-primary btn-responsive" style={{background: '#3b82f6'}}
                                 onClick={async () => {
                                     try {
                                         setSyncStatus('syncing');
-                                        const datos = {
-                                            numEquipos,
-                                            equipos,
-                                            baseEquipos,
-                                            fechas,
-                                            resultados,
-                                            posiciones,
-                                            crucesFinales,
-                                            zonasConfig,
-                                            playoffAvances
-                                        };
+                                        const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
                                         await guardarEnFirebase(datos);
-                                        setSyncStatus('synced');
-                                        setLastSync(new Date().toISOString());
+                                        setSyncStatus('synced'); setLastSync(new Date().toISOString());
                                         alert('✓ Datos guardados en Firebase exitosamente');
-                                    } catch (error) {
-                                        console.error('Error al guardar en Firebase:', error);
-                                        setSyncStatus('error');
-                                        alert('✗ Error al guardar en Firebase');
-                                    }
+                                    } catch (error) { setSyncStatus('error'); alert('✗ Error al guardar en Firebase'); }
                                 }}
                                 disabled={syncStatus === 'syncing'}
                             >
-                                ☁️ Guardar en Nube
+                                ☁️ Forzar Guardado Nube
                             </button>
                             <button 
-                                className="btn btn-success btn-responsive" 
+                                className="btn btn-success btn-responsive" style={{background: '#14b8a6'}}
                                 onClick={async () => {
                                     try {
                                         setSyncStatus('syncing');
                                         const datosFirebase = await cargarDesdeFirebase();
                                         if (datosFirebase) {
-                                            setNumEquipos(datosFirebase.numEquipos || 10);
-                                            setEquipos(datosFirebase.equipos || []);
-                                            setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO);
-                                            setFechas(datosFirebase.fechas || []);
-                                            setResultados(datosFirebase.resultados || {});
-                                            setPosiciones(datosFirebase.posiciones || {});
-                                            setCrucesFinales(datosFirebase.crucesFinales || []);
-                                            setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] });
-                                            setPlayoffAvances(datosFirebase.playoffAvances || {});
-                                            setLastSync(datosFirebase.ultimaActualizacion);
-                                            setSyncStatus('synced');
-                                            localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
+                                            setNumEquipos(datosFirebase.numEquipos || 10); setEquipos(datosFirebase.equipos || []); setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datosFirebase.fechas || []); setResultados(datosFirebase.resultados || {}); setPosiciones(datosFirebase.posiciones || {}); setCrucesFinales(datosFirebase.crucesFinales || []); setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datosFirebase.playoffAvances || {});
+                                            setLastSync(datosFirebase.ultimaActualizacion); setSyncStatus('synced'); localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
                                             alert('✓ Datos cargados desde Firebase exitosamente');
-                                        } else {
-                                            alert('No hay datos guardados en Firebase');
-                                            setSyncStatus('local');
-                                        }
-                                    } catch (error) {
-                                        console.error('Error al cargar desde Firebase:', error);
-                                        setSyncStatus('error');
-                                        alert('✗ Error al cargar desde Firebase');
-                                    }
+                                        } else { alert('No hay datos guardados en Firebase'); setSyncStatus('local'); }
+                                    } catch (error) { setSyncStatus('error'); alert('✗ Error al cargar desde Firebase'); }
                                 }}
                                 disabled={syncStatus === 'syncing'}
                             >
-                                ☁️ Cargar desde Nube
+                                ☁️ Forzar Carga Nube
                             </button>
                         </div>
-                        {lastSync && (
-                            <p style={{marginTop: '10px', fontSize: '12px', color: '#666'}}>
-                                Última sincronización: {new Date(lastSync).toLocaleString('es-AR')}
-                            </p>
-                        )}
+                        {lastSync && (<p style={{marginTop: '15px', fontSize: '13px', color: '#64748b', fontWeight: 'bold'}}>Última sincronización en nube: {new Date(lastSync).toLocaleString('es-AR')}</p>)}
                     </div>
 
+                    <div style={{background: '#fee2e2', padding: '20px', borderRadius: '8px', border: '1px solid #fca5a5'}}>
+                        <h3 style={{marginBottom: '10px', color: '#b91c1c'}}>⚠️ Zona de Peligro</h3>
+                        <p style={{marginBottom: '20px', color: '#991b1b', fontSize: '14px'}}>Estas acciones son destructivas y no se pueden deshacer.</p>
+                        <button className="btn btn-danger btn-responsive" onClick={() => {
+                            if (confirm('¿Estás seguro de que querés borrar el torneo actual? OJO: La base de clubes se mantendrá, pero las fechas y resultados se borrarán de tu navegador (tendrás que pisarlo en la nube manualmente luego).')) {
+                                const datosGuardados = localStorage.getItem('goat_torneo_data');
+                                let backupBase = EQUIPOS_POR_DEFECTO;
+                                if (datosGuardados) backupBase = JSON.parse(datosGuardados).baseEquipos || backupBase;
+                                localStorage.removeItem('goat_torneo_data');
+                                localStorage.setItem('goat_torneo_data', JSON.stringify({ baseEquipos: backupBase }));
+                                window.location.reload();
+                            }
+                        }}>🗑️ Resetear Torneo Actual</button>
+                    </div>
+                </div>
+            );
+        }
+
+        // COMPONENTE NUEVO: MODAL DE CLAVE
+        function DevModal({ onClose, onSuccess }) {
+            const [pin, setPin] = useState('');
+            const handleSubmit = () => {
+                if (pin === '2702') {
+                    onSuccess();
+                } else {
+                    alert('Clave incorrecta');
+                    onClose();
+                }
+            };
+            return (
+                <div className="modal" onClick={onClose}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '400px', textAlign: 'center'}}>
+                        <h3 style={{marginBottom: '20px', color: '#1e3c72'}}>🔒 Acceso Desarrollador</h3>
+                        <input 
+                            type="password" 
+                            value={pin} 
+                            onChange={e => setPin(e.target.value)} 
+                            placeholder="Ingrese el PIN..."
+                            onKeyPress={e => e.key === 'Enter' && handleSubmit()}
+                            style={{textAlign: 'center', fontSize: '20px', letterSpacing: '5px', marginBottom: '20px'}}
+                            autoFocus
+                        />
+                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', justifyContent: 'center'}}>
+                            <button className="btn btn-primary" onClick={handleSubmit}>Ingresar</button>
+                            <button className="btn btn-danger" onClick={onClose}>Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ConfiguracionTab({ numEquipos, setNumEquipos, equipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, agregarFecha, fechas, zonasConfig, setZonasConfig, activarAdmin }) {
+            const [showEquiposModal, setShowEquiposModal] = useState(false);
+            const [showAsignarFechasModal, setShowAsignarFechasModal] = useState(false);
+            const [showDevModal, setShowDevModal] = useState(false); // Estado para abrir modal de clave
+
+            return (
+                <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Configuración del Torneo</h2>
                     <div className="form-group">
                         <label>Número total de equipos</label>
@@ -1176,19 +1081,6 @@
                                     </div>
                                 )}
                             </div>
-
-                            <div style={{marginTop: '30px', paddingTop: '30px', borderTop: '2px solid #ddd'}}>
-                                <button className="btn btn-danger btn-responsive" onClick={() => {
-                                    if (confirm('¿Estás seguro de que querés borrar el torneo actual? OJO: La base de clubes se mantendrá, pero las fechas y zonas se borrarán.')) {
-                                        const datosGuardados = localStorage.getItem('goat_torneo_data');
-                                        let backupBase = EQUIPOS_POR_DEFECTO;
-                                        if (datosGuardados) backupBase = JSON.parse(datosGuardados).baseEquipos || backupBase;
-                                        localStorage.removeItem('goat_torneo_data');
-                                        localStorage.setItem('goat_torneo_data', JSON.stringify({ baseEquipos: backupBase }));
-                                        window.location.reload();
-                                    }
-                                }}>🗑️ Resetear Torneo Actual</button>
-                            </div>
                         </div>
                     )}
 
@@ -1201,6 +1093,23 @@
                                 if (window.actualizarCrucesFinales) window.actualizarCrucesFinales(crucesGenerados);
                                 setShowAsignarFechasModal(false); alert('Cruces generados exitosamente. Ir a la pestaña "Tablas" para cargar los resultados.');
                             }}
+                        />
+                    )}
+
+                    {/* BOTÓN SECRETO AL FINAL DE TODO */}
+                    <div style={{marginTop: '60px', borderTop: '1px dashed #eee', paddingTop: '20px', textAlign: 'right'}}>
+                        <button 
+                            style={{background: 'none', border: 'none', color: '#cbd5e1', fontSize: '12px', cursor: 'pointer'}}
+                            onClick={() => setShowDevModal(true)}
+                        >
+                            🔒 Acceso Desarrollador
+                        </button>
+                    </div>
+
+                    {showDevModal && (
+                        <DevModal 
+                            onClose={() => setShowDevModal(false)} 
+                            onSuccess={() => { setShowDevModal(false); activarAdmin(); }} 
                         />
                     )}
                 </div>
