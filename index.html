@@ -1955,8 +1955,17 @@
                                     )}
                                 </div>
                                 
-                                {fecha.partidos.filter(partido => partido.jugadores.length > 0).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; if (a.horario !== b.horario) return a.horario.localeCompare(b.horario); return (a.posicion || 0) - (b.posicion || 0); }).map(partido => {
-                                    const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id;
+                                {fecha.partidos && fecha.partidos
+                                    .filter(partido => partido.jugadores && partido.jugadores.length > 0)
+                                    .sort((a, b) => {
+                                        if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
+                                        if (a.horario !== b.horario) return a.horario.localeCompare(b.horario);
+                                        return (a.posicion || 0) - (b.posicion || 0);
+                                    })
+                                    .map(partido => {
+                                    const key = `${fechaIdx}-${partido.id}`;
+                                    const ganado = resultados[key] || false;
+                                    const esBonus = fecha.partidoBonus === partido.id;
                                     return (
                                         <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : '2px solid transparent' }}>
                                             <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px'}}>
