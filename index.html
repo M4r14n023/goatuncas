@@ -452,7 +452,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
 
         // Configuración de Firebase - Hub Universitario
         const firebaseConfig = {
@@ -479,7 +479,7 @@
                 ...datos,
                 ultimaActualizacion: syncTime
             });
-            return syncTime; // Retornamos el tiempo exacto para evitar desfasajes
+            return syncTime;
         };
 
         const cargarDesdeFirebase = () => {
@@ -556,7 +556,7 @@
             const [lastSync, setLastSync] = useState(null);
 
             // ESCUDO ANTI-BUCLES INFINITOS
-            const isReceivingData = React.useRef(false);
+            const isReceivingData = useRef(false);
 
             useEffect(() => {
                 const cargarDatos = async () => {
@@ -580,7 +580,7 @@
                         setSyncStatus('syncing');
                         const datosFirebase = await cargarDesdeFirebase();
                         if (datosFirebase) {
-                            isReceivingData.current = true; // Subimos el escudo
+                            isReceivingData.current = true;
                             
                             setNumEquipos(datosFirebase.numEquipos || 10);
                             setEquipos(datosFirebase.equipos || []);
@@ -595,7 +595,7 @@
                             setSyncStatus('synced');
                             localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
                             
-                            setTimeout(() => { isReceivingData.current = false; }, 1000); // Bajamos el escudo
+                            setTimeout(() => { isReceivingData.current = false; }, 1000);
                         } else {
                             setSyncStatus('local');
                         }
@@ -608,7 +608,7 @@
 
                 const unsubscribe = escucharCambiosFirebase((datos) => {
                     if (datos && datos.ultimaActualizacion !== lastSync) {
-                        isReceivingData.current = true; // Subimos el escudo
+                        isReceivingData.current = true;
                         
                         setNumEquipos(datos.numEquipos || 10);
                         setEquipos(datos.equipos || []);
@@ -623,17 +623,16 @@
                         setSyncStatus('synced');
                         localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
                         
-                        setTimeout(() => { isReceivingData.current = false; }, 1000); // Bajamos el escudo
+                        setTimeout(() => { isReceivingData.current = false; }, 1000);
                     }
                 });
 
                 return () => { if (unsubscribe) unsubscribe(); };
             }, []);
 
-            // EFECTO DE GUARDADO EN NUBE
+            // EFECTO DE GUARDADO EN NUBE CONTROLADO
             useEffect(() => {
-                // Si la actualización vino de Firebase, abortamos para evitar el bucle infinito
-                if (isReceivingData.current) return;
+                if (isReceivingData.current) return; // Evita el bucle infinito
 
                 const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
@@ -643,7 +642,7 @@
                     guardarEnFirebase(datos)
                         .then((tiempoExacto) => { 
                             setSyncStatus('synced'); 
-                            setLastSync(tiempoExacto); // Usamos el tiempo exacto que generó Firebase
+                            setLastSync(tiempoExacto); 
                         })
                         .catch((error) => { console.error('Error al sincronizar:', error); setSyncStatus('error'); });
                 }
@@ -834,7 +833,6 @@
                         <button className={`tab ${activeTab === 'resultados' ? 'active' : ''}`} onClick={() => setActiveTab('resultados')}>Resultados</button>
                         <button className={`tab ${activeTab === 'tablas' ? 'active' : ''}`} onClick={() => setActiveTab('tablas')}>Tablas</button>
                         <button className={`tab ${activeTab === 'estadisticas' ? 'active' : ''}`} onClick={() => setActiveTab('estadisticas')}>Estadísticas</button>
-                        {/* NUEVA PESTAÑA: MIS PARTIDOS */}
                         <button className={`tab ${activeTab === 'busqueda' ? 'active' : ''}`} onClick={() => setActiveTab('busqueda')}>Mis Partidos 🔍</button>
                         
                         {isAdmin && (
@@ -862,7 +860,6 @@
                         {activeTab === 'estadisticas' && (
                             <EstadisticasTab calcularEstadisticas={calcularEstadisticas} />
                         )}
-                        {/* NUEVO MÓDULO RENDERIZADO: MIS PARTIDOS */}
                         {activeTab === 'busqueda' && (
                             <BusquedaTab fechas={fechas} />
                         )}
@@ -880,12 +877,10 @@
             );
         }
 
-        // COMPONENTE NUEVO: BÚSQUEDA DE MIS PARTIDOS
         function BusquedaTab({ fechas }) {
             const [jugadorSeleccionado, setJugadorSeleccionado] = useState('');
             const [fechaSeleccionada, setFechaSeleccionada] = useState('todas');
 
-            // Armar lista de jugadores únicos, ordenada alfabéticamente
             const jugadores = Object.values(JUGADORES_GOAT).flat().map(j => j.nombre).sort((a, b) => a.localeCompare(b));
 
             return (
@@ -954,7 +949,6 @@
                                 );
                             })}
                             
-                            {/* Mensaje de aviso si no tiene partidos en absoluto en el filtro */}
                             {fechas.filter((_, idx) => fechaSeleccionada === 'todas' || parseInt(fechaSeleccionada) === idx).every(fecha => 
                                 !fecha.partidos || fecha.partidos.filter(p => p.jugadores && p.jugadores.includes(jugadorSeleccionado) && p.horario).length === 0
                             ) && (
@@ -1034,8 +1028,8 @@
                                     try {
                                         setSyncStatus('syncing');
                                         const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
-                                        await guardarEnFirebase(datos);
-                                        setSyncStatus('synced'); setLastSync(new Date().toISOString());
+                                        const syncTime = await guardarEnFirebase(datos);
+                                        setSyncStatus('synced'); setLastSync(syncTime);
                                         alert('✓ Datos guardados en Firebase exitosamente');
                                     } catch (error) { setSyncStatus('error'); alert('✗ Error al guardar en Firebase'); }
                                 }}
@@ -1692,11 +1686,26 @@
             return (
                 <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Armado de Fechas</h2>
-                    <div className="form-group">
-                        <label>Seleccionar Fecha</label>
-                        <select value={fechaSeleccionada} onChange={(e) => setFechaSeleccionada(parseInt(e.target.value))}>
-                            {fechas.map((f, idx) => (<option key={idx} value={idx}>Fecha {f.numero} - vs {f.rival}</option>))}
-                        </select>
+                    
+                    {/* NUEVA BOTONERA PARA ELEGIR FECHA */}
+                    <div style={{display: 'flex', gap: '10px', marginBottom: '25px', flexWrap: 'wrap'}}>
+                        {fechas.map((f, idx) => (
+                            <button 
+                                key={idx}
+                                className={`btn ${fechaSeleccionada === idx ? 'btn-primary' : ''}`}
+                                style={{
+                                    background: fechaSeleccionada === idx ? '#d4af37' : '#e2e8f0',
+                                    color: fechaSeleccionada === idx ? '#1a1a1a' : '#475569',
+                                    margin: 0,
+                                    flex: '1 1 calc(50% - 10px)',
+                                    minWidth: '130px',
+                                    padding: '10px'
+                                }}
+                                onClick={() => setFechaSeleccionada(idx)}
+                            >
+                                Fecha {f.numero} <br/><span style={{fontSize: '13px', fontWeight: 'normal'}}>vs {f.rival}</span>
+                            </button>
+                        ))}
                     </div>
 
                     <div className="date-section">
@@ -1926,8 +1935,8 @@
         function ResultadosTab({ fechas, resultados, toggleResultado, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances }) {
             const [showPlayOffModal, setShowPlayOffModal] = useState(false);
             
-            // Estado para controlar qué fechas están desplegadas (la Fecha 1 abierta por defecto)
-            const [fechasExpandidas, setFechasExpandidas] = useState({ 0: true });
+            // Estado vacío por defecto = Todas las fechas arrancan cerradas
+            const [fechasExpandidas, setFechasExpandidas] = useState({});
 
             if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
 
