@@ -447,7 +447,7 @@
                 { nombre: "Beltra", categoria: "damas_b" }
             ],
             damas_c: [
-                { nombre: "Nelly", damas_c: "damas_c" },
+                { nombre: "Nelly", categoria: "damas_c" },
                 { nombre: "Marina", categoria: "damas_c" },
                 { nombre: "Lulu", categoria: "damas_c" },
                 { nombre: "Caro Sorbi", categoria: "damas_c" }
@@ -2015,7 +2015,8 @@
             const getOrdenPartido = (pareja) => {
                 const jugadores = pareja.split(' - ');
                 const categorias = jugadores.map(j => { const jugador = Object.values(JUGADORES_GOAT).flat().find(jg => jg.nombre === j); return jugador ? jugador.categoria : ''; });
-                const cat1 = categorias[0]; const cat2 = categorias[1];
+                const cat1 = categorias[0] || ''; 
+                const cat2 = categorias[1] || '';
                 if (cat1.startsWith('damas') && cat2.startsWith('damas')) {
                     if (cat1 === 'damas_a' && cat2 === 'damas_a') return 1; if ((cat1 === 'damas_a' && cat2 === 'damas_b') || (cat1 === 'damas_b' && cat2 === 'damas_a')) return 2;
                     if (cat1 === 'damas_b' && cat2 === 'damas_b') return 3; if ((cat1 === 'damas_b' && cat2 === 'damas_c') || (cat1 === 'damas_c' && cat2 === 'damas_b')) return 4;
