@@ -18,6 +18,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -440,6 +445,50 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
+        // Configuración de Firebase (misma del Hub)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWut5pII90tdvaB_AwkvdQ6Oq3TgM5wKY",
+            authDomain: "hub-claudeai.firebaseapp.com",
+            databaseURL: "https://hub-claudeai-default-rtdb.firebaseio.com",
+            projectId: "hub-claudeai",
+            storageBucket: "hub-claudeai.firebasestorage.app",
+            messagingSenderId: "642915679228",
+            appId: "1:642915679228:web:e6e48b25869d74c14cfe87"
+        };
+
+        // Inicializar Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        const database = firebase.database();
+        const FIREBASE_PATH = 'goat_torneo';
+
+        // Funciones de sincronización con Firebase
+        const guardarEnFirebase = (datos) => {
+            return database.ref(FIREBASE_PATH).set({
+                ...datos,
+                ultimaActualizacion: new Date().toISOString()
+            });
+        };
+
+        const cargarDesdeFirebase = () => {
+            return database.ref(FIREBASE_PATH).once('value').then(snapshot => {
+                return snapshot.val();
+            });
+        };
+
+        const escucharCambiosFirebase = (callback) => {
+            const ref = database.ref(FIREBASE_PATH);
+            ref.on('value', (snapshot) => {
+                const datos = snapshot.val();
+                if (datos) {
+                    callback(datos);
+                }
+            });
+            return () => ref.off('value');
+        };
+
         const PARTIDOS = [
             // DAMAS
             { id: 9, tipo: "Dobles Damas A/B", categorias: ["damas_a", "damas_b"], numJugadores: 2, grupo: "damas" },
@@ -539,30 +588,110 @@
             const [crucesFinales, setCrucesFinales] = useState([]);
             const [zonasConfig, setZonasConfig] = useState({ zona1: [], zona2: [] });
             const [playoffAvances, setPlayoffAvances] = useState({});
+            const [syncStatus, setSyncStatus] = useState('local');
+            const [lastSync, setLastSync] = useState(null);
 
             useEffect(() => {
-                const datosGuardados = localStorage.getItem('goat_torneo_data');
-                if (datosGuardados) {
+                const cargarDatos = async () => {
+                    // Primero cargar desde localStorage
+                    const datosGuardados = localStorage.getItem('goat_torneo_data');
+                    if (datosGuardados) {
+                        try {
+                            const datos = JSON.parse(datosGuardados);
+                            setNumEquipos(datos.numEquipos || 10);
+                            setEquipos(datos.equipos || []);
+                            setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); 
+                            setFechas(datos.fechas || []);
+                            setResultados(datos.resultados || {});
+                            setPosiciones(datos.posiciones || {});
+                            setCrucesFinales(datos.crucesFinales || []);
+                            setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] });
+                            setPlayoffAvances(datos.playoffAvances || {});
+                        } catch (e) {
+                            console.error('Error al cargar datos:', e);
+                        }
+                    }
+
+                    // Luego intentar sincronizar con Firebase
                     try {
-                        const datos = JSON.parse(datosGuardados);
+                        setSyncStatus('syncing');
+                        const datosFirebase = await cargarDesdeFirebase();
+                        if (datosFirebase) {
+                            setNumEquipos(datosFirebase.numEquipos || 10);
+                            setEquipos(datosFirebase.equipos || []);
+                            setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO);
+                            setFechas(datosFirebase.fechas || []);
+                            setResultados(datosFirebase.resultados || {});
+                            setPosiciones(datosFirebase.posiciones || {});
+                            setCrucesFinales(datosFirebase.crucesFinales || []);
+                            setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] });
+                            setPlayoffAvances(datosFirebase.playoffAvances || {});
+                            setLastSync(datosFirebase.ultimaActualizacion);
+                            setSyncStatus('synced');
+                            
+                            // Actualizar localStorage
+                            localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
+                        }
+                    } catch (e) {
+                        console.error('Error al sincronizar con Firebase:', e);
+                        setSyncStatus('local');
+                    }
+                };
+
+                cargarDatos();
+
+                // Escuchar cambios en tiempo real
+                const unsubscribe = escucharCambiosFirebase((datos) => {
+                    if (datos && datos.ultimaActualizacion !== lastSync) {
                         setNumEquipos(datos.numEquipos || 10);
                         setEquipos(datos.equipos || []);
-                        setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); 
+                        setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO);
                         setFechas(datos.fechas || []);
                         setResultados(datos.resultados || {});
                         setPosiciones(datos.posiciones || {});
                         setCrucesFinales(datos.crucesFinales || []);
                         setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] });
                         setPlayoffAvances(datos.playoffAvances || {});
-                    } catch (e) {
-                        console.error('Error al cargar datos:', e);
+                        setLastSync(datos.ultimaActualizacion);
+                        setSyncStatus('synced');
+                        localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
                     }
-                }
+                });
+
+                return () => {
+                    if (unsubscribe) unsubscribe();
+                };
             }, []);
 
             useEffect(() => {
-                const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
+                const datos = {
+                    numEquipos,
+                    equipos,
+                    baseEquipos,
+                    fechas,
+                    resultados,
+                    posiciones,
+                    crucesFinales,
+                    zonasConfig,
+                    playoffAvances
+                };
+                
+                // Guardar en localStorage
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
+                
+                // Guardar en Firebase
+                if (equipos.length > 0 || fechas.length > 0) {
+                    setSyncStatus('syncing');
+                    guardarEnFirebase(datos)
+                        .then(() => {
+                            setSyncStatus('synced');
+                            setLastSync(new Date().toISOString());
+                        })
+                        .catch((error) => {
+                            console.error('Error al sincronizar con Firebase:', error);
+                            setSyncStatus('error');
+                        });
+                }
             }, [numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances]);
 
             useEffect(() => {
@@ -738,6 +867,39 @@
                         <div className="header-text">
                             <h1>GOAT - Interclubes UNCAS</h1>
                             <p>Sistema completo de seguimiento y armado de fechas</p>
+                            <div style={{
+                                marginTop: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                fontSize: '12px',
+                                color: '#c5a572'
+                            }}>
+                                {syncStatus === 'synced' && (
+                                    <>
+                                        <span style={{color: '#10b981'}}>●</span>
+                                        <span>Sincronizado con Firebase</span>
+                                    </>
+                                )}
+                                {syncStatus === 'syncing' && (
+                                    <>
+                                        <span style={{color: '#f59e0b'}}>●</span>
+                                        <span>Sincronizando...</span>
+                                    </>
+                                )}
+                                {syncStatus === 'local' && (
+                                    <>
+                                        <span style={{color: '#6b7280'}}>●</span>
+                                        <span>Solo local</span>
+                                    </>
+                                )}
+                                {syncStatus === 'error' && (
+                                    <>
+                                        <span style={{color: '#ef4444'}}>●</span>
+                                        <span>Error de sincronización</span>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -820,13 +982,82 @@
                     <div style={{marginBottom: '30px', paddingBottom: '20px', borderBottom: '2px solid #ddd'}}>
                         <h3 style={{marginBottom: '10px'}}>💾 Respaldo de Datos</h3>
                         <p style={{marginBottom: '15px', color: '#666', fontSize: '14px'}}>Exportá o importá toda la información del torneo, incluyendo la base de clubes y las fechas.</p>
-                        <div className="flex-mobile-col" style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
+                        <div className="flex-mobile-col" style={{display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap'}}>
                             <button className="btn btn-success btn-responsive" onClick={exportarDatos}>⬇️ Exportar Datos</button>
-                            <div style={{position: 'relative', width: '100%'}}>
+                            <div style={{position: 'relative'}}>
                                 <input type="file" id="importFile" accept=".json" style={{display: 'none'}} onChange={importarDatos} />
                                 <button className="btn btn-primary btn-responsive" onClick={() => document.getElementById('importFile').click()}>⬆️ Importar Datos</button>
                             </div>
+                            <button 
+                                className="btn btn-primary btn-responsive" 
+                                onClick={async () => {
+                                    try {
+                                        setSyncStatus('syncing');
+                                        const datos = {
+                                            numEquipos,
+                                            equipos,
+                                            baseEquipos,
+                                            fechas,
+                                            resultados,
+                                            posiciones,
+                                            crucesFinales,
+                                            zonasConfig,
+                                            playoffAvances
+                                        };
+                                        await guardarEnFirebase(datos);
+                                        setSyncStatus('synced');
+                                        setLastSync(new Date().toISOString());
+                                        alert('✓ Datos guardados en Firebase exitosamente');
+                                    } catch (error) {
+                                        console.error('Error al guardar en Firebase:', error);
+                                        setSyncStatus('error');
+                                        alert('✗ Error al guardar en Firebase');
+                                    }
+                                }}
+                                disabled={syncStatus === 'syncing'}
+                            >
+                                ☁️ Guardar en Nube
+                            </button>
+                            <button 
+                                className="btn btn-success btn-responsive" 
+                                onClick={async () => {
+                                    try {
+                                        setSyncStatus('syncing');
+                                        const datosFirebase = await cargarDesdeFirebase();
+                                        if (datosFirebase) {
+                                            setNumEquipos(datosFirebase.numEquipos || 10);
+                                            setEquipos(datosFirebase.equipos || []);
+                                            setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO);
+                                            setFechas(datosFirebase.fechas || []);
+                                            setResultados(datosFirebase.resultados || {});
+                                            setPosiciones(datosFirebase.posiciones || {});
+                                            setCrucesFinales(datosFirebase.crucesFinales || []);
+                                            setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] });
+                                            setPlayoffAvances(datosFirebase.playoffAvances || {});
+                                            setLastSync(datosFirebase.ultimaActualizacion);
+                                            setSyncStatus('synced');
+                                            localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
+                                            alert('✓ Datos cargados desde Firebase exitosamente');
+                                        } else {
+                                            alert('No hay datos guardados en Firebase');
+                                            setSyncStatus('local');
+                                        }
+                                    } catch (error) {
+                                        console.error('Error al cargar desde Firebase:', error);
+                                        setSyncStatus('error');
+                                        alert('✗ Error al cargar desde Firebase');
+                                    }
+                                }}
+                                disabled={syncStatus === 'syncing'}
+                            >
+                                ☁️ Cargar desde Nube
+                            </button>
                         </div>
+                        {lastSync && (
+                            <p style={{marginTop: '10px', fontSize: '12px', color: '#666'}}>
+                                Última sincronización: {new Date(lastSync).toLocaleString('es-AR')}
+                            </p>
+                        )}
                     </div>
 
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Configuración del Torneo</h2>
