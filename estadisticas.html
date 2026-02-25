@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a1a1a">
+    <title>Estadísticas GOAT</title>
+    <link rel="icon" type="image/jpeg" href="GOAT.jpeg">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a1a 0%, #2d2416 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; padding: 30px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #eee; }
+        .header-title { color: #1e3c72; display: flex; align-items: center; gap: 15px; }
+        .header-title img { width: 50px; height: 50px; border-radius: 50%; }
+        
+        .btn-volver { background: #e2e8f0; color: #334155; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: 0.3s; display: inline-block; border: none; cursor: pointer; }
+        .btn-volver:hover { background: #cbd5e1; }
+        .btn-excel { background: #10b981; color: white; padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-excel:hover { background: #059669; }
+
+        .sub-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        .sub-tab { padding: 8px 18px; background: #f1f5f9; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 14px; color: #475569; border: none; transition: 0.3s; }
+        .sub-tab:hover { background: #e2e8f0; }
+        .sub-tab.active { background: #1e3c72; color: white; box-shadow: 0 4px 6px rgba(30, 60, 114, 0.2); }
+        
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .form-group { margin-bottom: 15px; }
+        select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; outline: none; }
+        select:disabled { background: #f1f5f9; cursor: not-allowed; opacity: 0.7; }
+        
+        .efectividad-bar { display: flex; height: 24px; border-radius: 12px; overflow: hidden; background: #e2e8f0; margin-top: 5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .ef-ganados { background: #10b981; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
+        .ef-perdidos { background: #ef4444; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; }
+
+        .table-container { width: 100%; overflow-x: auto; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-radius: 8px; }
+        .stats-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .stats-table th, .stats-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .stats-table th { background: #f5f5f5; font-weight: 700; color: #1e3c72; }
+        .stats-table tr:hover { background: #f9fafb; }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .header { flex-direction: column; gap: 15px; text-align: center; }
+            .header-title { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const PARTIDOS = [
+            { id: 9, tipo: "Dobles Damas A/B", categorias: ["damas_a", "damas_b"], numJugadores: 2, grupo: "damas" }, { id: 21, tipo: "Dobles Damas A", categorias: ["damas_a"], numJugadores: 2, grupo: "damas" }, { id: 16, tipo: "Dobles Damas B", categorias: ["damas_b"], numJugadores: 2, grupo: "damas" }, { id: 26, tipo: "Dobles Damas B/C", categorias: ["damas_b", "damas_c"], numJugadores: 2, grupo: "damas" }, { id: 1, tipo: "Dobles Damas C-1", categorias: ["damas_c"], numJugadores: 2, grupo: "damas" }, { id: 22, tipo: "Dobles Damas C-2", categorias: ["damas_c"], numJugadores: 2, grupo: "damas" }, { id: 4, tipo: "Mixto D (Dama A + Caballero 2da)", categorias: ["damas_a", "caballeros_2da"], numJugadores: 2, mixto: true, grupo: "mixtos" }, { id: 14, tipo: "Mixto A (Dama A + Caballero 3ra)", categorias: ["damas_a", "caballeros_3ra"], numJugadores: 2, mixto: true, grupo: "mixtos" }, { id: 19, tipo: "Mixto B (Dama B + Caballero 4ta)", categorias: ["damas_b", "caballeros_4ta"], numJugadores: 2, mixto: true, grupo: "mixtos" }, { id: 11, tipo: "Mixto E (Dama B + Caballero 5ta)", categorias: ["damas_b", "caballeros_5ta"], numJugadores: 2, mixto: true, grupo: "mixtos" }, { id: 8, tipo: "Mixto C (Dama C + Caballero 5ta)", categorias: ["damas_c", "caballeros_5ta"], numJugadores: 2, mixto: true, grupo: "mixtos" }, { id: 20, tipo: "Single Caballero 2da", categorias: ["caballeros_2da"], numJugadores: 1, grupo: "singles" }, { id: 10, tipo: "Single Caballero 3ra", categorias: ["caballeros_3ra"], numJugadores: 1, grupo: "singles" }, { id: 6, tipo: "Single Caballero 4ta", categorias: ["caballeros_4ta"], numJugadores: 1, grupo: "singles" }, { id: 24, tipo: "Single Caballero 5ta", categorias: ["caballeros_5ta"], numJugadores: 1, grupo: "singles" }, { id: 7, tipo: "Dobles Caballeros 2da/2da", categorias: ["caballeros_2da"], numJugadores: 2, grupo: "dobles_puros" }, { id: 15, tipo: "Dobles Caballeros 2da", categorias: ["caballeros_2da"], numJugadores: 2, grupo: "dobles_puros" }, { id: 5, tipo: "Dobles Caballeros 3ra/3ra", categorias: ["caballeros_3ra"], numJugadores: 2, grupo: "dobles_puros" }, { id: 18, tipo: "Dobles Caballeros 3ra", categorias: ["caballeros_3ra"], numJugadores: 2, grupo: "dobles_puros" }, { id: 12, tipo: "Dobles Caballeros 4ta/4ta", categorias: ["caballeros_4ta"], numJugadores: 2, grupo: "dobles_puros" }, { id: 23, tipo: "Dobles Caballeros 4ta", categorias: ["caballeros_4ta"], numJugadores: 2, grupo: "dobles_puros" }, { id: 3, tipo: "Dobles Caballeros 5ta/5ta", categorias: ["caballeros_5ta"], numJugadores: 2, grupo: "dobles_puros" }, { id: 13, tipo: "Dobles Caballeros 5ta", categorias: ["caballeros_5ta"], numJugadores: 2, grupo: "dobles_puros" }, { id: 25, tipo: "Dobles Caballeros 2da/3ra", categorias: ["caballeros_2da", "caballeros_3ra"], numJugadores: 2, grupo: "dobles_combinados" }, { id: 2, tipo: "Dobles Caballeros 3ra/4ta", categorias: ["caballeros_3ra", "caballeros_4ta"], numJugadores: 2, grupo: "dobles_combinados" }, { id: 17, tipo: "Dobles Caballeros 4ta/5ta", categorias: ["caballeros_4ta", "caballeros_5ta"], numJugadores: 2, grupo: "dobles_combinados" }
+        ];
+
+        const JUGADORES_GOAT = {
+            caballeros_2da: [ { nombre: "Maxi", categoria: "caballeros_2da" }, { nombre: "Hernan", categoria: "caballeros_2da" }, { nombre: "Walter", categoria: "caballeros_2da" }, { nombre: "Charly", categoria: "caballeros_2da" } ],
+            caballeros_3ra: [ { nombre: "Mariano", categoria: "caballeros_3ra" }, { nombre: "Tomy", categoria: "caballeros_3ra" }, { nombre: "Nico", categoria: "caballeros_3ra" }, { nombre: "Chicho", categoria: "caballeros_3ra" } ],
+            caballeros_4ta: [ { nombre: "Rodri", categoria: "caballeros_4ta" }, { nombre: "Marce", categoria: "caballeros_4ta" }, { nombre: "Facu", categoria: "caballeros_4ta" }, { nombre: "Santi", categoria: "caballeros_4ta" } ],
+            caballeros_5ta: [ { nombre: "Toto", categoria: "caballeros_5ta" }, { nombre: "Tibu", categoria: "caballeros_5ta" }, { nombre: "Bocha", categoria: "caballeros_5ta" }, { nombre: "Peka", categoria: "caballeros_5ta" }, { nombre: "Nacho", categoria: "caballeros_5ta" } ],
+            damas_a: [ { nombre: "Caro Demaría", categoria: "damas_a" }, { nombre: "Kari", categoria: "damas_a" }, { nombre: "Grace", categoria: "damas_a" } ],
+            damas_b: [ { nombre: "Mariela", categoria: "damas_b" }, { nombre: "Mariana", categoria: "damas_b" }, { nombre: "Caro Razquin", categoria: "damas_b" }, { nombre: "Beltra", categoria: "damas_b" } ],
+            damas_c: [ { nombre: "Nelly", categoria: "damas_c" }, { nombre: "Marina", categoria: "damas_c" }, { nombre: "Lulu", categoria: "damas_c" }, { nombre: "Caro Sorbi", categoria: "damas_c" } ]
+        };
+
+        const EfectividadBar = ({ ganados, perdidos, label }) => {
+            const total = ganados + perdidos; const pG = total > 0 ? (ganados / total) * 100 : 0; const pP = total > 0 ? (perdidos / total) * 100 : 0;
+            return (
+                <div style={{marginBottom: '15px'}}>{label && <div style={{fontSize: '14px', color: '#475569', marginBottom: '5px', fontWeight: 'bold'}}>{label} ({ganados}G - {perdidos}P)</div>}
+                    <div className="efectividad-bar">
+                        {ganados > 0 && <div className="ef-ganados" style={{width: `${pG}%`}}>{pG.toFixed(0)}%</div>}
+                        {perdidos > 0 && <div className="ef-perdidos" style={{width: `${pP}%`}}>{pP.toFixed(0)}%</div>}
+                        {total === 0 && <div style={{width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '11px', color: '#94a3b8'}}>Sin partidos</div>}
+                    </div>
+                </div>
+            );
+        };
+
+        function App() {
+            const [fechas, setFechas] = useState([]);
+            const [resultados, setResultados] = useState({});
+            const [subTab, setSubTab] = useState('individual'); 
+            
+            // Filtros
+            const [indivPlayer, setIndivPlayer] = useState('');
+            const [parRama, setParRama] = useState(''); 
+            const [parTipo, setParTipo] = useState(''); 
+            const [parElegida, setParElegida] = useState('');
+
+            // Cargar datos al montar
+            useEffect(() => {
+                const datosGuardados = localStorage.getItem('goat_torneo_data');
+                if (datosGuardados) {
+                    try {
+                        const datos = JSON.parse(datosGuardados);
+                        setFechas(datos.fechas || []);
+                        setResultados(datos.resultados || {});
+                    } catch (e) { console.error('Error al cargar datos:', e); }
+                }
+            }, []);
+
+            // Motor de Estadísticas
+            const calcularEstadisticas = () => {
+                const stats = { jugadores: {}, parejas: {} };
+                const todosJugadores = Object.values(JUGADORES_GOAT).flat();
+                
+                todosJugadores.forEach(jugador => {
+                    stats.jugadores[jugador.nombre] = { 
+                        categoria: jugador.categoria,
+                        singles: { ganados: 0, perdidos: 0 }, 
+                        dobles: { ganados: 0, perdidos: 0 }, 
+                        total: { ganados: 0, perdidos: 0, historial: [] } 
+                    };
+                });
+                
+                fechas.forEach((fecha, fechaIdx) => {
+                    if (!fecha || !fecha.partidos) return;
+                    fecha.partidos.forEach(partido => {
+                        if (partido.jugadores && partido.jugadores.length > 0) {
+                            const key = `${fechaIdx}-${partido.id}`; 
+                            const ganado = resultados[key] || false; 
+                            const esSingle = partido.numJugadores === 1;
+                            
+                            partido.jugadores.forEach(jugador => {
+                                if (stats.jugadores[jugador]) {
+                                    const companeros = partido.jugadores.filter(j => j !== jugador);
+                                    const compTexto = companeros.length > 0 ? companeros.join(' / ') : 'Jugó Single';
+
+                                    if (esSingle) stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
+                                    else stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
+                                    
+                                    stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
+                                    stats.jugadores[jugador].total.historial.push({ fechaNum: fecha.numero, rival: fecha.rival, tipo: partido.tipo, companero: compTexto, resultado: ganado });
+                                }
+                            });
+
+                            if (!esSingle && partido.jugadores.length === 2) {
+                                const parejaKey = [...partido.jugadores].sort().join(' - ');
+                                if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [], tiposJugados: [] };
+                                stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
+                                stats.parejas[parejaKey].fechas.push({ fecha: fecha.numero, rival: fecha.rival, tipo: partido.tipo, resultado: ganado });
+                                if (!stats.parejas[parejaKey].tiposJugados.includes(partido.tipo)) stats.parejas[parejaKey].tiposJugados.push(partido.tipo);
+                            }
+                        }
+                    });
+                });
+                return stats;
+            };
+
+            const stats = calcularEstadisticas();
+            const allPlayers = Object.keys(stats.jugadores).sort((a,b) => a.localeCompare(b));
+            const tiposOptions = PARTIDOS.filter(p => { if (parRama === 'Damas') return p.grupo === 'damas'; if (parRama === 'Caballeros') return p.grupo === 'dobles_puros' || p.grupo === 'dobles_combinados'; if (parRama === 'Mixtos') return p.grupo === 'mixtos'; return false; }).map(p => p.tipo);
+            const parejasDisponibles = Object.entries(stats.parejas).filter(([_, data]) => parTipo === '' || data.tiposJugados.includes(parTipo)).sort((a, b) => a[0].localeCompare(b[0]));
+
+            const topSinglistas = Object.entries(stats.jugadores).filter(j => (j[1].singles.ganados + j[1].singles.perdidos) > 0).sort((a, b) => b[1].singles.ganados - a[1].singles.ganados);
+            const topParejas = Object.entries(stats.parejas).sort((a, b) => b[1].ganados - a[1].ganados);
+
+            // Exportación a Excel
+            const exportarAExcel = () => {
+                let csvContent = "\uFEFFESTADISTICAS INDIVIDUALES\nCategoria;Jugador;Singles Ganados;Singles Perdidos;Dobles Ganados;Dobles Perdidos;Total Ganados;Total Perdidos;% Victorias\n";
+                Object.entries(stats.jugadores).forEach(([nombre, data]) => {
+                    const total = data.total.ganados + data.total.perdidos;
+                    const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1).replace('.', ',') : "0,0";
+                    csvContent += `${data.categoria};${nombre};${data.singles.ganados};${data.singles.perdidos};${data.dobles.ganados};${data.dobles.perdidos};${data.total.ganados};${data.total.perdidos};${porcentaje}%\n`;
+                });
+                csvContent += "\n\nESTADISTICAS DE PAREJAS\nPareja;Ganados;Perdidos;% Victorias;Detalle de Partidos\n";
+                Object.entries(stats.parejas).forEach(([pareja, data]) => {
+                    const total = data.ganados + data.perdidos; 
+                    const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1).replace('.', ',') : "0,0";
+                    const detalle = data.fechas.map(f => `F${f.fecha} vs ${f.rival} (${f.resultado ? 'Ganado' : 'Perdido'})`).join(' | ');
+                    csvContent += `${pareja};${data.ganados};${data.perdidos};${porcentaje}%;${detalle}\n`;
+                });
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `GOAT_Estadisticas_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <div className="header-title">
+                            <img src="GOAT.jpeg" alt="GOAT Logo" />
+                            <div>
+                                <h1 style={{margin: 0, fontSize: '24px'}}>Análisis de Rendimiento</h1>
+                                <p style={{margin: 0, fontSize: '14px', color: '#64748b'}}>Datos y efectividad del equipo</p>
+                            </div>
+                        </div>
+                        <div style={{display: 'flex', gap: '10px'}}>
+                            <button className="btn-excel" onClick={exportarAExcel}>📊 Descargar CSV</button>
+                            <button className="btn-volver" onClick={() => window.location.href = 'index.html'}>⬅️ Volver a la App</button>
+                        </div>
+                    </div>
+
+                    <div className="sub-tabs">
+                        <button className={`sub-tab ${subTab === 'individual' ? 'active' : ''}`} onClick={() => setSubTab('individual')}>👤 Ficha Individual</button>
+                        <button className={`sub-tab ${subTab === 'parejas' ? 'active' : ''}`} onClick={() => setSubTab('parejas')}>👥 Análisis de Parejas</button>
+                        <button className={`sub-tab ${subTab === 'ranking' ? 'active' : ''}`} onClick={() => setSubTab('ranking')}>🏆 Rankings Top 10</button>
+                        <button className={`sub-tab ${subTab === 'general' ? 'active' : ''}`} onClick={() => setSubTab('general')}>📋 Tabla General</button>
+                    </div>
+
+                    {/* VISTA INDIVIDUAL */}
+                    {subTab === 'individual' && (
+                        <div>
+                            <div className="form-group" style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+                                <label>Seleccionar Jugador para analizar:</label>
+                                <select value={indivPlayer} onChange={e => setIndivPlayer(e.target.value)}>
+                                    <option value="">-- Buscar jugador --</option>
+                                    {allPlayers.map(j => <option key={j} value={j}>{j}</option>)}
+                                </select>
+                            </div>
+
+                            {indivPlayer && stats.jugadores[indivPlayer] && (
+                                <div className="grid-2">
+                                    <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Gráficos de Efectividad</h3>
+                                        <EfectividadBar ganados={stats.jugadores[indivPlayer].total.ganados} perdidos={stats.jugadores[indivPlayer].total.perdidos} label="Rendimiento Global" />
+                                        <EfectividadBar ganados={stats.jugadores[indivPlayer].dobles.ganados} perdidos={stats.jugadores[indivPlayer].dobles.perdidos} label="Desempeño en Dobles" />
+                                        <EfectividadBar ganados={stats.jugadores[indivPlayer].singles.ganados} perdidos={stats.jugadores[indivPlayer].singles.perdidos} label="Desempeño en Singles" />
+                                    </div>
+                                    <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Historial de Partidos</h3>
+                                        <div style={{maxHeight: '250px', overflowY: 'auto'}}>
+                                            {stats.jugadores[indivPlayer].total.historial.length === 0 ? <p style={{color: '#94a3b8'}}>Sin partidos jugados aún.</p> : 
+                                             stats.jugadores[indivPlayer].total.historial.map((h, i) => (
+                                                <div key={i} style={{padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                    <div>
+                                                        <strong style={{color: '#334155'}}>{h.tipo}</strong> <span style={{fontSize: '12px', color: '#64748b'}}>(F{h.fechaNum} vs {h.rival})</span>
+                                                        <div style={{fontSize: '13px', color: '#475569', marginTop: '4px'}}>Compañero: {h.companero}</div>
+                                                    </div>
+                                                    <span style={{background: h.resultado ? '#d1fae5' : '#fee2e2', color: h.resultado ? '#065f46' : '#991b1b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold'}}>
+                                                        {h.resultado ? 'Ganó' : 'Perdió'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* VISTA PAREJAS */}
+                    {subTab === 'parejas' && (
+                        <div>
+                            <div className="grid-2" style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px'}}>
+                                <div className="form-group" style={{marginBottom: 0}}>
+                                    <label>Rama</label>
+                                    <select value={parRama} onChange={e => {setParRama(e.target.value); setParTipo(''); setParElegida('');}}>
+                                        <option value="">-- Seleccionar --</option>
+                                        <option value="Damas">Damas</option>
+                                        <option value="Caballeros">Caballeros</option>
+                                        <option value="Mixtos">Mixtos</option>
+                                    </select>
+                                </div>
+                                <div className="form-group" style={{marginBottom: 0}}>
+                                    <label>Tipo de Partido</label>
+                                    <select value={parTipo} onChange={e => {setParTipo(e.target.value); setParElegida('');}} disabled={!parRama}>
+                                        <option value="">Todos los de la rama</option>
+                                        {tiposOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
+                                <div className="form-group" style={{marginBottom: 0, gridColumn: '1 / -1'}}>
+                                    <label>Elegir Pareja Analizada</label>
+                                    <select value={parElegida} onChange={e => setParElegida(e.target.value)} disabled={!parRama}>
+                                        <option value="">-- Buscar pareja --</option>
+                                        {parejasDisponibles.map(([p]) => <option key={p} value={p}>{p}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {parElegida && stats.parejas[parElegida] && (
+                                <div className="grid-2">
+                                    <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                        <h3 style={{marginBottom: '5px', color: '#1e3c72'}}>{parElegida}</h3>
+                                        <p style={{color: '#64748b', fontSize: '13px', marginBottom: '15px'}}>Categorías jugadas: {stats.parejas[parElegida].tiposJugados.join(', ')}</p>
+                                        <EfectividadBar ganados={stats.parejas[parElegida].ganados} perdidos={stats.parejas[parElegida].perdidos} label="Efectividad de la Pareja" />
+                                    </div>
+                                    <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Desempeño Juntos</h3>
+                                        <div style={{maxHeight: '250px', overflowY: 'auto'}}>
+                                            {stats.parejas[parElegida].fechas.map((h, i) => (
+                                                <div key={i} style={{padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                    <div>
+                                                        <strong style={{color: '#334155'}}>{h.tipo}</strong> 
+                                                        <div style={{fontSize: '13px', color: '#64748b', marginTop: '4px'}}>F{h.fecha} vs {h.rival}</div>
+                                                    </div>
+                                                    <span style={{background: h.resultado ? '#d1fae5' : '#fee2e2', color: h.resultado ? '#065f46' : '#991b1b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold'}}>
+                                                        {h.resultado ? 'Ganó' : 'Perdió'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* VISTA RANKING */}
+                    {subTab === 'ranking' && (
+                        <div className="grid-2">
+                            <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>🥇 Top 10 Parejas (Victorias)</h3>
+                                {topParejas.slice(0,10).map(([nombre, data], idx) => {
+                                    const total = data.ganados + data.perdidos;
+                                    const pct = total > 0 ? ((data.ganados / total) * 100).toFixed(0) : 0;
+                                    return (
+                                        <div key={idx} style={{marginBottom: '8px', padding: '12px', background: idx < 3 ? '#fffbef' : '#f8f9fa', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                            <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                <span style={{fontSize: '18px', fontWeight: 'bold', color: idx === 0 ? '#d4af37' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#475569'}}>#{idx + 1}</span>
+                                                <div>
+                                                    <strong style={{color: '#0f172a', display: 'block'}}>{nombre}</strong>
+                                                    <span style={{fontSize: '12px', color: '#64748b'}}>{data.ganados} Ganados, {data.perdidos} Perdidos</span>
+                                                </div>
+                                            </div>
+                                            <span style={{background: '#10b981', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold'}}>{pct}%</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>🎾 Top 10 Singlistas (Victorias)</h3>
+                                {topSinglistas.slice(0,10).map(([nombre, data], idx) => {
+                                    const total = data.singles.ganados + data.singles.perdidos;
+                                    const pct = total > 0 ? ((data.singles.ganados / total) * 100).toFixed(0) : 0;
+                                    return (
+                                        <div key={idx} style={{marginBottom: '8px', padding: '12px', background: idx < 3 ? '#fffbef' : '#f8f9fa', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                            <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                <span style={{fontSize: '18px', fontWeight: 'bold', color: idx === 0 ? '#d4af37' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#475569'}}>#{idx + 1}</span>
+                                                <div>
+                                                    <strong style={{color: '#0f172a', display: 'block'}}>{nombre}</strong>
+                                                    <span style={{fontSize: '12px', color: '#64748b'}}>{data.singles.ganados} Ganados, {data.singles.perdidos} Perdidos</span>
+                                                </div>
+                                            </div>
+                                            <span style={{background: '#10b981', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold'}}>{pct}%</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* VISTA TABLA GENERAL */}
+                    {subTab === 'general' && (
+                        <div className="table-container">
+                            <table className="stats-table">
+                                <thead>
+                                    <tr>
+                                        <th>Jugador</th>
+                                        <th>Categoría</th>
+                                        <th>Singles (G-P)</th>
+                                        <th>Dobles (G-P)</th>
+                                        <th>Total (G-P)</th>
+                                        <th>% Global</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {Object.entries(stats.jugadores).sort((a,b)=>b[1].total.ganados - a[1].total.ganados).map(([nombre, data], idx) => {
+                                        const total = data.total.ganados + data.total.perdidos; 
+                                        const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1) : 0;
+                                        return (
+                                            <tr key={nombre}>
+                                                <td><strong>{nombre}</strong></td>
+                                                <td style={{textTransform: 'capitalize'}}>{data.categoria.replace('_', ' ')}</td>
+                                                <td>{data.singles.ganados} - {data.singles.perdidos}</td>
+                                                <td>{data.dobles.ganados} - {data.dobles.perdidos}</td>
+                                                <td><strong>{data.total.ganados} - {data.total.perdidos}</strong></td>
+                                                <td>{porcentaje}%</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
