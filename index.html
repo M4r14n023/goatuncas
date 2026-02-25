@@ -43,6 +43,7 @@
             border-radius: 16px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
+            position: relative;
         }
 
         .header {
@@ -54,6 +55,7 @@
             align-items: center;
             justify-content: center;
             gap: 20px;
+            position: relative;
         }
 
         .header img {
@@ -79,7 +81,37 @@
             color: #c5a572;
         }
 
-        /* AJUSTES RESPONSIVE EN PESTAÑAS */
+        .login-container {
+            background: white;
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .role-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            background: #f8f9fa;
+            color: #1e3c72;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .role-btn:hover {
+            border-color: #d4af37;
+            background: #fffbef;
+            transform: translateY(-2px);
+        }
+
         .tabs {
             display: flex;
             background: #f5f5f5;
@@ -88,14 +120,8 @@
             -webkit-overflow-scrolling: touch;
         }
         
-        .tabs::-webkit-scrollbar {
-            height: 4px;
-        }
-        
-        .tabs::-webkit-scrollbar-thumb {
-            background: #c5a572;
-            border-radius: 4px;
-        }
+        .tabs::-webkit-scrollbar { height: 4px; }
+        .tabs::-webkit-scrollbar-thumb { background: #c5a572; border-radius: 4px; }
 
         .tab {
             flex: 1 0 auto; 
@@ -110,341 +136,88 @@
             transition: all 0.3s;
         }
 
-        .tab:hover {
-            background: #d0d0d0;
-        }
+        .tab:hover { background: #d0d0d0; }
+        .tab.active { background: white; border-bottom: 3px solid #d4af37; }
+        .tab.admin-tab { background: #1e293b; color: white; border-bottom: none; }
+        .tab.admin-tab.active { background: #0f172a; border-bottom: 3px solid #ef4444; }
 
-        .tab.active {
-            background: white;
-            border-bottom: 3px solid #d4af37;
+        .content { padding: 30px; min-height: 500px; }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
+        input[type="text"], input[type="password"], input[type="number"], textarea, select {
+            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
         }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #667eea; }
+        input:disabled, select:disabled { background: #f1f5f9; cursor: not-allowed; }
 
-        .tab.admin-tab {
-            background: #1e293b;
-            color: white;
-            border-bottom: none;
-        }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; margin-right: 10px; }
+        .btn-primary { background: #d4af37; color: #1a1a1a; font-weight: 700; }
+        .btn-primary:hover { background: #c5a03d; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .tab.admin-tab.active {
-            background: #0f172a;
-            border-bottom: 3px solid #ef4444;
-        }
+        .team-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+        .team-card { background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea; font-weight: bold; }
+        .team-card.goat { border-left-color: #10b981; background: #ecfdf5; }
 
-        .content {
-            padding: 30px;
-            min-height: 500px;
-        }
+        .match-grid { display: grid; gap: 15px; margin-top: 20px; }
+        .match-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px solid #ddd; }
+        .match-card.bonus { border-color: #f59e0b; background: #fffbeb; }
+        .match-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .match-type { font-weight: 700; color: #1e3c72; font-size: 16px; }
+        .match-time { background: #667eea; color: white; padding: 5px 12px; border-radius: 6px; font-size: 14px; }
+        .checkbox-container { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+        input[type="checkbox"] { width: 24px; height: 24px; cursor: pointer; }
+        input[type="checkbox"]:disabled { cursor: not-allowed; opacity: 0.5; }
 
-        .form-group {
-            margin-bottom: 25px;
-        }
+        .table-container { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-radius: 8px; }
+        .stats-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        .stats-table th, .stats-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .stats-table th { background: #f5f5f5; font-weight: 700; color: #1e3c72; }
+        .stats-table tr:hover { background: #f9fafb; }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
-        }
+        .warning { background: #fef3c7; border: 2px solid #f59e0b; padding: 15px; border-radius: 8px; margin: 15px 0; color: #92400e; font-weight: 600; }
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 10px; }
+        .modal-content { background: white; padding: 30px; border-radius: 16px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { font-size: 24px; font-weight: 700; margin-bottom: 20px; color: #1e3c72; }
 
-        input[type="text"],
-        input[type="password"],
-        input[type="number"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
+        .date-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; transition: all 0.3s ease; }
+        .date-header { font-size: 20px; font-weight: 700; color: #1e3c72; margin-bottom: 15px; }
 
-        input:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+        .player-count-warning { color: #dc2626; font-size: 12px; margin-top: 5px; }
+        .success-message { background: #d1fae5; border: 2px solid #10b981; padding: 15px; border-radius: 8px; margin: 15px 0; color: #065f46; font-weight: 600; }
+        .captain-badge { background: #f59e0b; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-left: 8px; }
 
-        textarea {
-            min-height: 150px;
-            font-family: monospace;
-        }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .grid-2 > div { min-width: 0; }
 
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-right: 10px;
-        }
-
-        .btn-primary {
-            background: #d4af37;
-            color: #1a1a1a;
-            font-weight: 700;
-        }
-
-        .btn-primary:hover {
-            background: #c5a03d;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
-        }
-
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #059669;
-        }
-
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-
-        .team-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        .user-menu {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
             gap: 15px;
-            margin-top: 20px;
-        }
-
-        .team-card {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .team-card.goat {
-            border-left-color: #10b981;
-            background: #ecfdf5;
-        }
-
-        .match-grid {
-            display: grid;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .match-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-        }
-
-        .match-card.bonus {
-            border-color: #f59e0b;
-            background: #fffbeb;
-        }
-
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .match-type {
-            font-weight: 700;
-            color: #1e3c72;
-            font-size: 16px;
-        }
-
-        .match-time {
-            background: #667eea;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        input[type="checkbox"] {
-            width: 24px;
-            height: 24px;
-            cursor: pointer;
-        }
-
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            border-radius: 8px;
-        }
-
-        .stats-table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 600px;
-        }
-
-        .stats-table th,
-        .stats-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .stats-table th {
-            background: #f5f5f5;
-            font-weight: 700;
-            color: #1e3c72;
-        }
-
-        .stats-table tr:hover {
-            background: #f9fafb;
-        }
-
-        .warning {
-            background: #fef3c7;
-            border: 2px solid #f59e0b;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            color: #92400e;
-            font-weight: 600;
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 10px;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            max-width: 800px;
-            width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            color: #1e3c72;
-        }
-
-        .date-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
-        }
-
-        .date-header {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1e3c72;
-            margin-bottom: 15px;
-        }
-
-        .player-count-warning {
-            color: #dc2626;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        .success-message {
-            background: #d1fae5;
-            border: 2px solid #10b981;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-            color: #065f46;
-            font-weight: 600;
-        }
-
-        .captain-badge {
-            background: #f59e0b;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            margin-left: 8px;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-        
-        .grid-2 > div {
-            min-width: 0;
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
         }
 
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .header {
-                flex-direction: column;
-                padding: 15px;
-            }
-            .header h1 {
-                font-size: 2em;
-                text-align: center;
-            }
-            .content {
-                padding: 15px;
-            }
-            .grid-2 {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-            .flex-mobile-col {
-                flex-direction: column !important;
-                align-items: stretch !important;
-            }
-            .btn-responsive {
-                width: 100%;
-                margin-bottom: 10px;
-                margin-right: 0 !important;
-            }
-            .match-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-            .modal-content {
-                padding: 20px;
-            }
-            .team-list {
-                grid-template-columns: 1fr;
-            }
+            body { padding: 10px; }
+            .header { flex-direction: column; padding: 15px; padding-top: 70px; }
+            .header h1 { font-size: 2em; text-align: center; }
+            .user-menu { top: 10px; right: 10px; padding: 5px 10px; }
+            .content { padding: 15px; }
+            .grid-2 { grid-template-columns: 1fr; gap: 15px; }
+            .flex-mobile-col { flex-direction: column !important; align-items: stretch !important; }
+            .btn-responsive { width: 100%; margin-bottom: 10px; margin-right: 0 !important; }
+            .match-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .modal-content { padding: 20px; }
+            .team-list { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -465,7 +238,6 @@
             appId: "1:642915679228:web:e6e48b25869d74c14cfe87"
         };
 
-        // Inicializar Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -475,26 +247,19 @@
 
         const guardarEnFirebase = async (datos) => {
             const syncTime = new Date().toISOString();
-            await database.ref(FIREBASE_PATH).set({
-                ...datos,
-                ultimaActualizacion: syncTime
-            });
+            await database.ref(FIREBASE_PATH).set({ ...datos, ultimaActualizacion: syncTime });
             return syncTime;
         };
 
         const cargarDesdeFirebase = () => {
-            return database.ref(FIREBASE_PATH).once('value').then(snapshot => {
-                return snapshot.val();
-            });
+            return database.ref(FIREBASE_PATH).once('value').then(snapshot => snapshot.val());
         };
 
         const escucharCambiosFirebase = (callback) => {
             const ref = database.ref(FIREBASE_PATH);
             ref.on('value', (snapshot) => {
                 const datos = snapshot.val();
-                if (datos) {
-                    callback(datos);
-                }
+                if (datos) callback(datos);
             });
             return () => ref.off('value');
         };
@@ -540,9 +305,62 @@
 
         const EQUIPOS_POR_DEFECTO = [ 'Uncas', 'El Rojo', 'Ferro', 'Tercer Tiempo', 'Tres Arroyos', 'Head', 'La Cardoneta', 'La Sede', 'Tiro Federal' ];
 
+        // COMPONENTE DE LOGIN (SELECCIÓN DE PERFIL)
+        function LoginScreen({ onLogin }) {
+            const [selectedRole, setSelectedRole] = useState(null);
+            const [pin, setPin] = useState('');
+
+            const handleEnter = () => {
+                if (selectedRole === 'jugador') {
+                    onLogin('jugador');
+                } else if (selectedRole === 'capitan') {
+                    if (pin === '1202') onLogin('capitan');
+                    else alert('PIN de Capitán incorrecto');
+                } else if (selectedRole === 'admin') {
+                    if (pin === '2702') onLogin('admin');
+                    else alert('PIN de Administrador incorrecto');
+                }
+            };
+
+            return (
+                <div className="container" style={{maxWidth: '100%', height: '100vh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2416 100%)', alignItems: 'center', justifyContent: 'center'}}>
+                    <div className="login-container">
+                        <img src="GOAT.jpeg" alt="GOAT Logo" style={{width: '100px', marginBottom: '20px'}} />
+                        <h1 style={{color: '#1e3c72', marginBottom: '10px'}}>Bienvenido a GOAT</h1>
+                        <p style={{color: '#666', marginBottom: '30px'}}>Seleccioná tu perfil para ingresar</p>
+
+                        {!selectedRole ? (
+                            <div>
+                                <button className="role-btn" onClick={() => { setSelectedRole('jugador'); onLogin('jugador'); }}>👤 Jugador (Solo Vista)</button>
+                                <button className="role-btn" onClick={() => setSelectedRole('capitan')}>⭐ Capitán</button>
+                                <button className="role-btn" onClick={() => setSelectedRole('admin')}>⚙️ Administrador</button>
+                            </div>
+                        ) : (
+                            <div>
+                                <h3 style={{marginBottom: '20px'}}>Ingresá el PIN de {selectedRole === 'capitan' ? 'Capitán' : 'Admin'}</h3>
+                                <input 
+                                    type="password" 
+                                    value={pin} 
+                                    onChange={(e) => setPin(e.target.value)}
+                                    onKeyPress={(e) => e.key === 'Enter' && handleEnter()}
+                                    style={{textAlign: 'center', fontSize: '24px', letterSpacing: '8px', marginBottom: '20px'}}
+                                    autoFocus
+                                />
+                                <div style={{display: 'flex', gap: '10px'}}>
+                                    <button className="btn btn-primary" style={{flex: 1}} onClick={handleEnter}>Ingresar</button>
+                                    <button className="btn btn-danger" style={{flex: 1}} onClick={() => { setSelectedRole(null); setPin(''); }}>Volver</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
         function App() {
-            const [activeTab, setActiveTab] = useState('configuracion');
-            const [isAdmin, setIsAdmin] = useState(false); 
+            const [userRole, setUserRole] = useState(localStorage.getItem('goat_user_role') || null);
+            const [activeTab, setActiveTab] = useState('busqueda'); // Inicia en "Mis Partidos" por defecto
+            
             const [numEquipos, setNumEquipos] = useState(10);
             const [equipos, setEquipos] = useState([]);
             const [baseEquipos, setBaseEquipos] = useState(EQUIPOS_POR_DEFECTO); 
@@ -555,8 +373,13 @@
             const [syncStatus, setSyncStatus] = useState('local');
             const [lastSync, setLastSync] = useState(null);
 
-            // ESCUDO ANTI-BUCLES INFINITOS
             const isReceivingData = useRef(false);
+
+            // Guardar rol en memoria
+            useEffect(() => {
+                if (userRole) localStorage.setItem('goat_user_role', userRole);
+                else localStorage.removeItem('goat_user_role');
+            }, [userRole]);
 
             useEffect(() => {
                 const cargarDatos = async () => {
@@ -564,15 +387,7 @@
                     if (datosGuardados) {
                         try {
                             const datos = JSON.parse(datosGuardados);
-                            setNumEquipos(datos.numEquipos || 10);
-                            setEquipos(datos.equipos || []);
-                            setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); 
-                            setFechas(datos.fechas || []);
-                            setResultados(datos.resultados || {});
-                            setPosiciones(datos.posiciones || {});
-                            setCrucesFinales(datos.crucesFinales || []);
-                            setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] });
-                            setPlayoffAvances(datos.playoffAvances || {});
+                            setNumEquipos(datos.numEquipos || 10); setEquipos(datos.equipos || []); setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datos.fechas || []); setResultados(datos.resultados || {}); setPosiciones(datos.posiciones || {}); setCrucesFinales(datos.crucesFinales || []); setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datos.playoffAvances || {});
                         } catch (e) { console.error('Error al cargar datos:', e); }
                     }
 
@@ -581,27 +396,12 @@
                         const datosFirebase = await cargarDesdeFirebase();
                         if (datosFirebase) {
                             isReceivingData.current = true;
-                            
-                            setNumEquipos(datosFirebase.numEquipos || 10);
-                            setEquipos(datosFirebase.equipos || []);
-                            setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO);
-                            setFechas(datosFirebase.fechas || []);
-                            setResultados(datosFirebase.resultados || {});
-                            setPosiciones(datosFirebase.posiciones || {});
-                            setCrucesFinales(datosFirebase.crucesFinales || []);
-                            setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] });
-                            setPlayoffAvances(datosFirebase.playoffAvances || {});
-                            setLastSync(datosFirebase.ultimaActualizacion);
-                            setSyncStatus('synced');
+                            setNumEquipos(datosFirebase.numEquipos || 10); setEquipos(datosFirebase.equipos || []); setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datosFirebase.fechas || []); setResultados(datosFirebase.resultados || {}); setPosiciones(datosFirebase.posiciones || {}); setCrucesFinales(datosFirebase.crucesFinales || []); setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datosFirebase.playoffAvances || {});
+                            setLastSync(datosFirebase.ultimaActualizacion); setSyncStatus('synced');
                             localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
-                            
                             setTimeout(() => { isReceivingData.current = false; }, 1000);
-                        } else {
-                            setSyncStatus('local');
-                        }
-                    } catch (e) {
-                        setSyncStatus('local');
-                    }
+                        } else { setSyncStatus('local'); }
+                    } catch (e) { setSyncStatus('local'); }
                 };
 
                 cargarDatos();
@@ -609,20 +409,9 @@
                 const unsubscribe = escucharCambiosFirebase((datos) => {
                     if (datos && datos.ultimaActualizacion !== lastSync) {
                         isReceivingData.current = true;
-                        
-                        setNumEquipos(datos.numEquipos || 10);
-                        setEquipos(datos.equipos || []);
-                        setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO);
-                        setFechas(datos.fechas || []);
-                        setResultados(datos.resultados || {});
-                        setPosiciones(datos.posiciones || {});
-                        setCrucesFinales(datos.crucesFinales || []);
-                        setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] });
-                        setPlayoffAvances(datos.playoffAvances || {});
-                        setLastSync(datos.ultimaActualizacion);
-                        setSyncStatus('synced');
+                        setNumEquipos(datos.numEquipos || 10); setEquipos(datos.equipos || []); setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datos.fechas || []); setResultados(datos.resultados || {}); setPosiciones(datos.posiciones || {}); setCrucesFinales(datos.crucesFinales || []); setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datos.playoffAvances || {});
+                        setLastSync(datos.ultimaActualizacion); setSyncStatus('synced');
                         localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
-                        
                         setTimeout(() => { isReceivingData.current = false; }, 1000);
                     }
                 });
@@ -630,26 +419,29 @@
                 return () => { if (unsubscribe) unsubscribe(); };
             }, []);
 
-            // EFECTO DE GUARDADO EN NUBE CONTROLADO
             useEffect(() => {
-                if (isReceivingData.current) return; // Evita el bucle infinito
-
+                if (isReceivingData.current) return;
                 const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
                 
-                if (equipos.length > 0 || fechas.length > 0) {
+                // Solo admin y capitán suben datos. Jugador no guarda en nube (protección extra)
+                if (userRole !== 'jugador' && (equipos.length > 0 || fechas.length > 0)) {
                     setSyncStatus('syncing');
                     guardarEnFirebase(datos)
-                        .then((tiempoExacto) => { 
-                            setSyncStatus('synced'); 
-                            setLastSync(tiempoExacto); 
-                        })
+                        .then((tiempoExacto) => { setSyncStatus('synced'); setLastSync(tiempoExacto); })
                         .catch((error) => { console.error('Error al sincronizar:', error); setSyncStatus('error'); });
                 }
-            }, [numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances]);
+            }, [numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances, userRole]);
 
-            const activarAdmin = () => { setIsAdmin(true); setActiveTab('admin'); };
-            const cerrarAdmin = () => { setIsAdmin(false); setActiveTab('configuracion'); };
+            const logout = () => {
+                setUserRole(null);
+                setActiveTab('busqueda');
+            };
+
+            // SI NO HAY ROL SELECCIONADO, MUESTRA LOGIN
+            if (!userRole) {
+                return <LoginScreen onLogin={setUserRole} />;
+            }
 
             const guardarEquiposSeleccionados = (nombresRivales) => {
                 const nuevosEquipos = nombresRivales.map(nombre => ({ nombre: nombre, esGoat: false }));
@@ -658,12 +450,7 @@
             };
 
             const agregarFecha = (numFecha, rival) => {
-                const nuevaFecha = {
-                    numero: numFecha, rival: rival,
-                    partidos: PARTIDOS.map(p => ({ ...p, jugadores: [], horario: '', dia: 'sabado', ganado: false })),
-                    partidoBonus: null, categoriasHabilitadas: { caballeros_5ta_en_4ta: false, caballeros_4ta_en_3ra: false, caballeros_3ra_en_2da: false, damas_c_en_b: false, damas_b_en_a: false },
-                    jugadoresHabilitados: []
-                };
+                const nuevaFecha = { numero: numFecha, rival: rival, partidos: PARTIDOS.map(p => ({ ...p, jugadores: [], horario: '', dia: 'sabado', ganado: false })), partidoBonus: null, categoriasHabilitadas: { caballeros_5ta_en_4ta: false, caballeros_4ta_en_3ra: false, caballeros_3ra_en_2da: false, damas_c_en_b: false, damas_b_en_a: false }, jugadoresHabilitados: [] };
                 const nuevasFechas = [...fechas]; nuevasFechas[numFecha - 1] = nuevaFecha; setFechas(nuevasFechas);
             };
 
@@ -691,14 +478,13 @@
             const contarPartidosJugador = (fechaIndex, nombreJugador) => {
                 let count = 0;
                 if (fechas[fechaIndex] && fechas[fechaIndex].partidos) {
-                    fechas[fechaIndex].partidos.forEach(partido => { 
-                        if (partido.jugadores && partido.jugadores.some(j => j === nombreJugador)) count++; 
-                    });
+                    fechas[fechaIndex].partidos.forEach(partido => { if (partido.jugadores && partido.jugadores.some(j => j === nombreJugador)) count++; });
                 }
                 return count;
             };
 
             const toggleResultado = (fechaIndex, partidoId) => {
+                if (userRole === 'jugador') return; // Bloqueo de seguridad
                 const key = `${fechaIndex}-${partidoId}`; setResultados(prev => ({ ...prev, [key]: !prev[key] }));
             };
 
@@ -816,60 +602,71 @@
                         <div className="header-text">
                             <h1>GOAT - Interclubes UNCAS</h1>
                             <p>Sistema completo de seguimiento y armado de fechas</p>
-                            {isAdmin && (
+                            
+                            {userRole !== 'jugador' && (
                                 <div style={{marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#c5a572'}}>
-                                    {syncStatus === 'synced' && <><span style={{color: '#10b981'}}>●</span><span>Sincronizado con Firebase</span></>}
+                                    {syncStatus === 'synced' && <><span style={{color: '#10b981'}}>●</span><span>Sincronizado con Nube</span></>}
                                     {syncStatus === 'syncing' && <><span style={{color: '#f59e0b'}}>●</span><span>Sincronizando...</span></>}
                                     {syncStatus === 'local' && <><span style={{color: '#6b7280'}}>●</span><span>Solo local</span></>}
                                     {syncStatus === 'error' && <><span style={{color: '#ef4444'}}>●</span><span>Error de sincronización</span></>}
                                 </div>
                             )}
                         </div>
+                        
+                        <div className="user-menu">
+                            <span style={{color: '#c5a572', fontSize: '14px', fontWeight: 'bold'}}>
+                                {userRole === 'admin' ? '⚙️ Admin' : userRole === 'capitan' ? '⭐ Capitán' : '👤 Jugador'}
+                            </span>
+                            <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin: 0}} onClick={logout}>Salir</button>
+                        </div>
                     </div>
 
                     <div className="tabs">
-                        <button className={`tab ${activeTab === 'configuracion' ? 'active' : ''}`} onClick={() => setActiveTab('configuracion')}>Configuración</button>
-                        <button className={`tab ${activeTab === 'fechas' ? 'active' : ''}`} onClick={() => setActiveTab('fechas')}>Fechas</button>
+                        <button className={`tab ${activeTab === 'busqueda' ? 'active' : ''}`} onClick={() => setActiveTab('busqueda')}>Mis Partidos 🔍</button>
                         <button className={`tab ${activeTab === 'resultados' ? 'active' : ''}`} onClick={() => setActiveTab('resultados')}>Resultados</button>
                         <button className={`tab ${activeTab === 'tablas' ? 'active' : ''}`} onClick={() => setActiveTab('tablas')}>Tablas</button>
                         <button className={`tab ${activeTab === 'estadisticas' ? 'active' : ''}`} onClick={() => setActiveTab('estadisticas')}>Estadísticas</button>
-                        <button className={`tab ${activeTab === 'busqueda' ? 'active' : ''}`} onClick={() => setActiveTab('busqueda')}>Mis Partidos 🔍</button>
+                        <button className={`tab ${activeTab === 'fechas' ? 'active' : ''}`} onClick={() => setActiveTab('fechas')}>Fechas</button>
+                        <button className={`tab ${activeTab === 'configuracion' ? 'active' : ''}`} onClick={() => setActiveTab('configuracion')}>Configuración</button>
                         
-                        {isAdmin && (
+                        {userRole === 'admin' && (
                             <button className={`tab admin-tab ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => setActiveTab('admin')}>⚙️ Admin</button>
                         )}
                     </div>
 
                     <div className="content">
+                        {activeTab === 'busqueda' && <BusquedaTab fechas={fechas} />}
+                        {activeTab === 'estadisticas' && <EstadisticasTab calcularEstadisticas={calcularEstadisticas} />}
+                        
                         {activeTab === 'configuracion' && (
                             <ConfiguracionTab 
-                                numEquipos={numEquipos} setNumEquipos={setNumEquipos} equipos={equipos} baseEquipos={baseEquipos} setBaseEquipos={setBaseEquipos}
+                                userRole={userRole} numEquipos={numEquipos} setNumEquipos={setNumEquipos} equipos={equipos} baseEquipos={baseEquipos} setBaseEquipos={setBaseEquipos}
                                 guardarEquiposSeleccionados={guardarEquiposSeleccionados} agregarFecha={agregarFecha} fechas={fechas} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig}
-                                activarAdmin={activarAdmin}
                             />
                         )}
                         {activeTab === 'fechas' && (
-                            <FechasTab fechas={fechas} procesarHorarios={procesarHorarios} actualizarJugadores={actualizarJugadores} contarPartidosJugador={contarPartidosJugador} generarPDF={generarPDF} setFechas={setFechas} />
+                            <FechasTab 
+                                userRole={userRole} fechas={fechas} procesarHorarios={procesarHorarios} actualizarJugadores={actualizarJugadores} 
+                                contarPartidosJugador={contarPartidosJugador} generarPDF={generarPDF} setFechas={setFechas} 
+                            />
                         )}
                         {activeTab === 'resultados' && (
-                            <ResultadosTab fechas={fechas} resultados={resultados} toggleResultado={toggleResultado} zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} />
+                            <ResultadosTab 
+                                userRole={userRole} fechas={fechas} resultados={resultados} toggleResultado={toggleResultado} zonasConfig={zonasConfig} 
+                                crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} 
+                            />
                         )}
                         {activeTab === 'tablas' && (
-                            <TablasTab equipos={equipos} fechas={fechas} resultados={resultados} crucesFinales={crucesFinales} setCrucesFinales={setCrucesFinales} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig} />
+                            <TablasTab 
+                                userRole={userRole} equipos={equipos} fechas={fechas} resultados={resultados} crucesFinales={crucesFinales} 
+                                setCrucesFinales={setCrucesFinales} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig} 
+                            />
                         )}
-                        {activeTab === 'estadisticas' && (
-                            <EstadisticasTab calcularEstadisticas={calcularEstadisticas} />
-                        )}
-                        {activeTab === 'busqueda' && (
-                            <BusquedaTab fechas={fechas} />
-                        )}
-
-                        {activeTab === 'admin' && isAdmin && (
+                        {activeTab === 'admin' && userRole === 'admin' && (
                             <AdminTab 
                                 numEquipos={numEquipos} equipos={equipos} baseEquipos={baseEquipos} fechas={fechas} resultados={resultados} posiciones={posiciones} crucesFinales={crucesFinales} zonasConfig={zonasConfig} playoffAvances={playoffAvances}
                                 setNumEquipos={setNumEquipos} setEquipos={setEquipos} setBaseEquipos={setBaseEquipos} setFechas={setFechas} setResultados={setResultados} setPosiciones={setPosiciones} setCrucesFinales={setCrucesFinales} setZonasConfig={setZonasConfig} setPlayoffAvances={setPlayoffAvances}
                                 syncStatus={syncStatus} setSyncStatus={setSyncStatus} lastSync={lastSync} setLastSync={setLastSync} guardarEnFirebase={guardarEnFirebase} cargarDesdeFirebase={cargarDesdeFirebase}
-                                cerrarAdmin={cerrarAdmin} 
                             />
                         )}
                     </div>
@@ -877,16 +674,16 @@
             );
         }
 
+        // COMPONENTES
+
         function BusquedaTab({ fechas }) {
             const [jugadorSeleccionado, setJugadorSeleccionado] = useState('');
             const [fechaSeleccionada, setFechaSeleccionada] = useState('todas');
-
             const jugadores = Object.values(JUGADORES_GOAT).flat().map(j => j.nombre).sort((a, b) => a.localeCompare(b));
 
             return (
                 <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>🔍 Mis Partidos</h2>
-                    
                     <div className="grid-2" style={{marginBottom: '30px', background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
                         <div className="form-group" style={{marginBottom: 0}}>
                             <label>Seleccionar Jugador</label>
@@ -907,12 +704,9 @@
                     {jugadorSeleccionado ? (
                         <div>
                             <h3 style={{marginBottom: '20px', color: '#1e3c72'}}>Partidos asignados para {jugadorSeleccionado}</h3>
-                            
                             {fechas.filter((_, idx) => fechaSeleccionada === 'todas' || parseInt(fechaSeleccionada) === idx).map((fecha, fechaIdx) => {
                                 if (!fecha || !fecha.partidos) return null;
-                                
                                 const partidosDelJugador = fecha.partidos.filter(p => p.jugadores && p.jugadores.includes(jugadorSeleccionado) && p.horario);
-                                
                                 if (partidosDelJugador.length === 0) return null;
 
                                 return (
@@ -937,9 +731,7 @@
                                                         </div>
                                                         <div style={{background: 'white', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
                                                             <strong style={{color: '#64748b'}}>Compañero/a: </strong> 
-                                                            <span style={{fontWeight: '600', color: '#0f172a'}}>
-                                                                {companeros.length > 0 ? companeros.join(' / ') : 'Juega Single'}
-                                                            </span>
+                                                            <span style={{fontWeight: '600', color: '#0f172a'}}>{companeros.length > 0 ? companeros.join(' / ') : 'Juega Single'}</span>
                                                         </div>
                                                     </div>
                                                 );
@@ -951,11 +743,7 @@
                             
                             {fechas.filter((_, idx) => fechaSeleccionada === 'todas' || parseInt(fechaSeleccionada) === idx).every(fecha => 
                                 !fecha.partidos || fecha.partidos.filter(p => p.jugadores && p.jugadores.includes(jugadorSeleccionado) && p.horario).length === 0
-                            ) && (
-                                <div className="warning" style={{textAlign: 'center', padding: '20px'}}>
-                                    {jugadorSeleccionado} no está convocado para {fechaSeleccionada === 'todas' ? 'ninguna fecha' : 'esta fecha'}.
-                                </div>
-                            )}
+                            ) && (<div className="warning" style={{textAlign: 'center', padding: '20px'}}>{jugadorSeleccionado} no está convocado para {fechaSeleccionada === 'todas' ? 'ninguna fecha' : 'esta fecha'}.</div>)}
                         </div>
                     ) : (
                         <div style={{textAlign: 'center', padding: '40px', background: '#f8f9fa', borderRadius: '8px', color: '#64748b', border: '2px dashed #cbd5e1'}}>
@@ -968,148 +756,22 @@
             );
         }
 
-        function AdminTab({ 
-            numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances,
-            setNumEquipos, setEquipos, setBaseEquipos, setFechas, setResultados, setPosiciones, setCrucesFinales, setZonasConfig, setPlayoffAvances,
-            syncStatus, setSyncStatus, lastSync, setLastSync, guardarEnFirebase, cargarDesdeFirebase, cerrarAdmin
-        }) {
-            const exportarDatos = () => {
-                const datos = localStorage.getItem('goat_torneo_data');
-                if (!datos) { alert('No hay datos guardados para exportar.'); return; }
-                const blob = new Blob([datos], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a'); a.href = url;
-                a.download = `goat_backup_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-            };
-
-            const importarDatos = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (evento) => {
-                    try {
-                        const contenido = JSON.parse(evento.target.result);
-                        if (contenido && (contenido.equipos || contenido.baseEquipos)) {
-                            if (confirm('¿Estás seguro de sobreescribir los datos actuales con este respaldo?')) {
-                                localStorage.setItem('goat_torneo_data', JSON.stringify(contenido));
-                                alert('Datos importados correctamente. La página se recargará.');
-                                window.location.reload();
-                            }
-                        } else { alert('El archivo no parece ser un respaldo válido de la app.'); }
-                    } catch (error) { alert('Error al leer el archivo. Asegurate de que sea un archivo JSON válido.'); }
-                };
-                reader.readAsText(file); e.target.value = ''; 
-            };
-
-            return (
-                <div>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px'}}>
-                        <h2 style={{color: '#1e3c72', margin: 0}}>⚙️ Panel de Control Administrador</h2>
-                        <button className="btn btn-danger btn-responsive" onClick={cerrarAdmin} style={{margin: 0}}>🔒 Cerrar Sesión Admin</button>
-                    </div>
-                    
-                    <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid #e2e8f0'}}>
-                        <h3 style={{marginBottom: '10px', color: '#0f172a'}}>💾 Respaldo y Nube</h3>
-                        <p style={{marginBottom: '20px', color: '#64748b', fontSize: '14px'}}>Sincronizá el estado actual del torneo o exportá copias manuales de seguridad.</p>
-                        
-                        <div className="flex-mobile-col" style={{display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap'}}>
-                            <button className="btn btn-success btn-responsive" onClick={exportarDatos}>⬇️ Exportar JSON</button>
-                            <div style={{position: 'relative'}}>
-                                <input type="file" id="importFile" accept=".json" style={{display: 'none'}} onChange={importarDatos} />
-                                <button className="btn btn-primary btn-responsive" onClick={() => document.getElementById('importFile').click()} style={{background: '#475569', color: 'white'}}>⬆️ Importar JSON</button>
-                            </div>
-                            
-                            <div style={{width: '2px', height: '30px', background: '#cbd5e1', margin: '0 10px'}} className="hidden-mobile"></div>
-
-                            <button 
-                                className="btn btn-primary btn-responsive" style={{background: '#3b82f6'}}
-                                onClick={async () => {
-                                    try {
-                                        setSyncStatus('syncing');
-                                        const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
-                                        const syncTime = await guardarEnFirebase(datos);
-                                        setSyncStatus('synced'); setLastSync(syncTime);
-                                        alert('✓ Datos guardados en Firebase exitosamente');
-                                    } catch (error) { setSyncStatus('error'); alert('✗ Error al guardar en Firebase'); }
-                                }}
-                                disabled={syncStatus === 'syncing'}
-                            >
-                                ☁️ Forzar Guardado Nube
-                            </button>
-                            <button 
-                                className="btn btn-success btn-responsive" style={{background: '#14b8a6'}}
-                                onClick={async () => {
-                                    try {
-                                        setSyncStatus('syncing');
-                                        const datosFirebase = await cargarDesdeFirebase();
-                                        if (datosFirebase) {
-                                            setNumEquipos(datosFirebase.numEquipos || 10); setEquipos(datosFirebase.equipos || []); setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datosFirebase.fechas || []); setResultados(datosFirebase.resultados || {}); setPosiciones(datosFirebase.posiciones || {}); setCrucesFinales(datosFirebase.crucesFinales || []); setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datosFirebase.playoffAvances || {});
-                                            setLastSync(datosFirebase.ultimaActualizacion); setSyncStatus('synced'); localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
-                                            alert('✓ Datos cargados desde Firebase exitosamente');
-                                        } else { alert('No hay datos guardados en Firebase'); setSyncStatus('local'); }
-                                    } catch (error) { setSyncStatus('error'); alert('✗ Error al cargar desde Firebase'); }
-                                }}
-                                disabled={syncStatus === 'syncing'}
-                            >
-                                ☁️ Forzar Carga Nube
-                            </button>
-                        </div>
-                        {lastSync && (<p style={{marginTop: '15px', fontSize: '13px', color: '#64748b', fontWeight: 'bold'}}>Última sincronización en nube: {new Date(lastSync).toLocaleString('es-AR')}</p>)}
-                    </div>
-
-                    <div style={{background: '#fee2e2', padding: '20px', borderRadius: '8px', border: '1px solid #fca5a5'}}>
-                        <h3 style={{marginBottom: '10px', color: '#b91c1c'}}>⚠️ Zona de Peligro</h3>
-                        <p style={{marginBottom: '20px', color: '#991b1b', fontSize: '14px'}}>Estas acciones son destructivas y no se pueden deshacer.</p>
-                        <button className="btn btn-danger btn-responsive" onClick={() => {
-                            if (confirm('¿Estás seguro de que querés borrar el torneo actual? OJO: La base de clubes se mantendrá, pero las fechas y resultados se borrarán de tu navegador (tendrás que pisarlo en la nube manualmente luego).')) {
-                                const datosGuardados = localStorage.getItem('goat_torneo_data');
-                                let backupBase = EQUIPOS_POR_DEFECTO;
-                                if (datosGuardados) backupBase = JSON.parse(datosGuardados).baseEquipos || backupBase;
-                                localStorage.removeItem('goat_torneo_data');
-                                localStorage.setItem('goat_torneo_data', JSON.stringify({ baseEquipos: backupBase }));
-                                window.location.reload();
-                            }
-                        }}>🗑️ Resetear Torneo Actual</button>
-                    </div>
-                </div>
-            );
-        }
-
-        function DevModal({ onClose, onSuccess }) {
-            const [pin, setPin] = useState('');
-            const handleSubmit = () => {
-                if (pin === '2702') { onSuccess(); } 
-                else { alert('Clave incorrecta'); onClose(); }
-            };
-            return (
-                <div className="modal" onClick={onClose}>
-                    <div className="modal-content" onClick={e => e.stopPropagation()} style={{maxWidth: '400px', textAlign: 'center'}}>
-                        <h3 style={{marginBottom: '20px', color: '#1e3c72'}}>🔒 Acceso Desarrollador</h3>
-                        <input type="password" value={pin} onChange={e => setPin(e.target.value)} placeholder="Ingrese el PIN..." onKeyPress={e => e.key === 'Enter' && handleSubmit()} style={{textAlign: 'center', fontSize: '20px', letterSpacing: '5px', marginBottom: '20px'}} autoFocus />
-                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', justifyContent: 'center'}}>
-                            <button className="btn btn-primary" onClick={handleSubmit}>Ingresar</button>
-                            <button className="btn btn-danger" onClick={onClose}>Cancelar</button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function ConfiguracionTab({ numEquipos, setNumEquipos, equipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, agregarFecha, fechas, zonasConfig, setZonasConfig, activarAdmin }) {
+        function ConfiguracionTab({ userRole, numEquipos, setNumEquipos, equipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, agregarFecha, fechas, zonasConfig, setZonasConfig }) {
             const [showEquiposModal, setShowEquiposModal] = useState(false);
             const [showAsignarFechasModal, setShowAsignarFechasModal] = useState(false);
-            const [showDevModal, setShowDevModal] = useState(false);
 
             return (
                 <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Configuración del Torneo</h2>
-                    <div className="form-group">
-                        <label>Número total de equipos</label>
-                        <input type="number" value={numEquipos} onChange={(e) => setNumEquipos(parseInt(e.target.value))} min="2" max="20" disabled={equipos.length > 0} />
-                    </div>
+                    
+                    {userRole !== 'jugador' && (
+                        <div className="form-group">
+                            <label>Número total de equipos</label>
+                            <input type="number" value={numEquipos} onChange={(e) => setNumEquipos(parseInt(e.target.value))} min="2" max="20" disabled={equipos.length > 0} />
+                        </div>
+                    )}
 
-                    {numEquipos === 10 && equipos.length < 10 && (
+                    {userRole !== 'jugador' && numEquipos === 10 && equipos.length < 10 && (
                         <div className="form-group">
                             <button className="btn btn-primary btn-responsive" onClick={() => setShowEquiposModal(true)}>Cargar Equipos Rivales</button>
                         </div>
@@ -1119,13 +781,13 @@
                         <ModalCargarEquipos baseEquipos={baseEquipos} setBaseEquipos={setBaseEquipos} onGuardar={(rivales) => { guardarEquiposSeleccionados(rivales); setShowEquiposModal(false); }} onClose={() => setShowEquiposModal(false)} />
                     )}
 
-                    {equipos.length > 0 && (
+                    {userRole !== 'jugador' && equipos.length > 0 && (
                         <div>
                             <h3 style={{marginTop: '30px', marginBottom: '15px'}}>Equipos Registrados</h3>
                             <div className="team-list">
                                 {equipos.map((eq, idx) => (
                                     <div key={idx} className={`team-card ${eq.esGoat ? 'goat' : ''}`}>
-                                        <strong>{eq.nombre}</strong> {eq.esGoat && <span> ⭐ (Nuestro Equipo)</span>}
+                                        <strong>{eq.nombre}</strong> {eq.esGoat && <span> ⭐</span>}
                                     </div>
                                 ))}
                             </div>
@@ -1133,48 +795,70 @@
                     )}
 
                     {equipos.length === 10 && (
-                        <div style={{marginTop: '40px'}}>
-                            <h3 style={{marginBottom: '20px'}}>Configurar Fechas</h3>
-                            {[1, 2, 3, 4].map(numFecha => (
-                                <div key={numFecha} className="form-group">
-                                    <label>Rival Fecha {numFecha}</label>
-                                    <select value={fechas[numFecha-1]?.rival || ''} onChange={(e) => { if (e.target.value) { agregarFecha(numFecha, e.target.value); } }}>
-                                        <option value="">Seleccionar rival...</option>
-                                        {equipos.filter(eq => !eq.esGoat).map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}
-                                    </select>
+                        <div style={{marginTop: userRole !== 'jugador' ? '40px' : '0px'}}>
+                            
+                            {userRole !== 'jugador' && (
+                                <div>
+                                    <h3 style={{marginBottom: '20px'}}>Configurar Fechas</h3>
+                                    {[1, 2, 3, 4].map(numFecha => (
+                                        <div key={numFecha} className="form-group">
+                                            <label>Rival Fecha {numFecha}</label>
+                                            <select value={fechas[numFecha-1]?.rival || ''} onChange={(e) => { if (e.target.value) { agregarFecha(numFecha, e.target.value); } }}>
+                                                <option value="">Seleccionar rival...</option>
+                                                {equipos.filter(eq => !eq.esGoat).map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}
+                                            </select>
+                                        </div>
+                                    ))}
+                                    {fechas.length === 4 && (<div className="success-message">✓ Todas las fechas configuradas. Ir a la pestaña "Fechas" para armar los equipos.</div>)}
                                 </div>
-                            ))}
+                            )}
 
-                            {fechas.length === 4 && (<div className="success-message">✓ Todas las fechas configuradas. Ir a la pestaña "Fechas" para armar los equipos.</div>)}
+                            <div style={{marginTop: userRole !== 'jugador' ? '40px' : '0px', paddingTop: userRole !== 'jugador' ? '30px' : '0px', borderTop: userRole !== 'jugador' ? '2px solid #ddd' : 'none'}}>
+                                <h3 style={{marginBottom: '20px'}}>Armado de Zonas</h3>
+                                
+                                {userRole === 'jugador' ? (
+                                    <div className="grid-2">
+                                        <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+                                            <h4 style={{marginBottom: '15px', color: '#1e3c72', borderBottom: '2px solid #d4af37', paddingBottom: '5px'}}>Zona 1</h4>
+                                            <ul style={{listStyle: 'none', padding: 0}}>
+                                                {zonasConfig.zona1.map((eq, idx) => eq ? <li key={idx} style={{padding: '8px 0', borderBottom: '1px solid #ddd', fontWeight: eq==='GOAT'?'bold':'normal', color: eq==='GOAT'?'#10b981':'#333'}}>{eq} {eq==='GOAT'&&'⭐'}</li> : null)}
+                                            </ul>
+                                        </div>
+                                        <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+                                            <h4 style={{marginBottom: '15px', color: '#1e3c72', borderBottom: '2px solid #d4af37', paddingBottom: '5px'}}>Zona 2</h4>
+                                            <ul style={{listStyle: 'none', padding: 0}}>
+                                                {zonasConfig.zona2.map((eq, idx) => eq ? <li key={idx} style={{padding: '8px 0', borderBottom: '1px solid #ddd', fontWeight: eq==='GOAT'?'bold':'normal', color: eq==='GOAT'?'#10b981':'#333'}}>{eq} {eq==='GOAT'&&'⭐'}</li> : null)}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid-2">
+                                        <div>
+                                            <label><strong>Zona 1</strong></label>
+                                            {[0, 1, 2, 3, 4].map(idx => (
+                                                <div key={idx} className="form-group">
+                                                    <select value={zonasConfig.zona1[idx] || ''} onChange={(e) => { const n = {...zonasConfig}; n.zona1[idx] = e.target.value; setZonasConfig(n); }}>
+                                                        <option value="">Seleccionar equipo...</option>
+                                                        {equipos.map((eq, eqIdx) => (<option key={eqIdx} value={eq.nombre}>{eq.nombre}</option>))}
+                                                    </select>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <div>
+                                            <label><strong>Zona 2</strong></label>
+                                            {[0, 1, 2, 3, 4].map(idx => (
+                                                <div key={idx} className="form-group">
+                                                    <select value={zonasConfig.zona2[idx] || ''} onChange={(e) => { const n = {...zonasConfig}; n.zona2[idx] = e.target.value; setZonasConfig(n); }}>
+                                                        <option value="">Seleccionar equipo...</option>
+                                                        {equipos.map((eq, eqIdx) => (<option key={eqIdx} value={eq.nombre}>{eq.nombre}</option>))}
+                                                    </select>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
-                            <div style={{marginTop: '40px', paddingTop: '30px', borderTop: '2px solid #ddd'}}>
-                                <h3 style={{marginBottom: '20px'}}>Configurar Zonas</h3>
-                                <p style={{marginBottom: '15px', color: '#666'}}>Dividí los 10 equipos en 2 zonas de 5 equipos cada una para la tabla de posiciones</p>
-                                <div className="grid-2">
-                                    <div>
-                                        <label><strong>Zona 1</strong></label>
-                                        {[0, 1, 2, 3, 4].map(idx => (
-                                            <div key={idx} className="form-group">
-                                                <select value={zonasConfig.zona1[idx] || ''} onChange={(e) => { const n = {...zonasConfig}; n.zona1[idx] = e.target.value; setZonasConfig(n); }}>
-                                                    <option value="">Seleccionar equipo...</option>
-                                                    {equipos.map((eq, eqIdx) => (<option key={eqIdx} value={eq.nombre}>{eq.nombre}</option>))}
-                                                </select>
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div>
-                                        <label><strong>Zona 2</strong></label>
-                                        {[0, 1, 2, 3, 4].map(idx => (
-                                            <div key={idx} className="form-group">
-                                                <select value={zonasConfig.zona2[idx] || ''} onChange={(e) => { const n = {...zonasConfig}; n.zona2[idx] = e.target.value; setZonasConfig(n); }}>
-                                                    <option value="">Seleccionar equipo...</option>
-                                                    {equipos.map((eq, eqIdx) => (<option key={eqIdx} value={eq.nombre}>{eq.nombre}</option>))}
-                                                </select>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                {zonasConfig.zona1.filter(e => e).length === 5 && zonasConfig.zona2.filter(e => e).length === 5 && (
+                                {userRole !== 'jugador' && zonasConfig.zona1.filter(e => e).length === 5 && zonasConfig.zona2.filter(e => e).length === 5 && (
                                     <div style={{marginTop: '20px'}}>
                                         <button className="btn btn-success btn-responsive" onClick={() => setShowAsignarFechasModal(true)}>Generar Cruces de Zonas</button>
                                     </div>
@@ -1190,178 +874,521 @@
                                 const datos = datosActuales ? JSON.parse(datosActuales) : {};
                                 datos.crucesFinales = crucesGenerados; localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
                                 if (window.actualizarCrucesFinales) window.actualizarCrucesFinales(crucesGenerados);
-                                setShowAsignarFechasModal(false); alert('Cruces generados exitosamente. Ir a la pestaña "Tablas" para cargar los resultados.');
+                                setShowAsignarFechasModal(false); alert('Cruces generados exitosamente.');
                             }}
                         />
                     )}
-
-                    <div style={{marginTop: '60px', borderTop: '1px dashed #eee', paddingTop: '20px', textAlign: 'right'}}>
-                        <button style={{background: 'none', border: 'none', color: '#cbd5e1', fontSize: '12px', cursor: 'pointer'}} onClick={() => setShowDevModal(true)}>🔒 Acceso Desarrollador</button>
-                    </div>
-
-                    {showDevModal && (
-                        <DevModal onClose={() => setShowDevModal(false)} onSuccess={() => { setShowDevModal(false); activarAdmin(); }} />
-                    )}
                 </div>
             );
         }
 
-        function ModalCargarEquipos({ baseEquipos, setBaseEquipos, onGuardar, onClose }) {
-            const [rivalesTemp, setRivalesTemp] = useState(Array(9).fill(''));
-            const [nuevoClub, setNuevoClub] = useState('');
+        function FechasTab({ userRole, fechas, procesarHorarios, actualizarJugadores, contarPartidosJugador, generarPDF, setFechas }) {
+            const [fechaSeleccionada, setFechaSeleccionada] = useState(0);
+            const [showHorarioModal, setShowHorarioModal] = useState(false);
+            const [horarioActual, setHorarioActual] = useState({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+            const [editandoHorario, setEditandoHorario] = useState(null);
+            const [showCategoriasModal, setShowCategoriasModal] = useState(false);
+            const [categoriasTemp, setCategoriasTemp] = useState({});
+            const [jugadoresHabilitadosTemp, setJugadoresHabilitadosTemp] = useState([]);
 
-            const handleAgregarClub = () => {
-                const nombreLimpio = nuevoClub.trim();
-                if (nombreLimpio && !baseEquipos.some(b => b.toLowerCase() === nombreLimpio.toLowerCase())) {
-                    setBaseEquipos([...baseEquipos, nombreLimpio].sort()); setNuevoClub('');
-                } else if (nombreLimpio) { alert('Este club ya existe en la base.'); }
+            if (fechas.length === 0) return <div className="warning">Por favor, que un Capitán configure primero los equipos y las fechas.</div>;
+            const fecha = fechas[fechaSeleccionada];
+
+            const abrirCategoriasModal = () => {
+                setCategoriasTemp(fecha.categoriasHabilitadas || { caballeros_5ta_en_4ta: false, caballeros_4ta_en_3ra: false, caballeros_3ra_en_2da: false, damas_c_en_b: false, damas_b_en_a: false });
+                setJugadoresHabilitadosTemp(fecha.jugadoresHabilitados || []); setShowCategoriasModal(true);
+            };
+            const guardarCategorias = () => { const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].categoriasHabilitadas = categoriasTemp; nuevasFechas[fechaSeleccionada].jugadoresHabilitados = jugadoresHabilitadosTemp; setFechas(nuevasFechas); setShowCategoriasModal(false); };
+            const toggleJugadorHabilitado = (nombreJugador, categoriaDestino) => {
+                const existe = jugadoresHabilitadosTemp.find(j => j.jugador === nombreJugador && j.categoriaDestino === categoriaDestino);
+                if (existe) setJugadoresHabilitadosTemp(jugadoresHabilitadosTemp.filter(j => !(j.jugador === nombreJugador && j.categoriaDestino === categoriaDestino)));
+                else setJugadoresHabilitadosTemp([...jugadoresHabilitadosTemp, { jugador: nombreJugador, categoriaDestino }]);
             };
 
-            const eliminarDeBase = (clubAEliminar) => {
-                if (confirm(`¿Seguro que querés eliminar "${clubAEliminar}" de tu base de datos permanente?`)) {
-                    setBaseEquipos(baseEquipos.filter(c => c !== clubAEliminar));
-                    const nuevosRivales = rivalesTemp.map(r => r === clubAEliminar ? '' : r); setRivalesTemp(nuevosRivales);
+            const getPartidosDisponibles = (excluirPartido = null) => {
+                return PARTIDOS.filter(p => {
+                    if (editandoHorario) {
+                        const partidoDelHorario = fecha.partidos.find(fp => fp.id === p.id && fp.horario === editandoHorario.horario && fp.dia === editandoHorario.dia);
+                        if (partidoDelHorario) return true;
+                    }
+                    if (excluirPartido && p.id === excluirPartido) return false;
+                    const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario;
+                });
+            };
+
+            const partidosDisponiblesP1 = getPartidosDisponibles(); const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
+
+            const agregarHorario = () => {
+                if (!horarioActual.partido1 || !horarioActual.partido2) { alert('Debes seleccionar los 2 partidos para este horario'); return; }
+                const nuevasFechas = [...fechas]; const fechaIdx = fechaSeleccionada;
+                if (editandoHorario) { nuevasFechas[fechaIdx].partidos = nuevasFechas[fechaIdx].partidos.map(p => { if (p.dia === editandoHorario.dia && p.horario === editandoHorario.horario) return { ...p, dia: 'sabado', horario: '', posicion: undefined }; return p; }); }
+                const idx1 = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === parseInt(horarioActual.partido1));
+                if (idx1 !== -1) { nuevasFechas[fechaIdx].partidos[idx1].horario = horarioActual.hora; nuevasFechas[fechaIdx].partidos[idx1].dia = horarioActual.dia; nuevasFechas[fechaIdx].partidos[idx1].posicion = 1; }
+                const idx2 = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === parseInt(horarioActual.partido2));
+                if (idx2 !== -1) { nuevasFechas[fechaIdx].partidos[idx2].horario = horarioActual.hora; nuevasFechas[fechaIdx].partidos[idx2].dia = horarioActual.dia; nuevasFechas[fechaIdx].partidos[idx2].posicion = 2; }
+                setFechas(nuevasFechas); setEditandoHorario(null);
+                const partidosSinAsignar = PARTIDOS.filter(p => { const partidoAsignado = nuevasFechas[fechaIdx].partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario; });
+                if (partidosSinAsignar.length >= 2) {
+                    const horariosUsados = {}; nuevasFechas[fechaIdx].partidos.forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
+                    const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
+                    const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+                    if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' }); 
+                    else { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); }
+                } else { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); }
+            };
+
+            const eliminarHorario = (dia, hora) => {
+                if (confirm(`¿Eliminar los partidos del ${dia} a las ${hora}?`)) {
+                    const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].partidos = nuevasFechas[fechaSeleccionada].partidos.map(p => { if (p.dia === dia && p.horario === hora) return { ...p, dia: 'sabado', horario: '', posicion: undefined }; return p; });
+                    setFechas(nuevasFechas);
+                }
+            };
+            const editarHorario = (dia, hora) => {
+                const partidos = fecha.partidos.filter(p => p.dia === dia && p.horario === hora);
+                if (partidos.length === 2) {
+                    const p1 = partidos.find(p => p.posicion === 1); const p2 = partidos.find(p => p.posicion === 2);
+                    setHorarioActual({ dia: dia, hora: hora, partido1: p1 ? p1.id.toString() : '', partido2: p2 ? p2.id.toString() : '' });
+                    setEditandoHorario({ dia, horario: hora }); setShowHorarioModal(true);
                 }
             };
 
-            const obtenerOpcionesDisponibles = (index) => { return baseEquipos.filter(club => { return !rivalesTemp.some((r, i) => r === club && i !== index); }); };
-            const actualizarRival = (index, valor) => { const nuevos = [...rivalesTemp]; nuevos[index] = valor; setRivalesTemp(nuevos); };
-            const procesarGuardado = () => { if (rivalesTemp.some(r => r === '')) { alert('Por favor selecciona los 9 rivales para avanzar.'); return; } onGuardar(rivalesTemp); };
+            const partidosPorHorario = {};
+            fecha.partidos.forEach(partido => { if (partido.horario) { const key = `${partido.dia}-${partido.horario}`; if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: partido.dia, hora: partido.horario, partidos: [] }; partidosPorHorario[key].partidos.push(partido); } });
+            const partidosSinAsignar = PARTIDOS.filter(p => { const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario; });
+            const categoriasHabilitadasCount = fecha.jugadoresHabilitados ? fecha.jugadoresHabilitados.length : 0;
 
             return (
-                <div className="modal" onClick={() => {}}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">Seleccionar los 9 equipos rivales</div>
-                        <p style={{color: '#666', marginBottom: '20px', fontSize: '14px'}}>Elegí los equipos desde la base de datos. Podes agregar nuevos o eliminar los que ya no compitan.</p>
+                <div>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Convocatorias</h2>
+                    
+                    <div style={{display: 'flex', gap: '10px', marginBottom: '25px', flexWrap: 'wrap'}}>
+                        {fechas.map((f, idx) => (
+                            <button 
+                                key={idx} className={`btn ${fechaSeleccionada === idx ? 'btn-primary' : ''}`}
+                                style={{ background: fechaSeleccionada === idx ? '#d4af37' : '#e2e8f0', color: fechaSeleccionada === idx ? '#1a1a1a' : '#475569', margin: 0, flex: '1 1 calc(50% - 10px)', minWidth: '130px', padding: '10px' }}
+                                onClick={() => setFechaSeleccionada(idx)}
+                            >
+                                Fecha {f.numero} <br/><span style={{fontSize: '13px', fontWeight: 'normal'}}>vs {f.rival}</span>
+                            </button>
+                        ))}
+                    </div>
 
-                        <div style={{background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '25px'}}>
-                            <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', alignItems: 'flex-end', marginBottom: '15px'}}>
-                                <div style={{flex: 1}}>
-                                    <label style={{fontSize: '13px'}}>➕ Agregar nuevo club a la base de datos</label>
-                                    <input type="text" value={nuevoClub} onChange={(e) => setNuevoClub(e.target.value)} placeholder="Ej: Tenis Club" onKeyPress={(e) => e.key === 'Enter' && handleAgregarClub()} />
+                    <div className="date-section">
+                        <div className="date-header">Fecha {fecha.numero} - vs {fecha.rival}</div>
+                        
+                        {userRole !== 'jugador' && (
+                            <>
+                                <div style={{marginBottom: '15px', padding: '12px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #0ea5e9'}}>
+                                    <strong>Partidos sin asignar: {partidosSinAsignar.length} de 26</strong>
                                 </div>
-                                <button className="btn btn-primary btn-responsive" onClick={handleAgregarClub} style={{marginRight: 0}}>Agregar</button>
-                            </div>
-                            
-                            <div style={{borderTop: '1px solid #ddd', paddingTop: '10px'}}>
-                                <span style={{fontSize: '12px', color: '#666', display: 'block', marginBottom: '8px'}}>Clubes en tu base de datos:</span>
-                                <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
-                                    {baseEquipos.map((club, idx) => (
-                                        <div key={idx} style={{background: '#e2e8f0', padding: '4px 10px', borderRadius: '15px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: '#1e293b'}}>
-                                            {club} <button onClick={() => eliminarDeBase(club)} style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', padding: '0 2px'}}>×</button>
-                                        </div>
-                                    ))}
+                                <div style={{marginBottom: '15px'}}>
+                                    <label style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer'}}>
+                                        <input type="checkbox" checked={categoriasHabilitadasCount > 0} onChange={abrirCategoriasModal} />
+                                        <span>Habilitar jugadores de categorías inferiores en superiores</span>
+                                    </label>
+                                    {categoriasHabilitadasCount > 0 && (<div style={{marginTop: '8px', fontSize: '14px', color: '#10b981', fontWeight: '600'}}>✓ {categoriasHabilitadasCount} jugador(es) habilitado(s) en categorías superiores</div>)}
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="grid-2">
-                            {rivalesTemp.map((rivalActual, idx) => (
-                                <div className="form-group" style={{marginBottom: '0'}} key={idx}>
-                                    <label>Rival {idx + 1}</label>
-                                    <select value={rivalActual} onChange={(e) => actualizarRival(idx, e.target.value)}>
-                                        <option value="">-- Seleccionar --</option>
-                                        {obtenerOpcionesDisponibles(idx).map((club, i) => (<option key={i} value={club}>{club}</option>))}
+                                <button className="btn btn-primary btn-responsive" onClick={() => {
+                                    setEditandoHorario(null);
+                                    const horariosUsados = {}; fecha.partidos.forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
+                                    const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
+                                    const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+                                    if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' }); else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                                    setShowHorarioModal(true);
+                                }}>➕ Agregar Horario</button>
+                                
+                                <div className="form-group" style={{marginTop: '20px'}}>
+                                    <label>Partido Bonus (vale 20 puntos)</label>
+                                    <select value={fecha.partidoBonus || ''} onChange={(e) => { const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].partidoBonus = e.target.value ? parseInt(e.target.value) : null; setFechas(nuevasFechas); }}>
+                                        <option value="">Seleccionar partido bonus...</option>
+                                        {PARTIDOS.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}
                                     </select>
                                 </div>
-                            ))}
-                        </div>
+                            </>
+                        )}
+                        {userRole === 'jugador' && fecha.partidoBonus && (
+                            <div style={{marginTop: '10px', padding: '10px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #f59e0b', color: '#92400e', fontWeight: 'bold'}}>
+                                ⭐ Partido Bonus de esta fecha: {PARTIDOS.find(p=>p.id===fecha.partidoBonus)?.tipo}
+                            </div>
+                        )}
 
-                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '30px', borderTop: '2px solid #eee', paddingTop: '20px'}}>
-                            <button className="btn btn-success btn-responsive" onClick={procesarGuardado}>Confirmar Torneo</button>
-                            <button className="btn btn-danger btn-responsive" onClick={onClose}>Cancelar</button>
+                        <button className="btn btn-success btn-responsive" onClick={() => generarPDF(fechaSeleccionada)} style={{marginTop: '20px'}}>📄 Descargar Convocatoria (PDF)</button>
+                    </div>
+
+                    {showCategoriasModal && ( <ModalCategorias categoriasTemp={categoriasTemp} setCategoriasTemp={setCategoriasTemp} jugadoresHabilitadosTemp={jugadoresHabilitadosTemp} toggleJugadorHabilitado={toggleJugadorHabilitado} guardarCategorias={guardarCategorias} setShowCategoriasModal={setShowCategoriasModal} /> )}
+
+                    {showHorarioModal && (
+                        <div className="modal" onClick={() => { if (confirm('¿Cerrar sin guardar?')) { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); setEditandoHorario(null); } }}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">{editandoHorario ? 'Editar Horario' : `Agregar Horario (${partidosSinAsignar.length} partidos restantes)`}</div>
+                                <div className="form-group"><label>Día</label><select value={horarioActual.dia} onChange={(e) => setHorarioActual({...horarioActual, dia: e.target.value})}><option value="sabado">Sábado</option><option value="domingo">Domingo</option></select></div>
+                                <div className="form-group">
+                                    <label>Horario</label>
+                                    <select value={horarioActual.hora} onChange={(e) => setHorarioActual({...horarioActual, hora: e.target.value})}>
+                                        <option value="09:00">09:00</option><option value="10:30">10:30</option><option value="12:00">12:00</option>
+                                        <option value="13:30">13:30</option><option value="15:00">15:00</option><option value="16:30">16:30</option>
+                                        {horarioActual.dia === 'sabado' && <option value="17:45">17:45</option>}
+                                    </select>
+                                </div>
+                                <div className="form-group"><label>Partido 1</label><select value={horarioActual.partido1} onChange={(e) => setHorarioActual({...horarioActual, partido1: e.target.value})}><option value="">Seleccionar partido...</option>{partidosDisponiblesP1.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
+                                <div className="form-group"><label>Partido 2</label><select value={horarioActual.partido2} onChange={(e) => setHorarioActual({...horarioActual, partido2: e.target.value})} disabled={!horarioActual.partido1}><option value="">Seleccionar partido...</option>{partidosDisponiblesP2.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
+                                <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
+                                    <button className="btn btn-primary btn-responsive" onClick={agregarHorario}>{editandoHorario ? 'Actualizar' : partidosSinAsignar.length > 2 ? 'Guardar y Continuar' : 'Guardar'}</button>
+                                    <button className="btn btn-danger btn-responsive" onClick={() => { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); setEditandoHorario(null); }}>Cancelar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div style={{marginTop: '30px'}}>
+                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Cronograma</h3>
+                        {Object.keys(partidosPorHorario).length === 0 && <div className="warning" style={{background: 'white', border: '1px solid #ddd'}}>Aún no hay horarios asignados en esta fecha.</div>}
+                        {Object.values(partidosPorHorario).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; return a.hora.localeCompare(b.hora); }).map((horario, idx) => (
+                            <div key={idx} style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '2px solid #ddd' }}>
+                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap:'10px'}}>
+                                    <strong style={{fontSize: '16px', color: '#1e3c72'}}>{horario.dia === 'sabado' ? 'Sábado' : 'Domingo'} - {horario.hora}</strong>
+                                    {userRole !== 'jugador' && (
+                                        <div style={{display: 'flex', gap:'5px'}}>
+                                            <button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => editarHorario(horario.dia, horario.hora)}>✏️ Editar</button>
+                                            <button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarHorario(horario.dia, horario.hora)}>🗑️</button>
+                                        </div>
+                                    )}
+                                </div>
+                                {horario.partidos.sort((a, b) => (a.posicion || 0) - (b.posicion || 0)).map(partido => (
+                                    <div key={partido.id} style={{ background: 'white', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: fecha.partidoBonus === partido.id ? '2px solid #f59e0b' : '1px solid #e5e7eb' }}>
+                                        <strong>Partido {partido.posicion}: {partido.tipo}</strong>
+                                        {fecha.partidoBonus === partido.id && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS</span>}
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="match-grid" style={{marginTop: '30px'}}>
+                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Asignación de Jugadores</h3>
+                        {fecha.partidos.filter(p => p.horario).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; if (a.horario !== b.horario) return a.horario.localeCompare(b.horario); return (a.posicion || 0) - (b.posicion || 0); }).map(partido => (
+                            <PartidoCard 
+                                key={partido.id} partido={partido} fechaIndex={fechaSeleccionada} fecha={fecha} userRole={userRole}
+                                actualizarJugadores={actualizarJugadores} contarPartidosJugador={contarPartidosJugador} esBonus={fecha.partidoBonus === partido.id}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function ModalCategorias({categoriasTemp, setCategoriasTemp, jugadoresHabilitadosTemp, toggleJugadorHabilitado, guardarCategorias, setShowCategoriasModal}) {
+            return (
+                <div className="modal" onClick={() => {}}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px'}}>
+                        <div className="modal-header">Habilitar Jugadores en Categorías Superiores</div>
+                        <p style={{marginBottom: '20px', color: '#666'}}>Los jugadores habilitados NO contarán en el límite de 3 partidos cuando jueguen en categoría superior.</p>
+
+                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
+                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_5ta_en_4ta || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_5ta_en_4ta: e.target.checked})} /> Caballeros 5ta → 4ta</label>
+                            {categoriasTemp.caballeros_5ta_en_4ta && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_5ta.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_4ta')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_4ta')} /> {j.nombre}</label>))}</div>)}
+                        </div>
+                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
+                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_4ta_en_3ra || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_4ta_en_3ra: e.target.checked})} /> Caballeros 4ta → 3ra</label>
+                            {categoriasTemp.caballeros_4ta_en_3ra && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_4ta.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_3ra')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_3ra')} /> {j.nombre}</label>))}</div>)}
+                        </div>
+                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
+                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_3ra_en_2da || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_3ra_en_2da: e.target.checked})} /> Caballeros 3ra → 2da</label>
+                            {categoriasTemp.caballeros_3ra_en_2da && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_3ra.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_2da')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_2da')} /> {j.nombre}</label>))}</div>)}
+                        </div>
+                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
+                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.damas_c_en_b || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, damas_c_en_b: e.target.checked})} /> Damas C → B</label>
+                            {categoriasTemp.damas_c_en_b && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.damas_c.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'damas_b')} onChange={() => toggleJugadorHabilitado(j.nombre, 'damas_b')} /> {j.nombre}</label>))}</div>)}
+                        </div>
+                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
+                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.damas_b_en_a || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, damas_b_en_a: e.target.checked})} /> Damas B → A</label>
+                            {categoriasTemp.damas_b_en_a && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.damas_b.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'damas_a')} onChange={() => toggleJugadorHabilitado(j.nombre, 'damas_a')} /> {j.nombre}</label>))}</div>)}
+                        </div>
+                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
+                            <button className="btn btn-primary btn-responsive" onClick={guardarCategorias}>Guardar</button>
+                            <button className="btn btn-danger btn-responsive" onClick={() => { setShowCategoriasModal(false); }}>Cancelar</button>
                         </div>
                     </div>
                 </div>
             );
         }
 
-        function AsignarFechasModal({ zonasConfig, equipos, onClose, onGenerar }) {
-            const [crucesConFechas, setCrucesConFechas] = useState([]);
+        function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPartidosJugador, esBonus, userRole }) {
+            const [jugadoresSeleccionados, setJugadoresSeleccionados] = useState(partido.jugadores || []);
+            useEffect(() => { setJugadoresSeleccionados(partido.jugadores || []); }, [partido.jugadores]);
 
-            useEffect(() => {
-                const generarCruces = () => {
-                    const cruces = [];
-                    const zona1 = zonasConfig.zona1.filter(e => e);
-                    for (let i = 0; i < zona1.length; i++) {
-                        for (let j = i + 1; j < zona1.length; j++) {
-                            if (zona1[i] !== 'GOAT' && zona1[j] !== 'GOAT') cruces.push({ equipo1: zona1[i], equipo2: zona1[j], zona: 1, fecha: '' });
-                        }
-                    }
-                    const zona2 = zonasConfig.zona2.filter(e => e);
-                    for (let i = 0; i < zona2.length; i++) {
-                        for (let j = i + 1; j < zona2.length; j++) {
-                            if (zona2[i] !== 'GOAT' && zona2[j] !== 'GOAT') cruces.push({ equipo1: zona2[i], equipo2: zona2[j], zona: 2, fecha: '' });
-                        }
-                    }
-                    setCrucesConFechas(cruces);
-                };
-                generarCruces();
-            }, []);
+            const jugadoresHabilitados = fecha.jugadoresHabilitados || [];
+            const jugadoresDisponibles = partido.categorias.flatMap(cat => {
+                const jugadoresBase = JUGADORES_GOAT[cat] || [];
+                const jugadoresExtra = jugadoresHabilitados.filter(jh => jh.categoriaDestino === cat).map(jh => {
+                    const jugadorOriginal = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
+                    return { ...jugadorOriginal, esHabilitado: true, categoriaOriginal: jugadorOriginal.categoria };
+                });
+                return [...jugadoresBase, ...jugadoresExtra];
+            });
 
-            const actualizarFecha = (idx, fecha) => { const nuevos = [...crucesConFechas]; nuevos[idx].fecha = fecha; setCrucesConFechas(nuevos); };
+            const agregarJugador = (nombreJugador) => {
+                if (jugadoresSeleccionados.length >= partido.numJugadores) { alert(`Este partido solo permite ${partido.numJugadores} jugador(es)`); return; }
+                const jugadorInfo = jugadoresDisponibles.find(j => j.nombre === nombreJugador);
+                const estaHabilitado = jugadorInfo && jugadorInfo.esHabilitado;
+                
+                if (!estaHabilitado) {
+                    const countPartidos = contarPartidosJugador(fechaIndex, nombreJugador);
+                    if (countPartidos >= 3) { alert(`${nombreJugador} ya está convocado para 3 partidos. No puede jugar más.`); return; }
+                }
 
-            const guardarCruces = () => {
-                if (crucesConFechas.some(c => !c.fecha)) { alert('Por favor asigná una fecha a todos los cruces'); return; }
-                const crucesFinales = crucesConFechas.map(c => ({ tipo: c.fecha, equipo1: c.equipo1, equipo2: c.equipo2, resultado1: '', resultado2: '' }));
-                onGenerar(crucesFinales);
+                const nuevosJugadores = [...jugadoresSeleccionados, nombreJugador];
+                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+            };
+
+            const eliminarJugador = (index) => {
+                const nuevosJugadores = jugadoresSeleccionados.filter((_, i) => i !== index);
+                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
             };
 
             return (
-                <div className="modal" onClick={() => {}}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">Asignar Fechas a los Cruces</div>
-                        <p style={{marginBottom: '20px', color: '#666'}}>Asigná a qué fecha corresponde cada cruce entre equipos de la misma zona</p>
-
-                        <div style={{marginBottom: '30px'}}>
-                            <h4 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 1</h4>
-                            {crucesConFechas.filter(c => c.zona === 1).map((cruce, idx) => {
-                                const realIdx = crucesConFechas.findIndex(c => c === cruce);
-                                return (
-                                    <div key={realIdx} className="flex-mobile-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: '#f8f9fa', marginBottom: '8px', borderRadius: '6px', gap: '10px' }}>
-                                        <span><strong>{cruce.equipo1}</strong> vs <strong>{cruce.equipo2}</strong></span>
-                                        <select value={cruce.fecha} onChange={(e) => actualizarFecha(realIdx, e.target.value)} style={{width: 'auto', minWidth: '150px'}}>
-                                            <option value="">Seleccionar...</option>
-                                            <option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option>
-                                            <option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option>
-                                        </select>
-                                    </div>
-                                );
-                            })}
-                        </div>
-
+                <div className={`match-card ${esBonus ? 'bonus' : ''}`}>
+                    <div className="match-header">
                         <div>
-                            <h4 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 2</h4>
-                            {crucesConFechas.filter(c => c.zona === 2).map((cruce, idx) => {
-                                const realIdx = crucesConFechas.findIndex(c => c === cruce);
+                            <div className="match-type">{partido.tipo}</div>
+                            {esBonus && <div style={{color: '#f59e0b', fontSize: '14px', fontWeight: '600'}}>⭐ PARTIDO BONUS (20 pts)</div>}
+                        </div>
+                        <div className="match-time">{partido.dia === 'sabado' ? 'Sáb' : 'Dom'} {partido.horario} - P{partido.posicion}</div>
+                    </div>
+
+                    <div style={{marginBottom: '10px'}}>
+                        <strong>Jugadores asignados:</strong> {jugadoresSeleccionados.length === 0 && <span style={{color: '#999'}}> Ninguno</span>}
+                        <div style={{marginTop: '8px'}}>
+                            {jugadoresSeleccionados.map((jugador, idx) => {
+                                const jugadorObj = jugadoresDisponibles.find(j => j.nombre === jugador);
+                                const esHabilitado = jugadorObj && jugadorObj.esHabilitado;
                                 return (
-                                    <div key={realIdx} className="flex-mobile-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: '#f8f9fa', marginBottom: '8px', borderRadius: '6px', gap: '10px' }}>
-                                        <span><strong>{cruce.equipo1}</strong> vs <strong>{cruce.equipo2}</strong></span>
-                                        <select value={cruce.fecha} onChange={(e) => actualizarFecha(realIdx, e.target.value)} style={{width: 'auto', minWidth: '150px'}}>
-                                            <option value="">Seleccionar...</option>
-                                            <option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option>
-                                            <option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option>
-                                        </select>
+                                    <div key={idx} style={{ display: 'inline-block', background: esHabilitado ? '#10b981' : '#667eea', color: 'white', padding: '5px 12px', borderRadius: '6px', marginRight: '8px', marginBottom: '8px' }}>
+                                        {jugador} {jugadorObj?.capitan && <span className="captain-badge">CAPITÁN</span>}
+                                        {esHabilitado && <span style={{ background: 'rgba(255,255,255,0.3)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginLeft: '6px' }}>↑</span>}
+                                        {userRole !== 'jugador' && (
+                                            <button onClick={() => eliminarJugador(idx)} style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px' }}>✕</button>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
+                    </div>
 
-                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '30px'}}>
-                            <button className="btn btn-primary btn-responsive" onClick={guardarCruces}>Generar Cruces</button>
-                            <button className="btn btn-danger btn-responsive" onClick={onClose}>Cancelar</button>
+                    {userRole !== 'jugador' && jugadoresSeleccionados.length < partido.numJugadores && (
+                        <div className="form-group" style={{marginBottom: '0'}}>
+                            <label>Agregar jugador:</label>
+                            <select onChange={(e) => { if (e.target.value) { agregarJugador(e.target.value); e.target.value = ''; } }} defaultValue="">
+                                <option value="">Seleccionar...</option>
+                                {jugadoresDisponibles.filter(j => !jugadoresSeleccionados.includes(j.nombre)).map((j, idx) => {
+                                    const count = contarPartidosJugador(fechaIndex, j.nombre);
+                                    return ( <option key={idx} value={j.nombre}>{j.nombre} {j.capitan ? '(CAPITÁN)' : ''} {j.esHabilitado ? '↑ ' : `- ${count}/3 partidos`}</option> );
+                                })}
+                            </select>
                         </div>
+                    )}
+
+                    {jugadoresSeleccionados.some(j => {
+                        const jugadorObj = jugadoresDisponibles.find(jd => jd.nombre === j);
+                        if (jugadorObj && jugadorObj.esHabilitado) return false; 
+                        return contarPartidosJugador(fechaIndex, j) > 3;
+                    }) && (<div className="player-count-warning">⚠️ Advertencia: Algún jugador supera el límite de 3 partidos</div>)}
+                </div>
+            );
+        }
+
+        function ResultadosTab({ userRole, fechas, resultados, toggleResultado, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances }) {
+            const [showPlayOffModal, setShowPlayOffModal] = useState(false);
+            
+            // Cuando la pestaña se carga, por defecto dejamos todas las fechas cerradas
+            const [fechasExpandidas, setFechasExpandidas] = useState({});
+
+            // Efecto para limpiar las pestañas expandidas si se sale y se vuelve a entrar a esta vista
+            useEffect(() => {
+                setFechasExpandidas({});
+            }, []);
+
+            if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
+
+            const calcularResultadoFecha = (fechaIdx) => {
+                const fecha = fechas[fechaIdx];
+                if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
+                let ganados = 0; let perdidos = 0; let puntosGanados = 0; let puntosPerdidos = 0;
+                
+                fecha.partidos.forEach(partido => {
+                    if (partido.jugadores && partido.jugadores.length > 0) {
+                        const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
+                        if (ganado) { ganados++; puntosGanados += puntos; } else { perdidos++; puntosPerdidos += puntos; }
+                    }
+                });
+                return { ganados, perdidos, puntosGanados, puntosPerdidos };
+            };
+
+            const toggleFecha = (idx) => { setFechasExpandidas(prev => ({ ...prev, [idx]: !prev[idx] })); };
+
+            return (
+                <div>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Resultados de Partidos</h2>
+                    <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{marginBottom: '20px'}}>🏆 Ver Play-Off Proyectado</button>
+                    {showPlayOffModal && (<PlayOffModal userRole={userRole} fechas={fechas} resultados={resultados} zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} onClose={() => setShowPlayOffModal(false)} />)}
+                    
+                    {fechas.map((fecha, fechaIdx) => {
+                        const resultado = calcularResultadoFecha(fechaIdx);
+                        const total = resultado.ganados + resultado.perdidos;
+                        const isExpanded = fechasExpandidas[fechaIdx];
+
+                        return (
+                            <div key={fechaIdx} className="date-section" style={{padding: isExpanded ? '20px' : '10px 20px'}}>
+                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none', gap: '15px'}} onClick={() => toggleFecha(fechaIdx)}>
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                                        <span style={{color: '#d4af37', fontSize: '18px', transition: 'transform 0.3s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}}>▶</span>
+                                        <div className="date-header" style={{marginBottom: 0}}>Fecha {fecha.numero} - vs {fecha.rival}</div>
+                                    </div>
+                                    {total > 0 && (
+                                        <div style={{ background: resultado.puntosGanados > resultado.puntosPerdidos ? '#d1fae5' : resultado.puntosGanados < resultado.puntosPerdidos ? '#fee2e2' : '#fef3c7', padding: '6px 15px', borderRadius: '8px', border: `2px solid ${resultado.puntosGanados > resultado.puntosPerdidos ? '#10b981' : resultado.puntosGanados < resultado.puntosPerdidos ? '#ef4444' : '#f59e0b'}`, fontWeight: '700', fontSize: '14px', textAlign: 'center' }}>
+                                            <div style={{color: '#1e3c72'}}>Puntos: {resultado.puntosGanados} - {resultado.puntosPerdidos}</div>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                {isExpanded && (
+                                    <div style={{marginTop: '20px', borderTop: '1px dashed #cbd5e1', paddingTop: '20px'}}>
+                                        {fecha.partidos && fecha.partidos.filter(partido => partido.jugadores && partido.jugadores.length > 0).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; if (a.horario !== b.horario) return a.horario.localeCompare(b.horario); return (a.posicion || 0) - (b.posicion || 0); }).map(partido => {
+                                            const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id;
+                                            return (
+                                                <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : '2px solid transparent' }}>
+                                                    <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px'}}>
+                                                        <div>
+                                                            <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>{partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario} - Partido {partido.posicion}</div>
+                                                            <strong>{partido.tipo}</strong> {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS (20 pts)</span>} {!esBonus && <span style={{color: '#666', marginLeft: '10px', fontSize: '14px'}}>(10 pts)</span>}
+                                                            <div style={{fontSize: '14px', marginTop: '5px'}}>{partido.jugadores.join(' / ')}</div>
+                                                        </div>
+                                                        <div className="checkbox-container" style={{margin: 0}}>
+                                                            <input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={userRole === 'jugador'} />
+                                                            <label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        const MatchRow = ({ label, eq1, eq2, matchKey, selected, onAdvance, disabled }) => (
+            <div style={{ display: 'flex', alignItems: 'center', background: '#f8f9fa', padding: '10px', borderRadius: '8px', marginBottom: '8px', border: '1px solid #e5e7eb', minWidth: '450px' }}>
+                <div style={{ width: '80px', fontSize: '11px', fontWeight: 'bold', color: '#1e3c72', textTransform: 'uppercase' }}>{label}</div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                    <span style={{ fontWeight: selected === eq1 && eq1 ? 'bold' : 'normal', color: eq1 && !eq1.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq1 || 'TBD'}</span>
+                    <button onClick={() => !disabled && eq1 && !eq1.startsWith('Ganador') ? onAdvance(matchKey, eq1) : null} style={{ background: 'none', border: 'none', cursor: (!disabled && eq1 && !eq1.startsWith('Ganador')) ? 'pointer' : 'default', fontSize: '18px', opacity: eq1 && !eq1.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">
+                        {selected === eq1 && eq1 ? '✅' : '⬜'}
+                    </button>
+                </div>
+                <div style={{ padding: '0 15px', color: '#d4af37', fontWeight: 'bold', fontSize: '12px' }}>VS</div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <button onClick={() => !disabled && eq2 && !eq2.startsWith('Ganador') ? onAdvance(matchKey, eq2) : null} style={{ background: 'none', border: 'none', cursor: (!disabled && eq2 && !eq2.startsWith('Ganador')) ? 'pointer' : 'default', fontSize: '18px', opacity: eq2 && !eq2.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">
+                        {selected === eq2 && eq2 ? '✅' : '⬜'}
+                    </button>
+                    <span style={{ fontWeight: selected === eq2 && eq2 ? 'bold' : 'normal', color: eq2 && !eq2.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq2 || 'TBD'}</span>
+                </div>
+            </div>
+        );
+
+        function PlayOffModal({ userRole, fechas, resultados, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances, onClose }) {
+            const calcularTablaZona = (zona) => {
+                const equiposZona = zona === 1 ? zonasConfig.zona1 : zonasConfig.zona2;
+                const tabla = {};
+                equiposZona.forEach((equipo, index) => { if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, originalIndex: index }; });
+                fechas.forEach((fecha, fechaIdx) => {
+                    if (!fecha || !fecha.partidos) return;
+                    const rival = fecha.rival;
+                    if (tabla['GOAT'] && tabla[rival]) {
+                        let puntosGOAT = 0; let puntosRival = 0;
+                        fecha.partidos.forEach(partido => {
+                            if (partido.jugadores && partido.jugadores.length > 0) {
+                                const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
+                                if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                            }
+                        });
+                        if (tabla['GOAT']) { tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra; }
+                        if (tabla[rival]) { tabla[rival].partidos++; tabla[rival].puntosFavor += puntosRival; tabla[rival].puntosContra += puntosGOAT; tabla[rival].puntosTotales += puntosRival; if (puntosRival > puntosGOAT) tabla[rival].ganados++; else if (puntosRival < puntosGOAT) tabla[rival].perdidos++; tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra; }
+                    }
+                });
+                crucesFinales.forEach(cruce => {
+                    if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
+                        const pts1 = parseInt(cruce.resultado1) || 0; const pts2 = parseInt(cruce.resultado2) || 0;
+                        if (pts1 > 0 || pts2 > 0) {
+                            tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosFavor += pts1; tabla[cruce.equipo1].puntosContra += pts2; tabla[cruce.equipo1].puntosTotales += pts1;
+                            tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosFavor += pts2; tabla[cruce.equipo2].puntosContra += pts1; tabla[cruce.equipo2].puntosTotales += pts2;
+                            if (pts1 > pts2) { tabla[cruce.equipo1].ganados++; tabla[cruce.equipo2].perdidos++; } else if (pts2 > pts1) { tabla[cruce.equipo2].ganados++; tabla[cruce.equipo1].perdidos++; }
+                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+                        }
+                    }
+                });
+                return Object.values(tabla).sort((a, b) => { if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales; if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia; return a.originalIndex - b.originalIndex; });
+            };
+
+            const tablaZ1 = calcularTablaZona(1); const tablaZ2 = calcularTablaZona(2);
+            if (tablaZ1.length < 5 || tablaZ2.length < 5) {
+                return ( <div className="modal" onClick={onClose}><div className="modal-content" onClick={(e) => e.stopPropagation()}><div className="modal-header">🏆 Play-Off Proyectado</div><div className="warning">Por favor, configurá las zonas completas en la pestaña "Configuración" (5 equipos por zona) para poder ver la llave de Play-Offs.</div><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div></div> );
+            }
+
+            const eqZ1 = tablaZ1.map(t => t.nombre); const eqZ2 = tablaZ2.map(t => t.nombre);
+            const octA_1 = eqZ1[3]; const octA_2 = eqZ2[4]; const octB_1 = eqZ2[3]; const octB_2 = eqZ1[4];
+            const ganOctA = (playoffAvances.octA === octA_1 || playoffAvances.octA === octA_2) ? playoffAvances.octA : null;
+            const ganOctB = (playoffAvances.octB === octB_1 || playoffAvances.octB === octB_2) ? playoffAvances.octB : null;
+            const cua1_1 = eqZ1[0]; const cua1_2 = ganOctB || 'Ganador 8vos B'; const cua2_1 = eqZ1[1]; const cua2_2 = eqZ2[2];
+            const cua3_1 = eqZ1[2]; const cua3_2 = eqZ2[1]; const cua4_1 = ganOctA || 'Ganador 8vos A'; const cua4_2 = eqZ2[0];
+            const ganCua1 = (playoffAvances.cua1 === cua1_1 || playoffAvances.cua1 === cua1_2) ? playoffAvances.cua1 : null;
+            const ganCua2 = (playoffAvances.cua2 === cua2_1 || playoffAvances.cua2 === cua2_2) ? playoffAvances.cua2 : null;
+            const ganCua3 = (playoffAvances.cua3 === cua3_1 || playoffAvances.cua3 === cua3_2) ? playoffAvances.cua3 : null;
+            const ganCua4 = (playoffAvances.cua4 === cua4_1 || playoffAvances.cua4 === cua4_2) ? playoffAvances.cua4 : null;
+            const semi1_1 = ganCua1 || 'Ganador Cruce 1'; const semi1_2 = ganCua3 || 'Ganador Cruce 3';
+            const semi2_1 = ganCua2 || 'Ganador Cruce 2'; const semi2_2 = ganCua4 || 'Ganador Cruce 4';
+            const ganSemi1 = (playoffAvances.semi1 === semi1_1 || playoffAvances.semi1 === semi1_2) ? playoffAvances.semi1 : null;
+            const ganSemi2 = (playoffAvances.semi2 === semi2_1 || playoffAvances.semi2 === semi2_2) ? playoffAvances.semi2 : null;
+            const final_1 = ganSemi1 || 'Ganador Semi 1'; const final_2 = ganSemi2 || 'Ganador Semi 2';
+            const ganFinal = (playoffAvances.final === final_1 || playoffAvances.final === final_2) ? playoffAvances.final : null;
+
+            const handleAdvance = (matchKey, equipo) => { setPlayoffAvances(prev => { const isAlreadySelected = prev[matchKey] === equipo; return { ...prev, [matchKey]: isAlreadySelected ? null : equipo }; }); };
+            const disableAdvance = userRole === 'jugador';
+
+            return (
+                <div className="modal" onClick={onClose}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '90vh'}}>
+                        <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
+                            <span>🏆 Llave de Play-Offs</span>
+                            {!disableAdvance && <button onClick={() => setPlayoffAvances({})} className="btn" style={{padding: '5px 10px', fontSize: '12px', background: '#e0e0e0', margin: 0}}>Resetear Ticks</button>}
+                        </div>
+                        <p style={{marginBottom: '20px', color: '#666', fontSize: '13px'}}>Las posiciones iniciales se calculan basándose en la tabla de zonas actual. {disableAdvance ? 'Aquí podés ver los cruces proyectados.' : 'Utilizá los ✅ para proyectar ganadores hacia la final.'}</p>
+                        
+                        <div className="table-container" style={{boxShadow: 'none'}}>
+                            <div style={{minWidth: '500px'}}>
+                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Octavos de Final</h4><MatchRow label="8vos A" eq1={octA_1} eq2={octA_2} matchKey="octA" selected={ganOctA} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="8vos B" eq1={octB_1} eq2={octB_2} matchKey="octB" selected={ganOctB} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
+                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Cuartos de Final</h4><MatchRow label="Cruce 1" eq1={cua1_1} eq2={cua1_2} matchKey="cua1" selected={ganCua1} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="Cruce 2" eq1={cua2_1} eq2={cua2_2} matchKey="cua2" selected={ganCua2} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="Cruce 3" eq1={cua3_1} eq2={cua3_2} matchKey="cua3" selected={ganCua3} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="Cruce 4" eq1={cua4_1} eq2={cua4_2} matchKey="cua4" selected={ganCua4} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
+                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Semifinales</h4><MatchRow label="Semi 1" eq1={semi1_1} eq2={semi1_2} matchKey="semi1" selected={ganSemi1} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="Semi 2" eq1={semi2_1} eq2={semi2_2} matchKey="semi2" selected={ganSemi2} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
+                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Final</h4><MatchRow label="Campeonato" eq1={final_1} eq2={final_2} matchKey="final" selected={ganFinal} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
+                            </div>
+                        </div>
+
+                        {ganFinal && (<div style={{background: '#d4af37', color: '#1a1a1a', padding: '15px', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold', fontSize: '20px'}}>🏆 CAMPEÓN PROYECTADO: {ganFinal.toUpperCase()} 🏆</div>)}
+                        <div style={{marginTop: '20px'}}><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div>
                     </div>
                 </div>
             );
         }
 
-        function TablasTab({ equipos, fechas, resultados, crucesFinales, setCrucesFinales, zonasConfig, setZonasConfig }) {
+        function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales, zonasConfig, setZonasConfig }) {
             const [showCruceModal, setShowCruceModal] = useState(false);
             const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
             const [editandoCruce, setEditandoCruce] = useState(null);
 
-            if (equipos.length < 10) return <div className="warning">Por favor, configure primero los equipos en la pestaña "Configuración".</div>;
+            if (equipos.length < 10) return <div className="warning">Por favor, que un Capitán configure primero los equipos en la pestaña "Configuración".</div>;
 
             const calcularTablaZona = (zona) => {
                 const equiposZona = zona === 1 ? zonasConfig.zona1 : zonasConfig.zona2;
@@ -1373,21 +1400,11 @@
                     
                     const rival = fecha.rival;
                     if (tabla['GOAT'] && tabla[rival]) {
-                        let puntosGOAT = 0;
-                        let puntosRival = 0;
-                        
+                        let puntosGOAT = 0; let puntosRival = 0;
                         fecha.partidos.forEach(partido => {
                             if (partido.jugadores && partido.jugadores.length > 0) {
-                                const key = `${fechaIdx}-${partido.id}`;
-                                const ganado = resultados[key] || false;
-                                const esBonus = fecha.partidoBonus === partido.id;
-                                const puntos = esBonus ? 20 : 10;
-                                
-                                if (ganado) {
-                                    puntosGOAT += puntos;
-                                } else {
-                                    puntosRival += puntos;
-                                }
+                                const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
+                                if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                             }
                         });
                         if (tabla['GOAT']) { tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra; }
@@ -1416,22 +1433,11 @@
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
                     
-                    const rival = fecha.rival;
-                    let puntosGOAT = 0;
-                    let puntosRival = 0;
-                    
+                    const rival = fecha.rival; let puntosGOAT = 0; let puntosRival = 0;
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
-                            const key = `${fechaIdx}-${partido.id}`;
-                            const ganado = resultados[key] || false;
-                            const esBonus = fecha.partidoBonus === partido.id;
-                            const puntos = esBonus ? 20 : 10;
-                            
-                            if (ganado) {
-                                puntosGOAT += puntos;
-                            } else {
-                                puntosRival += puntos;
-                            }
+                            const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
+                            if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                         }
                     });
                     tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
@@ -1456,7 +1462,6 @@
                 else { setCrucesFinales([...crucesFinales, cruceActual]); }
                 setShowCruceModal(false); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setEditandoCruce(null);
             };
-
             const eliminarCruce = (idx) => { if (confirm('¿Eliminar este cruce?')) setCrucesFinales(crucesFinales.filter((_, i) => i !== idx)); };
 
             const tablaZona1 = calcularTablaZona(1); const tablaZona2 = calcularTablaZona(2); const tablaGeneral = calcularTablaGeneral();
@@ -1521,28 +1526,30 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Cruces Adicionales</h3>
-                                <button className="btn btn-primary btn-responsive" onClick={() => { setEditandoCruce(null); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setShowCruceModal(true); }}>
-                                    ➕ Agregar Cruce
-                                </button>
-                                {crucesFinales.length > 0 && (
-                                    <div style={{marginTop: '20px'}}>
-                                        {crucesFinales.map((cruce, idx) => (
-                                            <div key={idx} className="flex-mobile-col" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: '2px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
-                                                <div>
-                                                    <strong>{cruce.tipo}</strong>
-                                                    <div style={{marginTop: '8px'}}>{cruce.equipo1} <strong>{cruce.resultado1 || '0'}</strong> - <strong>{cruce.resultado2 || '0'}</strong> {cruce.equipo2}</div>
+                            {userRole !== 'jugador' && (
+                                <div>
+                                    <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Cruces Adicionales</h3>
+                                    <button className="btn btn-primary btn-responsive" onClick={() => { setEditandoCruce(null); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setShowCruceModal(true); }}>
+                                        ➕ Agregar Cruce
+                                    </button>
+                                    {crucesFinales.length > 0 && (
+                                        <div style={{marginTop: '20px'}}>
+                                            {crucesFinales.map((cruce, idx) => (
+                                                <div key={idx} className="flex-mobile-col" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: '2px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
+                                                    <div>
+                                                        <strong>{cruce.tipo}</strong>
+                                                        <div style={{marginTop: '8px'}}>{cruce.equipo1} <strong>{cruce.resultado1 || '0'}</strong> - <strong>{cruce.resultado2 || '0'}</strong> {cruce.equipo2}</div>
+                                                    </div>
+                                                    <div style={{display: 'flex', gap: '10px'}}>
+                                                        <button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => { setEditandoCruce(idx); setCruceActual(cruce); setShowCruceModal(true); }}>✏️</button>
+                                                        <button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarCruce(idx)}>🗑️</button>
+                                                    </div>
                                                 </div>
-                                                <div style={{display: 'flex', gap: '10px'}}>
-                                                    <button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => { setEditandoCruce(idx); setCruceActual(cruce); setShowCruceModal(true); }}>✏️</button>
-                                                    <button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarCruce(idx)}>🗑️</button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
                             {showCruceModal && (
                                 <div className="modal" onClick={() => {}}>
@@ -1551,35 +1558,13 @@
                                         <div className="form-group">
                                             <label>Tipo de Cruce</label>
                                             <select value={cruceActual.tipo} onChange={(e) => setCruceActual({...cruceActual, tipo: e.target.value})}>
-                                                <option value="">Seleccionar...</option>
-                                                <option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option>
-                                                <option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option>
-                                                <option value="Octavos de Final">Octavos de Final</option><option value="Cuartos de Final">Cuartos de Final</option>
-                                                <option value="Semifinal">Semifinal</option><option value="Final">Final</option>
+                                                <option value="">Seleccionar...</option><option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option><option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option><option value="Octavos de Final">Octavos de Final</option><option value="Cuartos de Final">Cuartos de Final</option><option value="Semifinal">Semifinal</option><option value="Final">Final</option>
                                             </select>
                                         </div>
-                                        <div className="form-group">
-                                            <label>Equipo 1</label>
-                                            <select value={cruceActual.equipo1} onChange={(e) => setCruceActual({...cruceActual, equipo1: e.target.value})}>
-                                                <option value="">Seleccionar...</option>
-                                                {equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}
-                                            </select>
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Resultado Equipo 1</label>
-                                            <input type="number" value={cruceActual.resultado1} onChange={(e) => setCruceActual({...cruceActual, resultado1: e.target.value})} placeholder="Puntos"/>
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Equipo 2</label>
-                                            <select value={cruceActual.equipo2} onChange={(e) => setCruceActual({...cruceActual, equipo2: e.target.value})}>
-                                                <option value="">Seleccionar...</option>
-                                                {equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}
-                                            </select>
-                                        </div>
-                                        <div className="form-group">
-                                            <label>Resultado Equipo 2</label>
-                                            <input type="number" value={cruceActual.resultado2} onChange={(e) => setCruceActual({...cruceActual, resultado2: e.target.value})} placeholder="Puntos"/>
-                                        </div>
+                                        <div className="form-group"><label>Equipo 1</label><select value={cruceActual.equipo1} onChange={(e) => setCruceActual({...cruceActual, equipo1: e.target.value})}><option value="">Seleccionar...</option>{equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}</select></div>
+                                        <div className="form-group"><label>Resultado Equipo 1</label><input type="number" value={cruceActual.resultado1} onChange={(e) => setCruceActual({...cruceActual, resultado1: e.target.value})} placeholder="Puntos"/></div>
+                                        <div className="form-group"><label>Equipo 2</label><select value={cruceActual.equipo2} onChange={(e) => setCruceActual({...cruceActual, equipo2: e.target.value})}><option value="">Seleccionar...</option>{equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}</select></div>
+                                        <div className="form-group"><label>Resultado Equipo 2</label><input type="number" value={cruceActual.resultado2} onChange={(e) => setCruceActual({...cruceActual, resultado2: e.target.value})} placeholder="Puntos"/></div>
                                         <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
                                             <button className="btn btn-primary btn-responsive" onClick={agregarCruce}>{editandoCruce !== null ? 'Actualizar' : 'Guardar'}</button>
                                             <button className="btn btn-danger btn-responsive" onClick={() => { setShowCruceModal(false); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setEditandoCruce(null); }}>Cancelar</button>
@@ -1591,619 +1576,6 @@
                     ) : (
                         <div className="warning">Por favor, configurá las zonas en la pestaña "Configuración" (5 equipos por zona).</div>
                     )}
-                </div>
-            );
-        }
-
-        function FechasTab({ fechas, procesarHorarios, actualizarJugadores, contarPartidosJugador, generarPDF, setFechas }) {
-            const [fechaSeleccionada, setFechaSeleccionada] = useState(0);
-            const [showHorarioModal, setShowHorarioModal] = useState(false);
-            const [horarioActual, setHorarioActual] = useState({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
-            const [editandoHorario, setEditandoHorario] = useState(null);
-            const [showCategoriasModal, setShowCategoriasModal] = useState(false);
-            const [categoriasTemp, setCategoriasTemp] = useState({});
-            const [jugadoresHabilitadosTemp, setJugadoresHabilitadosTemp] = useState([]);
-
-            if (fechas.length === 0) return <div className="warning">Por favor, configure primero los equipos y las fechas en la pestaña "Configuración".</div>;
-            const fecha = fechas[fechaSeleccionada];
-
-            const abrirCategoriasModal = () => {
-                setCategoriasTemp(fecha.categoriasHabilitadas || { caballeros_5ta_en_4ta: false, caballeros_4ta_en_3ra: false, caballeros_3ra_en_2da: false, damas_c_en_b: false, damas_b_en_a: false });
-                setJugadoresHabilitadosTemp(fecha.jugadoresHabilitados || []); setShowCategoriasModal(true);
-            };
-
-            const guardarCategorias = () => { const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].categoriasHabilitadas = categoriasTemp; nuevasFechas[fechaSeleccionada].jugadoresHabilitados = jugadoresHabilitadosTemp; setFechas(nuevasFechas); setShowCategoriasModal(false); };
-            const toggleJugadorHabilitado = (nombreJugador, categoriaDestino) => {
-                const existe = jugadoresHabilitadosTemp.find(j => j.jugador === nombreJugador && j.categoriaDestino === categoriaDestino);
-                if (existe) setJugadoresHabilitadosTemp(jugadoresHabilitadosTemp.filter(j => !(j.jugador === nombreJugador && j.categoriaDestino === categoriaDestino)));
-                else setJugadoresHabilitadosTemp([...jugadoresHabilitadosTemp, { jugador: nombreJugador, categoriaDestino }]);
-            };
-
-            const getPartidosDisponibles = (excluirPartido = null) => {
-                return PARTIDOS.filter(p => {
-                    if (editandoHorario) {
-                        const partidoDelHorario = fecha.partidos.find(fp => fp.id === p.id && fp.horario === editandoHorario.horario && fp.dia === editandoHorario.dia);
-                        if (partidoDelHorario) return true;
-                    }
-                    if (excluirPartido && p.id === excluirPartido) return false;
-                    const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario;
-                });
-            };
-
-            const partidosDisponiblesP1 = getPartidosDisponibles();
-            const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
-
-            const agregarHorario = () => {
-                if (!horarioActual.partido1 || !horarioActual.partido2) { alert('Debes seleccionar los 2 partidos para este horario'); return; }
-                const nuevasFechas = [...fechas]; const fechaIdx = fechaSeleccionada;
-                if (editandoHorario) {
-                    nuevasFechas[fechaIdx].partidos = nuevasFechas[fechaIdx].partidos.map(p => {
-                        if (p.dia === editandoHorario.dia && p.horario === editandoHorario.horario) return { ...p, dia: 'sabado', horario: '', posicion: undefined }; return p;
-                    });
-                }
-                const idx1 = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === parseInt(horarioActual.partido1));
-                if (idx1 !== -1) { nuevasFechas[fechaIdx].partidos[idx1].horario = horarioActual.hora; nuevasFechas[fechaIdx].partidos[idx1].dia = horarioActual.dia; nuevasFechas[fechaIdx].partidos[idx1].posicion = 1; }
-                const idx2 = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === parseInt(horarioActual.partido2));
-                if (idx2 !== -1) { nuevasFechas[fechaIdx].partidos[idx2].horario = horarioActual.hora; nuevasFechas[fechaIdx].partidos[idx2].dia = horarioActual.dia; nuevasFechas[fechaIdx].partidos[idx2].posicion = 2; }
-                
-                setFechas(nuevasFechas); setEditandoHorario(null);
-                const partidosSinAsignar = PARTIDOS.filter(p => { const partidoAsignado = nuevasFechas[fechaIdx].partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario; });
-
-                if (partidosSinAsignar.length >= 2) {
-                    const horariosUsados = {}; nuevasFechas[fechaIdx].partidos.forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
-                    const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
-                    const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
-                    if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' }); 
-                    else { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); }
-                } else {
-                    setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
-                    if (partidosSinAsignar.length === 0) alert('¡Todos los partidos han sido asignados!');
-                }
-            };
-
-            const eliminarHorario = (dia, hora) => {
-                if (confirm(`¿Eliminar los partidos del ${dia} a las ${hora}?`)) {
-                    const nuevasFechas = [...fechas];
-                    nuevasFechas[fechaSeleccionada].partidos = nuevasFechas[fechaSeleccionada].partidos.map(p => { if (p.dia === dia && p.horario === hora) return { ...p, dia: 'sabado', horario: '', posicion: undefined }; return p; });
-                    setFechas(nuevasFechas);
-                }
-            };
-
-            const editarHorario = (dia, hora) => {
-                const partidos = fecha.partidos.filter(p => p.dia === dia && p.horario === hora);
-                if (partidos.length === 2) {
-                    const p1 = partidos.find(p => p.posicion === 1); const p2 = partidos.find(p => p.posicion === 2);
-                    setHorarioActual({ dia: dia, hora: hora, partido1: p1 ? p1.id.toString() : '', partido2: p2 ? p2.id.toString() : '' });
-                    setEditandoHorario({ dia, horario: hora }); setShowHorarioModal(true);
-                }
-            };
-
-            const partidosPorHorario = {};
-            fecha.partidos.forEach(partido => { if (partido.horario) { const key = `${partido.dia}-${partido.horario}`; if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: partido.dia, hora: partido.horario, partidos: [] }; partidosPorHorario[key].partidos.push(partido); } });
-            const partidosSinAsignar = PARTIDOS.filter(p => { const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario; });
-            const categoriasHabilitadasCount = fecha.jugadoresHabilitados ? fecha.jugadoresHabilitados.length : 0;
-
-            return (
-                <div>
-                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Armado de Fechas</h2>
-                    
-                    {/* NUEVA BOTONERA PARA ELEGIR FECHA */}
-                    <div style={{display: 'flex', gap: '10px', marginBottom: '25px', flexWrap: 'wrap'}}>
-                        {fechas.map((f, idx) => (
-                            <button 
-                                key={idx}
-                                className={`btn ${fechaSeleccionada === idx ? 'btn-primary' : ''}`}
-                                style={{
-                                    background: fechaSeleccionada === idx ? '#d4af37' : '#e2e8f0',
-                                    color: fechaSeleccionada === idx ? '#1a1a1a' : '#475569',
-                                    margin: 0,
-                                    flex: '1 1 calc(50% - 10px)',
-                                    minWidth: '130px',
-                                    padding: '10px'
-                                }}
-                                onClick={() => setFechaSeleccionada(idx)}
-                            >
-                                Fecha {f.numero} <br/><span style={{fontSize: '13px', fontWeight: 'normal'}}>vs {f.rival}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="date-section">
-                        <div className="date-header">Fecha {fecha.numero} - vs {fecha.rival}</div>
-                        <div style={{marginBottom: '15px', padding: '12px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #0ea5e9'}}>
-                            <strong>Partidos sin asignar: {partidosSinAsignar.length} de 26</strong>
-                        </div>
-                        <div style={{marginBottom: '15px'}}>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer'}}>
-                                <input type="checkbox" checked={categoriasHabilitadasCount > 0} onChange={abrirCategoriasModal} />
-                                <span>Habilitar jugadores de categorías inferiores en superiores</span>
-                            </label>
-                            {categoriasHabilitadasCount > 0 && (<div style={{marginTop: '8px', fontSize: '14px', color: '#10b981', fontWeight: '600'}}>✓ {categoriasHabilitadasCount} jugador(es) habilitado(s) en categorías superiores</div>)}
-                        </div>
-
-                        <button className="btn btn-primary btn-responsive" onClick={() => {
-                            setEditandoHorario(null);
-                            const horariosUsados = {}; fecha.partidos.forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
-                            const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
-                            const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
-                            if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' });
-                            else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
-                            setShowHorarioModal(true);
-                        }}>➕ Agregar Horario</button>
-
-                        <div className="form-group" style={{marginTop: '20px'}}>
-                            <label>Partido Bonus (vale 20 puntos)</label>
-                            <select value={fecha.partidoBonus || ''} onChange={(e) => { const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].partidoBonus = e.target.value ? parseInt(e.target.value) : null; setFechas(nuevasFechas); }}>
-                                <option value="">Seleccionar partido bonus...</option>
-                                {PARTIDOS.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}
-                            </select>
-                        </div>
-                        <button className="btn btn-success btn-responsive" onClick={() => generarPDF(fechaSeleccionada)} style={{marginTop: '20px'}}>📄 Exportar PDF</button>
-                    </div>
-
-                    {showCategoriasModal && (
-                        <div className="modal" onClick={() => {}}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px'}}>
-                                <div className="modal-header">Habilitar Jugadores en Categorías Superiores</div>
-                                <p style={{marginBottom: '20px', color: '#666'}}>Los jugadores habilitados NO contarán en el límite de 3 partidos cuando jueguen en categoría superior.</p>
-
-                                <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                                    <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_5ta_en_4ta || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_5ta_en_4ta: e.target.checked})} /> Caballeros 5ta → 4ta</label>
-                                    {categoriasTemp.caballeros_5ta_en_4ta && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_5ta.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_4ta')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_4ta')} /> {j.nombre}</label>))}</div>)}
-                                </div>
-                                <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                                    <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_4ta_en_3ra || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_4ta_en_3ra: e.target.checked})} /> Caballeros 4ta → 3ra</label>
-                                    {categoriasTemp.caballeros_4ta_en_3ra && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_4ta.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_3ra')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_3ra')} /> {j.nombre}</label>))}</div>)}
-                                </div>
-                                <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                                    <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_3ra_en_2da || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_3ra_en_2da: e.target.checked})} /> Caballeros 3ra → 2da</label>
-                                    {categoriasTemp.caballeros_3ra_en_2da && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_3ra.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_2da')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_2da')} /> {j.nombre}</label>))}</div>)}
-                                </div>
-                                <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                                    <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.damas_c_en_b || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, damas_c_en_b: e.target.checked})} /> Damas C → B</label>
-                                    {categoriasTemp.damas_c_en_b && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.damas_c.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'damas_b')} onChange={() => toggleJugadorHabilitado(j.nombre, 'damas_b')} /> {j.nombre}</label>))}</div>)}
-                                </div>
-                                <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                                    <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.damas_b_en_a || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, damas_b_en_a: e.target.checked})} /> Damas B → A</label>
-                                    {categoriasTemp.damas_b_en_a && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.damas_b.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'damas_a')} onChange={() => toggleJugadorHabilitado(j.nombre, 'damas_a')} /> {j.nombre}</label>))}</div>)}
-                                </div>
-
-                                <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
-                                    <button className="btn btn-primary btn-responsive" onClick={guardarCategorias}>Guardar</button>
-                                    <button className="btn btn-danger btn-responsive" onClick={() => { setShowCategoriasModal(false); }}>Cancelar</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {showHorarioModal && (
-                        <div className="modal" onClick={() => { if (confirm('¿Cerrar sin guardar?')) { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); setEditandoHorario(null); } }}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <div className="modal-header">{editandoHorario ? 'Editar Horario' : `Agregar Horario (${partidosSinAsignar.length} partidos restantes)`}</div>
-                                <div className="form-group">
-                                    <label>Día</label>
-                                    <select value={horarioActual.dia} onChange={(e) => setHorarioActual({...horarioActual, dia: e.target.value})}>
-                                        <option value="sabado">Sábado</option><option value="domingo">Domingo</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Horario</label>
-                                    <select value={horarioActual.hora} onChange={(e) => setHorarioActual({...horarioActual, hora: e.target.value})}>
-                                        <option value="09:00">09:00</option><option value="10:30">10:30</option><option value="12:00">12:00</option>
-                                        <option value="13:30">13:30</option><option value="15:00">15:00</option><option value="16:30">16:30</option>
-                                        {horarioActual.dia === 'sabado' && <option value="17:45">17:45</option>}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Partido 1</label>
-                                    <select value={horarioActual.partido1} onChange={(e) => setHorarioActual({...horarioActual, partido1: e.target.value})}>
-                                        <option value="">Seleccionar partido...</option>
-                                        {partidosDisponiblesP1.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label>Partido 2</label>
-                                    <select value={horarioActual.partido2} onChange={(e) => setHorarioActual({...horarioActual, partido2: e.target.value})} disabled={!horarioActual.partido1}>
-                                        <option value="">Seleccionar partido...</option>
-                                        {partidosDisponiblesP2.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}
-                                    </select>
-                                </div>
-                                <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
-                                    <button className="btn btn-primary btn-responsive" onClick={agregarHorario}>{editandoHorario ? 'Actualizar' : partidosSinAsignar.length > 2 ? 'Guardar y Continuar' : 'Guardar'}</button>
-                                    <button className="btn btn-danger btn-responsive" onClick={() => { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); setEditandoHorario(null); }}>Cancelar</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div style={{marginTop: '30px'}}>
-                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Horarios Configurados</h3>
-                        {Object.values(partidosPorHorario).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; return a.hora.localeCompare(b.hora); }).map((horario, idx) => (
-                            <div key={idx} style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '2px solid #ddd' }}>
-                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap:'10px'}}>
-                                    <strong style={{fontSize: '16px', color: '#1e3c72'}}>{horario.dia === 'sabado' ? 'Sábado' : 'Domingo'} - {horario.hora}</strong>
-                                    <div style={{display: 'flex', gap:'5px'}}>
-                                        <button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => editarHorario(horario.dia, horario.hora)}>✏️ Editar</button>
-                                        <button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarHorario(horario.dia, horario.hora)}>🗑️</button>
-                                    </div>
-                                </div>
-                                {horario.partidos.sort((a, b) => (a.posicion || 0) - (b.posicion || 0)).map(partido => (
-                                    <div key={partido.id} style={{ background: 'white', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: fecha.partidoBonus === partido.id ? '2px solid #f59e0b' : '1px solid #e5e7eb' }}>
-                                        <strong>Partido {partido.posicion}: {partido.tipo}</strong>
-                                        {fecha.partidoBonus === partido.id && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS</span>}
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="match-grid" style={{marginTop: '30px'}}>
-                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Asignación de Jugadores</h3>
-                        {fecha.partidos.filter(p => p.horario).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; if (a.horario !== b.horario) return a.horario.localeCompare(b.horario); return (a.posicion || 0) - (b.posicion || 0); }).map(partido => (
-                            <PartidoCard 
-                                key={partido.id} partido={partido} fechaIndex={fechaSeleccionada} fecha={fecha}
-                                actualizarJugadores={actualizarJugadores} contarPartidosJugador={contarPartidosJugador} esBonus={fecha.partidoBonus === partido.id}
-                            />
-                        ))}
-                    </div>
-                </div>
-            );
-        }
-
-        function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPartidosJugador, esBonus }) {
-            const [jugadoresSeleccionados, setJugadoresSeleccionados] = useState(partido.jugadores || []);
-            useEffect(() => { setJugadoresSeleccionados(partido.jugadores || []); }, [partido.jugadores]);
-
-            const jugadoresHabilitados = fecha.jugadoresHabilitados || [];
-            const jugadoresDisponibles = partido.categorias.flatMap(cat => {
-                const jugadoresBase = JUGADORES_GOAT[cat] || [];
-                const jugadoresExtra = jugadoresHabilitados.filter(jh => jh.categoriaDestino === cat).map(jh => {
-                    const jugadorOriginal = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
-                    return { ...jugadorOriginal, esHabilitado: true, categoriaOriginal: jugadorOriginal.categoria };
-                });
-                return [...jugadoresBase, ...jugadoresExtra];
-            });
-
-            const agregarJugador = (nombreJugador) => {
-                if (jugadoresSeleccionados.length >= partido.numJugadores) { alert(`Este partido solo permite ${partido.numJugadores} jugador(es)`); return; }
-                const jugadorInfo = jugadoresDisponibles.find(j => j.nombre === nombreJugador);
-                const estaHabilitado = jugadorInfo && jugadorInfo.esHabilitado;
-                
-                if (!estaHabilitado) {
-                    const countPartidos = contarPartidosJugador(fechaIndex, nombreJugador);
-                    if (countPartidos >= 3) { alert(`${nombreJugador} ya está convocado para 3 partidos. No puede jugar más.`); return; }
-                }
-
-                const nuevosJugadores = [...jugadoresSeleccionados, nombreJugador];
-                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
-            };
-
-            const eliminarJugador = (index) => {
-                const nuevosJugadores = jugadoresSeleccionados.filter((_, i) => i !== index);
-                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
-            };
-
-            return (
-                <div className={`match-card ${esBonus ? 'bonus' : ''}`}>
-                    <div className="match-header">
-                        <div>
-                            <div className="match-type">{partido.tipo}</div>
-                            {esBonus && <div style={{color: '#f59e0b', fontSize: '14px', fontWeight: '600'}}>⭐ PARTIDO BONUS (20 pts)</div>}
-                        </div>
-                        <div className="match-time">{partido.dia === 'sabado' ? 'Sáb' : 'Dom'} {partido.horario} - P{partido.posicion}</div>
-                    </div>
-
-                    <div style={{marginBottom: '10px'}}>
-                        <strong>Jugadores asignados:</strong> {jugadoresSeleccionados.length === 0 && <span style={{color: '#999'}}> Ninguno</span>}
-                        <div style={{marginTop: '8px'}}>
-                            {jugadoresSeleccionados.map((jugador, idx) => {
-                                const jugadorObj = jugadoresDisponibles.find(j => j.nombre === jugador);
-                                const esHabilitado = jugadorObj && jugadorObj.esHabilitado;
-                                return (
-                                    <div key={idx} style={{ display: 'inline-block', background: esHabilitado ? '#10b981' : '#667eea', color: 'white', padding: '5px 12px', borderRadius: '6px', marginRight: '8px', marginBottom: '8px' }}>
-                                        {jugador} {jugadorObj?.capitan && <span className="captain-badge">CAPITÁN</span>}
-                                        {esHabilitado && <span style={{ background: 'rgba(255,255,255,0.3)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginLeft: '6px' }}>↑</span>}
-                                        <button onClick={() => eliminarJugador(idx)} style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px' }}>✕</button>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-
-                    {jugadoresSeleccionados.length < partido.numJugadores && (
-                        <div className="form-group" style={{marginBottom: '0'}}>
-                            <label>Agregar jugador:</label>
-                            <select onChange={(e) => { if (e.target.value) { agregarJugador(e.target.value); e.target.value = ''; } }} defaultValue="">
-                                <option value="">Seleccionar...</option>
-                                {jugadoresDisponibles.filter(j => !jugadoresSeleccionados.includes(j.nombre)).map((j, idx) => {
-                                    const count = contarPartidosJugador(fechaIndex, j.nombre);
-                                    return ( <option key={idx} value={j.nombre}>{j.nombre} {j.capitan ? '(CAPITÁN)' : ''} {j.esHabilitado ? '↑ ' : `- ${count}/3 partidos`}</option> );
-                                })}
-                            </select>
-                        </div>
-                    )}
-
-                    {jugadoresSeleccionados.some(j => {
-                        const jugadorObj = jugadoresDisponibles.find(jd => jd.nombre === j);
-                        if (jugadorObj && jugadorObj.esHabilitado) return false; 
-                        return contarPartidosJugador(fechaIndex, j) > 3;
-                    }) && (<div className="player-count-warning">⚠️ Advertencia: Algún jugador supera el límite de 3 partidos</div>)}
-                </div>
-            );
-        }
-
-        function ResultadosTab({ fechas, resultados, toggleResultado, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances }) {
-            const [showPlayOffModal, setShowPlayOffModal] = useState(false);
-            
-            // Estado vacío por defecto = Todas las fechas arrancan cerradas
-            const [fechasExpandidas, setFechasExpandidas] = useState({});
-
-            if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
-
-            const calcularResultadoFecha = (fechaIdx) => {
-                const fecha = fechas[fechaIdx];
-                if (!fecha || !fecha.partidos) {
-                    return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
-                }
-                
-                let ganados = 0;
-                let perdidos = 0;
-                let puntosGanados = 0;
-                let puntosPerdidos = 0;
-                
-                fecha.partidos.forEach(partido => {
-                    if (partido.jugadores && partido.jugadores.length > 0) {
-                        const key = `${fechaIdx}-${partido.id}`;
-                        const ganado = resultados[key] || false;
-                        const esBonus = fecha.partidoBonus === partido.id;
-                        const puntos = esBonus ? 20 : 10;
-                        
-                        if (ganado) {
-                            ganados++;
-                            puntosGanados += puntos;
-                        } else {
-                            perdidos++;
-                            puntosPerdidos += puntos;
-                        }
-                    }
-                });
-                
-                return { ganados, perdidos, puntosGanados, puntosPerdidos };
-            };
-
-            const toggleFecha = (idx) => {
-                setFechasExpandidas(prev => ({ ...prev, [idx]: !prev[idx] }));
-            };
-
-            return (
-                <div>
-                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Resultados de Partidos</h2>
-                    <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{marginBottom: '20px'}}>🏆 Ver Play-Off Proyectado</button>
-                    {showPlayOffModal && (<PlayOffModal fechas={fechas} resultados={resultados} zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} onClose={() => setShowPlayOffModal(false)} />)}
-                    
-                    {fechas.map((fecha, fechaIdx) => {
-                        const resultado = calcularResultadoFecha(fechaIdx);
-                        const total = resultado.ganados + resultado.perdidos;
-                        const isExpanded = fechasExpandidas[fechaIdx];
-
-                        return (
-                            <div key={fechaIdx} className="date-section" style={{padding: isExpanded ? '20px' : '10px 20px'}}>
-                                <div 
-                                    className="flex-mobile-col" 
-                                    style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none', gap: '15px'}}
-                                    onClick={() => toggleFecha(fechaIdx)}
-                                >
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                                        <span style={{color: '#d4af37', fontSize: '18px', transition: 'transform 0.3s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}}>
-                                            ▶
-                                        </span>
-                                        <div className="date-header" style={{marginBottom: 0}}>Fecha {fecha.numero} - vs {fecha.rival}</div>
-                                    </div>
-                                    
-                                    {total > 0 && (
-                                        <div style={{ background: resultado.puntosGanados > resultado.puntosPerdidos ? '#d1fae5' : resultado.puntosGanados < resultado.puntosPerdidos ? '#fee2e2' : '#fef3c7', padding: '6px 15px', borderRadius: '8px', border: `2px solid ${resultado.puntosGanados > resultado.puntosPerdidos ? '#10b981' : resultado.puntosGanados < resultado.puntosPerdidos ? '#ef4444' : '#f59e0b'}`, fontWeight: '700', fontSize: '14px', textAlign: 'center' }}>
-                                            <div style={{color: '#1e3c72'}}>Puntos: {resultado.puntosGanados} - {resultado.puntosPerdidos}</div>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {isExpanded && (
-                                    <div style={{marginTop: '20px', borderTop: '1px dashed #cbd5e1', paddingTop: '20px'}}>
-                                        {fecha.partidos && fecha.partidos
-                                            .filter(partido => partido.jugadores && partido.jugadores.length > 0)
-                                            .sort((a, b) => {
-                                                if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
-                                                if (a.horario !== b.horario) return a.horario.localeCompare(b.horario);
-                                                return (a.posicion || 0) - (b.posicion || 0);
-                                            })
-                                            .map(partido => {
-                                            const key = `${fechaIdx}-${partido.id}`;
-                                            const ganado = resultados[key] || false;
-                                            const esBonus = fecha.partidoBonus === partido.id;
-                                            return (
-                                                <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : '2px solid transparent' }}>
-                                                    <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px'}}>
-                                                        <div>
-                                                            <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>{partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario} - Partido {partido.posicion}</div>
-                                                            <strong>{partido.tipo}</strong> {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS (20 pts)</span>} {!esBonus && <span style={{color: '#666', marginLeft: '10px', fontSize: '14px'}}>(10 pts)</span>}
-                                                            <div style={{fontSize: '14px', marginTop: '5px'}}>{partido.jugadores.join(' / ')}</div>
-                                                        </div>
-                                                        <div className="checkbox-container" style={{margin: 0}}>
-                                                            <input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} />
-                                                            <label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            );
-        }
-
-        const MatchRow = ({ label, eq1, eq2, matchKey, selected, onAdvance }) => (
-            <div style={{ display: 'flex', alignItems: 'center', background: '#f8f9fa', padding: '10px', borderRadius: '8px', marginBottom: '8px', border: '1px solid #e5e7eb', minWidth: '450px' }}>
-                <div style={{ width: '80px', fontSize: '11px', fontWeight: 'bold', color: '#1e3c72', textTransform: 'uppercase' }}>{label}</div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                    <span style={{ fontWeight: selected === eq1 && eq1 ? 'bold' : 'normal', color: eq1 && !eq1.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq1 || 'TBD'}</span>
-                    <button onClick={() => eq1 && !eq1.startsWith('Ganador') ? onAdvance(matchKey, eq1) : null} style={{ background: 'none', border: 'none', cursor: eq1 && !eq1.startsWith('Ganador') ? 'pointer' : 'default', fontSize: '18px', opacity: eq1 && !eq1.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">
-                        {selected === eq1 && eq1 ? '✅' : '⬜'}
-                    </button>
-                </div>
-                <div style={{ padding: '0 15px', color: '#d4af37', fontWeight: 'bold', fontSize: '12px' }}>VS</div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button onClick={() => eq2 && !eq2.startsWith('Ganador') ? onAdvance(matchKey, eq2) : null} style={{ background: 'none', border: 'none', cursor: eq2 && !eq2.startsWith('Ganador') ? 'pointer' : 'default', fontSize: '18px', opacity: eq2 && !eq2.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">
-                        {selected === eq2 && eq2 ? '✅' : '⬜'}
-                    </button>
-                    <span style={{ fontWeight: selected === eq2 && eq2 ? 'bold' : 'normal', color: eq2 && !eq2.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq2 || 'TBD'}</span>
-                </div>
-            </div>
-        );
-
-        function PlayOffModal({ fechas, resultados, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances, onClose }) {
-            const calcularTablaZona = (zona) => {
-                const equiposZona = zona === 1 ? zonasConfig.zona1 : zonasConfig.zona2;
-                const tabla = {};
-                equiposZona.forEach((equipo, index) => {
-                    if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, originalIndex: index };
-                });
-                fechas.forEach((fecha, fechaIdx) => {
-                    if (!fecha || !fecha.partidos) return;
-                    
-                    const rival = fecha.rival;
-                    if (tabla['GOAT'] && tabla[rival]) {
-                        let puntosGOAT = 0;
-                        let puntosRival = 0;
-                        
-                        fecha.partidos.forEach(partido => {
-                            if (partido.jugadores && partido.jugadores.length > 0) {
-                                const key = `${fechaIdx}-${partido.id}`;
-                                const ganado = resultados[key] || false;
-                                const esBonus = fecha.partidoBonus === partido.id;
-                                const puntos = esBonus ? 20 : 10;
-                                
-                                if (ganado) {
-                                    puntosGOAT += puntos;
-                                } else {
-                                    puntosRival += puntos;
-                                }
-                            }
-                        });
-                        
-                        if (tabla['GOAT']) {
-                            tabla['GOAT'].partidos++;
-                            tabla['GOAT'].puntosFavor += puntosGOAT;
-                            tabla['GOAT'].puntosContra += puntosRival;
-                            tabla['GOAT'].puntosTotales += puntosGOAT;
-                            if (puntosGOAT > puntosRival) {
-                                tabla['GOAT'].ganados++;
-                            } else if (puntosGOAT < puntosRival) {
-                                tabla['GOAT'].perdidos++;
-                            }
-                            tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
-                        }
-                        
-                        if (tabla[rival]) {
-                            tabla[rival].partidos++;
-                            tabla[rival].puntosFavor += puntosRival;
-                            tabla[rival].puntosContra += puntosGOAT;
-                            tabla[rival].puntosTotales += puntosRival;
-                            if (puntosRival > puntosGOAT) {
-                                tabla[rival].ganados++;
-                            } else if (puntosRival < puntosGOAT) {
-                                tabla[rival].perdidos++;
-                            }
-                            tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
-                        }
-                    }
-                });
-                
-                crucesFinales.forEach(cruce => {
-                    if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
-                        const pts1 = parseInt(cruce.resultado1) || 0;
-                        const pts2 = parseInt(cruce.resultado2) || 0;
-                        
-                        if (pts1 > 0 || pts2 > 0) {
-                            tabla[cruce.equipo1].partidos++;
-                            tabla[cruce.equipo1].puntosFavor += pts1;
-                            tabla[cruce.equipo1].puntosContra += pts2;
-                            tabla[cruce.equipo1].puntosTotales += pts1;
-                            
-                            tabla[cruce.equipo2].partidos++;
-                            tabla[cruce.equipo2].puntosFavor += pts2;
-                            tabla[cruce.equipo2].puntosContra += pts1;
-                            tabla[cruce.equipo2].puntosTotales += pts2;
-                            
-                            if (pts1 > pts2) {
-                                tabla[cruce.equipo1].ganados++;
-                                tabla[cruce.equipo2].perdidos++;
-                            } else if (pts2 > pts1) {
-                                tabla[cruce.equipo2].ganados++;
-                                tabla[cruce.equipo1].perdidos++;
-                            }
-                            
-                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra;
-                            tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
-                        }
-                    }
-                });
-                
-                return Object.values(tabla).sort((a, b) => {
-                    if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales;
-                    if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia;
-                    return a.originalIndex - b.originalIndex;
-                });
-            };
-
-            const tablaZ1 = calcularTablaZona(1); const tablaZ2 = calcularTablaZona(2);
-            if (tablaZ1.length < 5 || tablaZ2.length < 5) {
-                return ( <div className="modal" onClick={onClose}><div className="modal-content" onClick={(e) => e.stopPropagation()}><div className="modal-header">🏆 Play-Off Proyectado</div><div className="warning">Por favor, configurá las zonas completas en la pestaña "Configuración" (5 equipos por zona) para poder ver la llave de Play-Offs.</div><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div></div> );
-            }
-
-            const eqZ1 = tablaZ1.map(t => t.nombre); const eqZ2 = tablaZ2.map(t => t.nombre);
-            const octA_1 = eqZ1[3]; const octA_2 = eqZ2[4]; const octB_1 = eqZ2[3]; const octB_2 = eqZ1[4];
-            const ganOctA = (playoffAvances.octA === octA_1 || playoffAvances.octA === octA_2) ? playoffAvances.octA : null;
-            const ganOctB = (playoffAvances.octB === octB_1 || playoffAvances.octB === octB_2) ? playoffAvances.octB : null;
-            const cua1_1 = eqZ1[0]; const cua1_2 = ganOctB || 'Ganador 8vos B'; const cua2_1 = eqZ1[1]; const cua2_2 = eqZ2[2];
-            const cua3_1 = eqZ1[2]; const cua3_2 = eqZ2[1]; const cua4_1 = ganOctA || 'Ganador 8vos A'; const cua4_2 = eqZ2[0];
-            const ganCua1 = (playoffAvances.cua1 === cua1_1 || playoffAvances.cua1 === cua1_2) ? playoffAvances.cua1 : null;
-            const ganCua2 = (playoffAvances.cua2 === cua2_1 || playoffAvances.cua2 === cua2_2) ? playoffAvances.cua2 : null;
-            const ganCua3 = (playoffAvances.cua3 === cua3_1 || playoffAvances.cua3 === cua3_2) ? playoffAvances.cua3 : null;
-            const ganCua4 = (playoffAvances.cua4 === cua4_1 || playoffAvances.cua4 === cua4_2) ? playoffAvances.cua4 : null;
-            const semi1_1 = ganCua1 || 'Ganador Cruce 1'; const semi1_2 = ganCua3 || 'Ganador Cruce 3';
-            const semi2_1 = ganCua2 || 'Ganador Cruce 2'; const semi2_2 = ganCua4 || 'Ganador Cruce 4';
-            const ganSemi1 = (playoffAvances.semi1 === semi1_1 || playoffAvances.semi1 === semi1_2) ? playoffAvances.semi1 : null;
-            const ganSemi2 = (playoffAvances.semi2 === semi2_1 || playoffAvances.semi2 === semi2_2) ? playoffAvances.semi2 : null;
-            const final_1 = ganSemi1 || 'Ganador Semi 1'; const final_2 = ganSemi2 || 'Ganador Semi 2';
-            const ganFinal = (playoffAvances.final === final_1 || playoffAvances.final === final_2) ? playoffAvances.final : null;
-
-            const handleAdvance = (matchKey, equipo) => { setPlayoffAvances(prev => { const isAlreadySelected = prev[matchKey] === equipo; return { ...prev, [matchKey]: isAlreadySelected ? null : equipo }; }); };
-
-            return (
-                <div className="modal" onClick={onClose}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '90vh'}}>
-                        <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
-                            <span>🏆 Llave de Play-Offs</span>
-                            <button onClick={() => setPlayoffAvances({})} className="btn" style={{padding: '5px 10px', fontSize: '12px', background: '#e0e0e0', margin: 0}}>Resetear Ticks</button>
-                        </div>
-                        <p style={{marginBottom: '20px', color: '#666', fontSize: '13px'}}>Las posiciones iniciales se calculan basándose en la tabla de zonas actual. Utilizá los ✅ para proyectar ganadores hacia la final.</p>
-                        
-                        <div className="table-container" style={{boxShadow: 'none'}}>
-                            <div style={{minWidth: '500px'}}>
-                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Octavos de Final</h4><MatchRow label="8vos A" eq1={octA_1} eq2={octA_2} matchKey="octA" selected={ganOctA} onAdvance={handleAdvance} /><MatchRow label="8vos B" eq1={octB_1} eq2={octB_2} matchKey="octB" selected={ganOctB} onAdvance={handleAdvance} /></div>
-                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Cuartos de Final</h4><MatchRow label="Cruce 1" eq1={cua1_1} eq2={cua1_2} matchKey="cua1" selected={ganCua1} onAdvance={handleAdvance} /><MatchRow label="Cruce 2" eq1={cua2_1} eq2={cua2_2} matchKey="cua2" selected={ganCua2} onAdvance={handleAdvance} /><MatchRow label="Cruce 3" eq1={cua3_1} eq2={cua3_2} matchKey="cua3" selected={ganCua3} onAdvance={handleAdvance} /><MatchRow label="Cruce 4" eq1={cua4_1} eq2={cua4_2} matchKey="cua4" selected={ganCua4} onAdvance={handleAdvance} /></div>
-                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Semifinales</h4><MatchRow label="Semi 1" eq1={semi1_1} eq2={semi1_2} matchKey="semi1" selected={ganSemi1} onAdvance={handleAdvance} /><MatchRow label="Semi 2" eq1={semi2_1} eq2={semi2_2} matchKey="semi2" selected={ganSemi2} onAdvance={handleAdvance} /></div>
-                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Final</h4><MatchRow label="Campeonato" eq1={final_1} eq2={final_2} matchKey="final" selected={ganFinal} onAdvance={handleAdvance} /></div>
-                            </div>
-                        </div>
-
-                        {ganFinal && (<div style={{background: '#d4af37', color: '#1a1a1a', padding: '15px', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold', fontSize: '20px'}}>🏆 CAMPEÓN PROYECTADO: {ganFinal.toUpperCase()} 🏆</div>)}
-                        <div style={{marginTop: '20px'}}><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div>
-                    </div>
                 </div>
             );
         }
@@ -2238,8 +1610,7 @@
             const getOrdenPartido = (pareja) => {
                 const jugadores = pareja.split(' - ');
                 const categorias = jugadores.map(j => { const jugador = Object.values(JUGADORES_GOAT).flat().find(jg => jg.nombre === j); return jugador ? jugador.categoria : ''; });
-                const cat1 = categorias[0] || ''; 
-                const cat2 = categorias[1] || '';
+                const cat1 = categorias[0] || ''; const cat2 = categorias[1] || '';
                 if (cat1.startsWith('damas') && cat2.startsWith('damas')) {
                     if (cat1 === 'damas_a' && cat2 === 'damas_a') return 1; if ((cat1 === 'damas_a' && cat2 === 'damas_b') || (cat1 === 'damas_b' && cat2 === 'damas_a')) return 2;
                     if (cat1 === 'damas_b' && cat2 === 'damas_b') return 3; if ((cat1 === 'damas_b' && cat2 === 'damas_c') || (cat1 === 'damas_c' && cat2 === 'damas_b')) return 4;
