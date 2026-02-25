@@ -1686,12 +1686,14 @@
 
         function EstadisticasTab({ calcularEstadisticas }) {
             const stats = calcularEstadisticas();
+            
             const getCategoriaOrden = (nombreJugador) => {
                 const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador);
                 if (!jugador) return 999;
                 const ordenCategorias = { 'damas_a': 1, 'damas_b': 2, 'damas_c': 3, 'caballeros_2da': 4, 'caballeros_3ra': 5, 'caballeros_4ta': 6, 'caballeros_5ta': 7 };
                 return ordenCategorias[jugador.categoria] || 999;
             };
+            
             const getCategoriaNombre = (nombreJugador) => {
                 const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador);
                 if (!jugador) return '';
@@ -1714,7 +1716,8 @@
             const getOrdenPartido = (pareja) => {
                 const jugadores = pareja.split(' - ');
                 const categorias = jugadores.map(j => { const jugador = Object.values(JUGADORES_GOAT).flat().find(jg => jg.nombre === j); return jugador ? jugador.categoria : ''; });
-                const cat1 = categorias[0] || ''; const cat2 = categorias[1] || '';
+                const cat1 = categorias[0] || ''; 
+                const cat2 = categorias[1] || '';
                 if (cat1.startsWith('damas') && cat2.startsWith('damas')) {
                     if (cat1 === 'damas_a' && cat2 === 'damas_a') return 1; if ((cat1 === 'damas_a' && cat2 === 'damas_b') || (cat1 === 'damas_b' && cat2 === 'damas_a')) return 2;
                     if (cat1 === 'damas_b' && cat2 === 'damas_b') return 3; if ((cat1 === 'damas_b' && cat2 === 'damas_c') || (cat1 === 'damas_c' && cat2 === 'damas_b')) return 4;
@@ -1738,9 +1741,57 @@
 
             const parejasOrdenadas = Object.entries(stats.parejas).sort((a, b) => getOrdenPartido(a[0]) - getOrdenPartido(b[0]));
 
+            // --- NUEVA FUNCIÓN DE EXPORTACIÓN A EXCEL (CSV) ---
+            const exportarAExcel = () => {
+                let csvContent = "\uFEFF"; // Codificación BOM para que Excel lea las tildes y eñes
+                
+                // Cabeceras Individuales
+                csvContent += "ESTADISTICAS INDIVIDUALES\n";
+                csvContent += "Categoria;Jugador;Singles Ganados;Singles Perdidos;Dobles Ganados;Dobles Perdidos;Total Ganados;Total Perdidos;% Victorias\n";
+                
+                Object.entries(jugadoresPorCategoria).forEach(([categoria, jugadores]) => {
+                    jugadores.forEach(([nombre, data]) => {
+                        const total = data.total.ganados + data.total.perdidos;
+                        const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1).replace('.', ',') : "0,0";
+                        csvContent += `${categoria};${nombre};${data.singles.ganados};${data.singles.perdidos};${data.dobles.ganados};${data.dobles.perdidos};${data.total.ganados};${data.total.perdidos};${porcentaje}%\n`;
+                    });
+                });
+
+                csvContent += "\n\n";
+
+                // Cabeceras Parejas
+                csvContent += "ESTADISTICAS DE PAREJAS\n";
+                csvContent += "Pareja;Ganados;Perdidos;% Victorias;Detalle de Partidos\n";
+                
+                parejasOrdenadas.forEach(([pareja, data]) => {
+                    const total = data.ganados + data.perdidos; 
+                    const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1).replace('.', ',') : "0,0";
+                    // Limpiamos el texto del detalle para que no rompa el Excel
+                    const detalle = data.fechas.map(f => `F${f.fecha} vs ${f.rival} (${f.resultado ? 'Ganado' : 'Perdido'})`).join(' | ');
+                    csvContent += `${pareja};${data.ganados};${data.perdidos};${porcentaje}%;${detalle}\n`;
+                });
+
+                // Crear enlace de descarga
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `GOAT_Estadisticas_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
             return (
                 <div>
-                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Estadísticas del Equipo</h2>
+                    {/* ENCABEZADO CON BOTÓN DE EXPORTAR */}
+                    <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px'}}>
+                        <h2 style={{color: '#1e3c72', margin: 0}}>Estadísticas del Equipo</h2>
+                        <button className="btn btn-success btn-responsive" onClick={exportarAExcel} style={{margin: 0}}>
+                            📊 Descargar Excel
+                        </button>
+                    </div>
+
                     <div className="stats-section">
                         <h3>Estadísticas Individuales</h3>
                         <div className="table-container">
