@@ -23,130 +23,44 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2416 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #1a1a1a 0%, #2d2416 100%);
-            color: #d4af37;
-            padding: 20px 30px;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            position: relative;
-        }
-
-        .header img {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-        }
-
-        .header-text {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 5px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            color: #d4af37;
-        }
-
-        .header p {
-            color: #c5a572;
-        }
-
-        .login-container {
-            background: white;
-            max-width: 500px;
-            margin: 100px auto;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            text-align: center;
-        }
-
-        .role-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            margin-bottom: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 8px;
-            border: 2px solid #ddd;
-            background: #f8f9fa;
-            color: #1e3c72;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .role-btn:hover {
-            border-color: #d4af37;
-            background: #fffbef;
-            transform: translateY(-2px);
-        }
-
-        .tabs {
-            display: flex;
-            background: #f5f5f5;
-            border-bottom: 2px solid #ddd;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1a1a1a 0%, #2d2416 100%); min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; position: relative; }
         
+        .header { background: linear-gradient(135deg, #1a1a1a 0%, #2d2416 100%); color: #d4af37; padding: 20px 30px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 20px; position: relative; }
+        .header img { width: 80px; height: 80px; object-fit: contain; }
+        .header-text { display: flex; flex-direction: column; align-items: center; }
+        .header h1 { font-size: 2.5em; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); color: #d4af37; }
+        .header p { color: #c5a572; }
+        
+        .login-container { background: white; max-width: 500px; margin: 100px auto; padding: 40px; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); text-align: center; }
+        .role-btn { display: block; width: 100%; padding: 15px; margin-bottom: 15px; font-size: 18px; font-weight: bold; border-radius: 8px; border: 2px solid #ddd; background: #f8f9fa; color: #1e3c72; cursor: pointer; transition: all 0.3s; }
+        .role-btn:hover { border-color: #d4af37; background: #fffbef; transform: translateY(-2px); }
+
+        .tabs { display: flex; background: #f5f5f5; border-bottom: 2px solid #ddd; overflow-x: auto; -webkit-overflow-scrolling: touch; }
         .tabs::-webkit-scrollbar { height: 4px; }
         .tabs::-webkit-scrollbar-thumb { background: #c5a572; border-radius: 4px; }
-
-        .tab {
-            flex: 1 0 auto; 
-            min-width: 130px; 
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            background: #e0e0e0;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
+        .tab { flex: 1 0 auto; min-width: 130px; padding: 15px; text-align: center; cursor: pointer; background: #e0e0e0; border: none; font-size: 16px; font-weight: 600; transition: all 0.3s; }
         .tab:hover { background: #d0d0d0; }
         .tab.active { background: white; border-bottom: 3px solid #d4af37; }
         .tab.admin-tab { background: #1e293b; color: white; border-bottom: none; }
         .tab.admin-tab.active { background: #0f172a; border-bottom: 3px solid #ef4444; }
 
+        /* Estilos Sub-Tabs Estadísticas */
+        .sub-tabs { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
+        .sub-tab { padding: 8px 18px; background: #f1f5f9; border-radius: 20px; cursor: pointer; font-weight: 600; font-size: 14px; color: #475569; border: none; transition: 0.3s; }
+        .sub-tab:hover { background: #e2e8f0; }
+        .sub-tab.active { background: #1e3c72; color: white; box-shadow: 0 4px 6px rgba(30, 60, 114, 0.2); }
+        
+        /* Gráficos de Barras CSS */
+        .efectividad-bar { display: flex; height: 24px; border-radius: 12px; overflow: hidden; background: #e2e8f0; margin-top: 5px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .ef-ganados { background: #10b981; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; transition: width 0.8s ease; }
+        .ef-perdidos { background: #ef4444; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: bold; transition: width 0.8s ease; }
+
         .content { padding: 30px; min-height: 500px; }
         .form-group { margin-bottom: 25px; }
         label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; }
-        input[type="text"], input[type="password"], input[type="number"], textarea, select {
-            width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;
-        }
+        input[type="text"], input[type="password"], input[type="number"], textarea, select { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s; }
         input:focus, textarea:focus, select:focus { outline: none; border-color: #667eea; }
         input:disabled, select:disabled { background: #f1f5f9; cursor: not-allowed; }
 
@@ -194,17 +108,7 @@
         .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
         .grid-2 > div { min-width: 0; }
 
-        .user-menu {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: rgba(255,255,255,0.1);
-            padding: 8px 15px;
-            border-radius: 20px;
-        }
+        .user-menu { position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 15px; background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; }
 
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -438,7 +342,6 @@
                 setActiveTab('busqueda');
             };
 
-            // SI NO HAY ROL SELECCIONADO, MUESTRA LOGIN
             if (!userRole) {
                 return <LoginScreen onLogin={setUserRole} />;
             }
@@ -564,30 +467,54 @@
                 doc.save(`GOAT-Fecha${fecha.numero}-vs-${fecha.rival}.pdf`);
             };
 
+            // Novedad: Motor de estadísticas ajustado para guardar historiales
             const calcularEstadisticas = () => {
                 const stats = { jugadores: {}, parejas: {} };
                 const todosJugadores = Object.values(JUGADORES_GOAT).flat();
+                
                 todosJugadores.forEach(jugador => {
-                    stats.jugadores[jugador.nombre] = { singles: { ganados: 0, perdidos: 0 }, dobles: { ganados: 0, perdidos: 0 }, total: { ganados: 0, perdidos: 0 } };
+                    stats.jugadores[jugador.nombre] = { 
+                        categoria: jugador.categoria,
+                        singles: { ganados: 0, perdidos: 0 }, 
+                        dobles: { ganados: 0, perdidos: 0 }, 
+                        total: { ganados: 0, perdidos: 0, historial: [] } 
+                    };
                 });
                 
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
-                            const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esSingle = partido.numJugadores === 1;
+                            const key = `${fechaIdx}-${partido.id}`; 
+                            const ganado = resultados[key] || false; 
+                            const esSingle = partido.numJugadores === 1;
+                            
                             partido.jugadores.forEach(jugador => {
                                 if (stats.jugadores[jugador]) {
+                                    const companeros = partido.jugadores.filter(j => j !== jugador);
+                                    const compTexto = companeros.length > 0 ? companeros.join(' / ') : 'Jugó Single';
+
                                     if (esSingle) stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
                                     else stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
+                                    
                                     stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
+                                    
+                                    // Guardamos el detalle para el módulo Individual
+                                    stats.jugadores[jugador].total.historial.push({
+                                        fechaNum: fecha.numero, rival: fecha.rival,
+                                        tipo: partido.tipo, companero: compTexto, resultado: ganado
+                                    });
                                 }
                             });
+
                             if (!esSingle && partido.jugadores.length === 2) {
                                 const parejaKey = [...partido.jugadores].sort().join(' - ');
-                                if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [] };
+                                if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [], tiposJugados: [] };
                                 stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
                                 stats.parejas[parejaKey].fechas.push({ fecha: fecha.numero, rival: fecha.rival, tipo: partido.tipo, resultado: ganado });
+                                if (!stats.parejas[parejaKey].tiposJugados.includes(partido.tipo)) {
+                                    stats.parejas[parejaKey].tiposJugados.push(partido.tipo);
+                                }
                             }
                         }
                     });
@@ -755,7 +682,7 @@
                 </div>
             );
         }
-        // COMPONENTE FALTANTE: PESTAÑA DE ADMINISTRADOR
+
         function AdminTab({ 
             numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances,
             setNumEquipos, setEquipos, setBaseEquipos, setFechas, setResultados, setPosiciones, setCrucesFinales, setZonasConfig, setPlayoffAvances,
@@ -860,6 +787,7 @@
                 </div>
             );
         }
+
         function ConfiguracionTab({ userRole, numEquipos, setNumEquipos, equipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, agregarFecha, fechas, zonasConfig, setZonasConfig }) {
             const [showEquiposModal, setShowEquiposModal] = useState(false);
             const [showAsignarFechasModal, setShowAsignarFechasModal] = useState(false);
@@ -909,7 +837,7 @@
                                             <label>Rival Fecha {numFecha}</label>
                                             <select value={fechas[numFecha-1]?.rival || ''} onChange={(e) => { if (e.target.value) { agregarFecha(numFecha, e.target.value); } }}>
                                                 <option value="">Seleccionar rival...</option>
-                                                {equipos.filter(eq => !eq.esGoat).map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}
+                                                {equipos.filter(eq => !eq.esGoat).map((eq, idx) => (<option key={eqIdx} value={eq.nombre}>{eq.nombre}</option>))}
                                             </select>
                                         </div>
                                     ))}
@@ -986,502 +914,151 @@
             );
         }
 
-        function FechasTab({ userRole, fechas, procesarHorarios, actualizarJugadores, contarPartidosJugador, generarPDF, setFechas }) {
-            const [fechaSeleccionada, setFechaSeleccionada] = useState(0);
-            const [showHorarioModal, setShowHorarioModal] = useState(false);
-            const [horarioActual, setHorarioActual] = useState({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
-            const [editandoHorario, setEditandoHorario] = useState(null);
-            const [showCategoriasModal, setShowCategoriasModal] = useState(false);
-            const [categoriasTemp, setCategoriasTemp] = useState({});
-            const [jugadoresHabilitadosTemp, setJugadoresHabilitadosTemp] = useState([]);
+        function ModalCargarEquipos({ baseEquipos, setBaseEquipos, onGuardar, onClose }) {
+            const [rivalesTemp, setRivalesTemp] = useState(Array(9).fill(''));
+            const [nuevoClub, setNuevoClub] = useState('');
 
-            if (fechas.length === 0) return <div className="warning">Por favor, que un Capitán configure primero los equipos y las fechas.</div>;
-            const fecha = fechas[fechaSeleccionada];
-
-            const abrirCategoriasModal = () => {
-                setCategoriasTemp(fecha.categoriasHabilitadas || { caballeros_5ta_en_4ta: false, caballeros_4ta_en_3ra: false, caballeros_3ra_en_2da: false, damas_c_en_b: false, damas_b_en_a: false });
-                setJugadoresHabilitadosTemp(fecha.jugadoresHabilitados || []); setShowCategoriasModal(true);
-            };
-            const guardarCategorias = () => { const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].categoriasHabilitadas = categoriasTemp; nuevasFechas[fechaSeleccionada].jugadoresHabilitados = jugadoresHabilitadosTemp; setFechas(nuevasFechas); setShowCategoriasModal(false); };
-            const toggleJugadorHabilitado = (nombreJugador, categoriaDestino) => {
-                const existe = jugadoresHabilitadosTemp.find(j => j.jugador === nombreJugador && j.categoriaDestino === categoriaDestino);
-                if (existe) setJugadoresHabilitadosTemp(jugadoresHabilitadosTemp.filter(j => !(j.jugador === nombreJugador && j.categoriaDestino === categoriaDestino)));
-                else setJugadoresHabilitadosTemp([...jugadoresHabilitadosTemp, { jugador: nombreJugador, categoriaDestino }]);
+            const handleAgregarClub = () => {
+                const nombreLimpio = nuevoClub.trim();
+                if (nombreLimpio && !baseEquipos.some(b => b.toLowerCase() === nombreLimpio.toLowerCase())) {
+                    setBaseEquipos([...baseEquipos, nombreLimpio].sort()); setNuevoClub('');
+                } else if (nombreLimpio) { alert('Este club ya existe en la base.'); }
             };
 
-            const getPartidosDisponibles = (excluirPartido = null) => {
-                return PARTIDOS.filter(p => {
-                    if (editandoHorario) {
-                        const partidoDelHorario = fecha.partidos.find(fp => fp.id === p.id && fp.horario === editandoHorario.horario && fp.dia === editandoHorario.dia);
-                        if (partidoDelHorario) return true;
-                    }
-                    if (excluirPartido && p.id === excluirPartido) return false;
-                    const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario;
-                });
-            };
-
-            const partidosDisponiblesP1 = getPartidosDisponibles(); const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
-
-            const agregarHorario = () => {
-                if (!horarioActual.partido1 || !horarioActual.partido2) { alert('Debes seleccionar los 2 partidos para este horario'); return; }
-                const nuevasFechas = [...fechas]; const fechaIdx = fechaSeleccionada;
-                if (editandoHorario) { nuevasFechas[fechaIdx].partidos = nuevasFechas[fechaIdx].partidos.map(p => { if (p.dia === editandoHorario.dia && p.horario === editandoHorario.horario) return { ...p, dia: 'sabado', horario: '', posicion: undefined }; return p; }); }
-                const idx1 = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === parseInt(horarioActual.partido1));
-                if (idx1 !== -1) { nuevasFechas[fechaIdx].partidos[idx1].horario = horarioActual.hora; nuevasFechas[fechaIdx].partidos[idx1].dia = horarioActual.dia; nuevasFechas[fechaIdx].partidos[idx1].posicion = 1; }
-                const idx2 = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === parseInt(horarioActual.partido2));
-                if (idx2 !== -1) { nuevasFechas[fechaIdx].partidos[idx2].horario = horarioActual.hora; nuevasFechas[fechaIdx].partidos[idx2].dia = horarioActual.dia; nuevasFechas[fechaIdx].partidos[idx2].posicion = 2; }
-                setFechas(nuevasFechas); setEditandoHorario(null);
-                const partidosSinAsignar = PARTIDOS.filter(p => { const partidoAsignado = nuevasFechas[fechaIdx].partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario; });
-                if (partidosSinAsignar.length >= 2) {
-                    const horariosUsados = {}; nuevasFechas[fechaIdx].partidos.forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
-                    const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
-                    const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
-                    if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' }); 
-                    else { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); }
-                } else { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); }
-            };
-
-            const eliminarHorario = (dia, hora) => {
-                if (confirm(`¿Eliminar los partidos del ${dia} a las ${hora}?`)) {
-                    const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].partidos = nuevasFechas[fechaSeleccionada].partidos.map(p => { if (p.dia === dia && p.horario === hora) return { ...p, dia: 'sabado', horario: '', posicion: undefined }; return p; });
-                    setFechas(nuevasFechas);
-                }
-            };
-            const editarHorario = (dia, hora) => {
-                const partidos = fecha.partidos.filter(p => p.dia === dia && p.horario === hora);
-                if (partidos.length === 2) {
-                    const p1 = partidos.find(p => p.posicion === 1); const p2 = partidos.find(p => p.posicion === 2);
-                    setHorarioActual({ dia: dia, hora: hora, partido1: p1 ? p1.id.toString() : '', partido2: p2 ? p2.id.toString() : '' });
-                    setEditandoHorario({ dia, horario: hora }); setShowHorarioModal(true);
+            const eliminarDeBase = (clubAEliminar) => {
+                if (confirm(`¿Seguro que querés eliminar "${clubAEliminar}" de tu base de datos permanente?`)) {
+                    setBaseEquipos(baseEquipos.filter(c => c !== clubAEliminar));
+                    const nuevosRivales = rivalesTemp.map(r => r === clubAEliminar ? '' : r); setRivalesTemp(nuevosRivales);
                 }
             };
 
-            const partidosPorHorario = {};
-            fecha.partidos.forEach(partido => { if (partido.horario) { const key = `${partido.dia}-${partido.horario}`; if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: partido.dia, hora: partido.horario, partidos: [] }; partidosPorHorario[key].partidos.push(partido); } });
-            const partidosSinAsignar = PARTIDOS.filter(p => { const partidoAsignado = fecha.partidos.find(fp => fp.id === p.id); return !partidoAsignado.horario; });
-            const categoriasHabilitadasCount = fecha.jugadoresHabilitados ? fecha.jugadoresHabilitados.length : 0;
+            const obtenerOpcionesDisponibles = (index) => { return baseEquipos.filter(club => { return !rivalesTemp.some((r, i) => r === club && i !== index); }); };
+            const actualizarRival = (index, valor) => { const nuevos = [...rivalesTemp]; nuevos[index] = valor; setRivalesTemp(nuevos); };
+            const procesarGuardado = () => { if (rivalesTemp.some(r => r === '')) { alert('Por favor selecciona los 9 rivales para avanzar.'); return; } onGuardar(rivalesTemp); };
 
-            return (
-                <div>
-                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Convocatorias</h2>
-                    
-                    <div style={{display: 'flex', gap: '10px', marginBottom: '25px', flexWrap: 'wrap'}}>
-                        {fechas.map((f, idx) => (
-                            <button 
-                                key={idx} className={`btn ${fechaSeleccionada === idx ? 'btn-primary' : ''}`}
-                                style={{ background: fechaSeleccionada === idx ? '#d4af37' : '#e2e8f0', color: fechaSeleccionada === idx ? '#1a1a1a' : '#475569', margin: 0, flex: '1 1 calc(50% - 10px)', minWidth: '130px', padding: '10px' }}
-                                onClick={() => setFechaSeleccionada(idx)}
-                            >
-                                Fecha {f.numero} <br/><span style={{fontSize: '13px', fontWeight: 'normal'}}>vs {f.rival}</span>
-                            </button>
-                        ))}
-                    </div>
-
-                    <div className="date-section">
-                        <div className="date-header">Fecha {fecha.numero} - vs {fecha.rival}</div>
-                        
-                        {userRole !== 'jugador' && (
-                            <>
-                                <div style={{marginBottom: '15px', padding: '12px', background: '#f0f9ff', borderRadius: '8px', border: '1px solid #0ea5e9'}}>
-                                    <strong>Partidos sin asignar: {partidosSinAsignar.length} de 26</strong>
-                                </div>
-                                <div style={{marginBottom: '15px'}}>
-                                    <label style={{display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer'}}>
-                                        <input type="checkbox" checked={categoriasHabilitadasCount > 0} onChange={abrirCategoriasModal} />
-                                        <span>Habilitar jugadores de categorías inferiores en superiores</span>
-                                    </label>
-                                    {categoriasHabilitadasCount > 0 && (<div style={{marginTop: '8px', fontSize: '14px', color: '#10b981', fontWeight: '600'}}>✓ {categoriasHabilitadasCount} jugador(es) habilitado(s) en categorías superiores</div>)}
-                                </div>
-                                <button className="btn btn-primary btn-responsive" onClick={() => {
-                                    setEditandoHorario(null);
-                                    const horariosUsados = {}; fecha.partidos.forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
-                                    const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
-                                    const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
-                                    if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' }); else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
-                                    setShowHorarioModal(true);
-                                }}>➕ Agregar Horario</button>
-                                
-                                <div className="form-group" style={{marginTop: '20px'}}>
-                                    <label>Partido Bonus (vale 20 puntos)</label>
-                                    <select value={fecha.partidoBonus || ''} onChange={(e) => { const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].partidoBonus = e.target.value ? parseInt(e.target.value) : null; setFechas(nuevasFechas); }}>
-                                        <option value="">Seleccionar partido bonus...</option>
-                                        {PARTIDOS.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}
-                                    </select>
-                                </div>
-                            </>
-                        )}
-                        {userRole === 'jugador' && fecha.partidoBonus && (
-                            <div style={{marginTop: '10px', padding: '10px', background: '#fffbeb', borderRadius: '8px', border: '1px solid #f59e0b', color: '#92400e', fontWeight: 'bold'}}>
-                                ⭐ Partido Bonus de esta fecha: {PARTIDOS.find(p=>p.id===fecha.partidoBonus)?.tipo}
-                            </div>
-                        )}
-
-                        <button className="btn btn-success btn-responsive" onClick={() => generarPDF(fechaSeleccionada)} style={{marginTop: '20px'}}>📄 Descargar Convocatoria (PDF)</button>
-                    </div>
-
-                    {showCategoriasModal && ( <ModalCategorias categoriasTemp={categoriasTemp} setCategoriasTemp={setCategoriasTemp} jugadoresHabilitadosTemp={jugadoresHabilitadosTemp} toggleJugadorHabilitado={toggleJugadorHabilitado} guardarCategorias={guardarCategorias} setShowCategoriasModal={setShowCategoriasModal} /> )}
-
-                    {showHorarioModal && (
-                        <div className="modal" onClick={() => { if (confirm('¿Cerrar sin guardar?')) { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); setEditandoHorario(null); } }}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <div className="modal-header">{editandoHorario ? 'Editar Horario' : `Agregar Horario (${partidosSinAsignar.length} partidos restantes)`}</div>
-                                <div className="form-group"><label>Día</label><select value={horarioActual.dia} onChange={(e) => setHorarioActual({...horarioActual, dia: e.target.value})}><option value="sabado">Sábado</option><option value="domingo">Domingo</option></select></div>
-                                <div className="form-group">
-                                    <label>Horario</label>
-                                    <select value={horarioActual.hora} onChange={(e) => setHorarioActual({...horarioActual, hora: e.target.value})}>
-                                        <option value="09:00">09:00</option><option value="10:30">10:30</option><option value="12:00">12:00</option>
-                                        <option value="13:30">13:30</option><option value="15:00">15:00</option><option value="16:30">16:30</option>
-                                        {horarioActual.dia === 'sabado' && <option value="17:45">17:45</option>}
-                                    </select>
-                                </div>
-                                <div className="form-group"><label>Partido 1</label><select value={horarioActual.partido1} onChange={(e) => setHorarioActual({...horarioActual, partido1: e.target.value})}><option value="">Seleccionar partido...</option>{partidosDisponiblesP1.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
-                                <div className="form-group"><label>Partido 2</label><select value={horarioActual.partido2} onChange={(e) => setHorarioActual({...horarioActual, partido2: e.target.value})} disabled={!horarioActual.partido1}><option value="">Seleccionar partido...</option>{partidosDisponiblesP2.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
-                                <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
-                                    <button className="btn btn-primary btn-responsive" onClick={agregarHorario}>{editandoHorario ? 'Actualizar' : partidosSinAsignar.length > 2 ? 'Guardar y Continuar' : 'Guardar'}</button>
-                                    <button className="btn btn-danger btn-responsive" onClick={() => { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); setEditandoHorario(null); }}>Cancelar</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div style={{marginTop: '30px'}}>
-                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Cronograma</h3>
-                        {Object.keys(partidosPorHorario).length === 0 && <div className="warning" style={{background: 'white', border: '1px solid #ddd'}}>Aún no hay horarios asignados en esta fecha.</div>}
-                        {Object.values(partidosPorHorario).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; return a.hora.localeCompare(b.hora); }).map((horario, idx) => (
-                            <div key={idx} style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '2px solid #ddd' }}>
-                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap:'10px'}}>
-                                    <strong style={{fontSize: '16px', color: '#1e3c72'}}>{horario.dia === 'sabado' ? 'Sábado' : 'Domingo'} - {horario.hora}</strong>
-                                    {userRole !== 'jugador' && (
-                                        <div style={{display: 'flex', gap:'5px'}}>
-                                            <button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => editarHorario(horario.dia, horario.hora)}>✏️ Editar</button>
-                                            <button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarHorario(horario.dia, horario.hora)}>🗑️</button>
-                                        </div>
-                                    )}
-                                </div>
-                                {horario.partidos.sort((a, b) => (a.posicion || 0) - (b.posicion || 0)).map(partido => (
-                                    <div key={partido.id} style={{ background: 'white', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: fecha.partidoBonus === partido.id ? '2px solid #f59e0b' : '1px solid #e5e7eb' }}>
-                                        <strong>Partido {partido.posicion}: {partido.tipo}</strong>
-                                        {fecha.partidoBonus === partido.id && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS</span>}
-                                    </div>
-                                ))}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="match-grid" style={{marginTop: '30px'}}>
-                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Asignación de Jugadores</h3>
-                        {fecha.partidos.filter(p => p.horario).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; if (a.horario !== b.horario) return a.horario.localeCompare(b.horario); return (a.posicion || 0) - (b.posicion || 0); }).map(partido => (
-                            <PartidoCard 
-                                key={partido.id} partido={partido} fechaIndex={fechaSeleccionada} fecha={fecha} userRole={userRole}
-                                actualizarJugadores={actualizarJugadores} contarPartidosJugador={contarPartidosJugador} esBonus={fecha.partidoBonus === partido.id}
-                            />
-                        ))}
-                    </div>
-                </div>
-            );
-        }
-
-        function ModalCategorias({categoriasTemp, setCategoriasTemp, jugadoresHabilitadosTemp, toggleJugadorHabilitado, guardarCategorias, setShowCategoriasModal}) {
             return (
                 <div className="modal" onClick={() => {}}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px'}}>
-                        <div className="modal-header">Habilitar Jugadores en Categorías Superiores</div>
-                        <p style={{marginBottom: '20px', color: '#666'}}>Los jugadores habilitados NO contarán en el límite de 3 partidos cuando jueguen en categoría superior.</p>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">Seleccionar los 9 equipos rivales</div>
+                        <p style={{color: '#666', marginBottom: '20px', fontSize: '14px'}}>Elegí los equipos desde la base de datos. Podes agregar nuevos o eliminar los que ya no compitan.</p>
 
-                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_5ta_en_4ta || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_5ta_en_4ta: e.target.checked})} /> Caballeros 5ta → 4ta</label>
-                            {categoriasTemp.caballeros_5ta_en_4ta && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_5ta.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_4ta')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_4ta')} /> {j.nombre}</label>))}</div>)}
+                        <div style={{background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '25px'}}>
+                            <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', alignItems: 'flex-end', marginBottom: '15px'}}>
+                                <div style={{flex: 1}}>
+                                    <label style={{fontSize: '13px'}}>➕ Agregar nuevo club a la base de datos</label>
+                                    <input type="text" value={nuevoClub} onChange={(e) => setNuevoClub(e.target.value)} placeholder="Ej: Tenis Club" onKeyPress={(e) => e.key === 'Enter' && handleAgregarClub()} />
+                                </div>
+                                <button className="btn btn-primary btn-responsive" onClick={handleAgregarClub} style={{marginRight: 0}}>Agregar</button>
+                            </div>
+                            
+                            <div style={{borderTop: '1px solid #ddd', paddingTop: '10px'}}>
+                                <span style={{fontSize: '12px', color: '#666', display: 'block', marginBottom: '8px'}}>Clubes en tu base de datos:</span>
+                                <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
+                                    {baseEquipos.map((club, idx) => (
+                                        <div key={idx} style={{background: '#e2e8f0', padding: '4px 10px', borderRadius: '15px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: '#1e293b'}}>
+                                            {club} <button onClick={() => eliminarDeBase(club)} style={{background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', padding: '0 2px'}}>×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_4ta_en_3ra || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_4ta_en_3ra: e.target.checked})} /> Caballeros 4ta → 3ra</label>
-                            {categoriasTemp.caballeros_4ta_en_3ra && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_4ta.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_3ra')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_3ra')} /> {j.nombre}</label>))}</div>)}
+
+                        <div className="grid-2">
+                            {rivalesTemp.map((rivalActual, idx) => (
+                                <div className="form-group" style={{marginBottom: '0'}} key={idx}>
+                                    <label>Rival {idx + 1}</label>
+                                    <select value={rivalActual} onChange={(e) => actualizarRival(idx, e.target.value)}>
+                                        <option value="">-- Seleccionar --</option>
+                                        {obtenerOpcionesDisponibles(idx).map((club, i) => (<option key={i} value={club}>{club}</option>))}
+                                    </select>
+                                </div>
+                            ))}
                         </div>
-                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_3ra_en_2da || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, caballeros_3ra_en_2da: e.target.checked})} /> Caballeros 3ra → 2da</label>
-                            {categoriasTemp.caballeros_3ra_en_2da && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.caballeros_3ra.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_2da')} onChange={() => toggleJugadorHabilitado(j.nombre, 'caballeros_2da')} /> {j.nombre}</label>))}</div>)}
-                        </div>
-                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.damas_c_en_b || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, damas_c_en_b: e.target.checked})} /> Damas C → B</label>
-                            {categoriasTemp.damas_c_en_b && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.damas_c.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'damas_b')} onChange={() => toggleJugadorHabilitado(j.nombre, 'damas_b')} /> {j.nombre}</label>))}</div>)}
-                        </div>
-                        <div style={{marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px'}}>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.damas_b_en_a || false} onChange={(e) => setCategoriasTemp({...categoriasTemp, damas_b_en_a: e.target.checked})} /> Damas B → A</label>
-                            {categoriasTemp.damas_b_en_a && (<div style={{marginLeft: '30px'}}>{JUGADORES_GOAT.damas_b.map(j => (<label key={j.nombre} style={{display: 'block', marginBottom: '5px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'damas_a')} onChange={() => toggleJugadorHabilitado(j.nombre, 'damas_a')} /> {j.nombre}</label>))}</div>)}
-                        </div>
-                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
-                            <button className="btn btn-primary btn-responsive" onClick={guardarCategorias}>Guardar</button>
-                            <button className="btn btn-danger btn-responsive" onClick={() => { setShowCategoriasModal(false); }}>Cancelar</button>
+
+                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '30px', borderTop: '2px solid #eee', paddingTop: '20px'}}>
+                            <button className="btn btn-success btn-responsive" onClick={procesarGuardado}>Confirmar Torneo</button>
+                            <button className="btn btn-danger btn-responsive" onClick={onClose}>Cancelar</button>
                         </div>
                     </div>
                 </div>
             );
         }
 
-        function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPartidosJugador, esBonus, userRole }) {
-            const [jugadoresSeleccionados, setJugadoresSeleccionados] = useState(partido.jugadores || []);
-            useEffect(() => { setJugadoresSeleccionados(partido.jugadores || []); }, [partido.jugadores]);
+        function AsignarFechasModal({ zonasConfig, equipos, onClose, onGenerar }) {
+            const [crucesConFechas, setCrucesConFechas] = useState([]);
 
-            const jugadoresHabilitados = fecha.jugadoresHabilitados || [];
-            const jugadoresDisponibles = partido.categorias.flatMap(cat => {
-                const jugadoresBase = JUGADORES_GOAT[cat] || [];
-                const jugadoresExtra = jugadoresHabilitados.filter(jh => jh.categoriaDestino === cat).map(jh => {
-                    const jugadorOriginal = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
-                    return { ...jugadorOriginal, esHabilitado: true, categoriaOriginal: jugadorOriginal.categoria };
-                });
-                return [...jugadoresBase, ...jugadoresExtra];
-            });
+            useEffect(() => {
+                const generarCruces = () => {
+                    const cruces = [];
+                    const zona1 = zonasConfig.zona1.filter(e => e);
+                    for (let i = 0; i < zona1.length; i++) {
+                        for (let j = i + 1; j < zona1.length; j++) {
+                            if (zona1[i] !== 'GOAT' && zona1[j] !== 'GOAT') cruces.push({ equipo1: zona1[i], equipo2: zona1[j], zona: 1, fecha: '' });
+                        }
+                    }
+                    const zona2 = zonasConfig.zona2.filter(e => e);
+                    for (let i = 0; i < zona2.length; i++) {
+                        for (let j = i + 1; j < zona2.length; j++) {
+                            if (zona2[i] !== 'GOAT' && zona2[j] !== 'GOAT') cruces.push({ equipo1: zona2[i], equipo2: zona2[j], zona: 2, fecha: '' });
+                        }
+                    }
+                    setCrucesConFechas(cruces);
+                };
+                generarCruces();
+            }, []);
 
-            const agregarJugador = (nombreJugador) => {
-                if (jugadoresSeleccionados.length >= partido.numJugadores) { alert(`Este partido solo permite ${partido.numJugadores} jugador(es)`); return; }
-                const jugadorInfo = jugadoresDisponibles.find(j => j.nombre === nombreJugador);
-                const estaHabilitado = jugadorInfo && jugadorInfo.esHabilitado;
-                
-                if (!estaHabilitado) {
-                    const countPartidos = contarPartidosJugador(fechaIndex, nombreJugador);
-                    if (countPartidos >= 3) { alert(`${nombreJugador} ya está convocado para 3 partidos. No puede jugar más.`); return; }
-                }
+            const actualizarFecha = (idx, fecha) => { const nuevos = [...crucesConFechas]; nuevos[idx].fecha = fecha; setCrucesConFechas(nuevos); };
 
-                const nuevosJugadores = [...jugadoresSeleccionados, nombreJugador];
-                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
-            };
-
-            const eliminarJugador = (index) => {
-                const nuevosJugadores = jugadoresSeleccionados.filter((_, i) => i !== index);
-                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+            const guardarCruces = () => {
+                if (crucesConFechas.some(c => !c.fecha)) { alert('Por favor asigná una fecha a todos los cruces'); return; }
+                const crucesFinales = crucesConFechas.map(c => ({ tipo: c.fecha, equipo1: c.equipo1, equipo2: c.equipo2, resultado1: '', resultado2: '' }));
+                onGenerar(crucesFinales);
             };
 
             return (
-                <div className={`match-card ${esBonus ? 'bonus' : ''}`}>
-                    <div className="match-header">
-                        <div>
-                            <div className="match-type">{partido.tipo}</div>
-                            {esBonus && <div style={{color: '#f59e0b', fontSize: '14px', fontWeight: '600'}}>⭐ PARTIDO BONUS (20 pts)</div>}
-                        </div>
-                        <div className="match-time">{partido.dia === 'sabado' ? 'Sáb' : 'Dom'} {partido.horario} - P{partido.posicion}</div>
-                    </div>
+                <div className="modal" onClick={() => {}}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">Asignar Fechas a los Cruces</div>
+                        <p style={{marginBottom: '20px', color: '#666'}}>Asigná a qué fecha corresponde cada cruce entre equipos de la misma zona</p>
 
-                    <div style={{marginBottom: '10px'}}>
-                        <strong>Jugadores asignados:</strong> {jugadoresSeleccionados.length === 0 && <span style={{color: '#999'}}> Ninguno</span>}
-                        <div style={{marginTop: '8px'}}>
-                            {jugadoresSeleccionados.map((jugador, idx) => {
-                                const jugadorObj = jugadoresDisponibles.find(j => j.nombre === jugador);
-                                const esHabilitado = jugadorObj && jugadorObj.esHabilitado;
+                        <div style={{marginBottom: '30px'}}>
+                            <h4 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 1</h4>
+                            {crucesConFechas.filter(c => c.zona === 1).map((cruce, idx) => {
+                                const realIdx = crucesConFechas.findIndex(c => c === cruce);
                                 return (
-                                    <div key={idx} style={{ display: 'inline-block', background: esHabilitado ? '#10b981' : '#667eea', color: 'white', padding: '5px 12px', borderRadius: '6px', marginRight: '8px', marginBottom: '8px' }}>
-                                        {jugador} {jugadorObj?.capitan && <span className="captain-badge">CAPITÁN</span>}
-                                        {esHabilitado && <span style={{ background: 'rgba(255,255,255,0.3)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginLeft: '6px' }}>↑</span>}
-                                        {userRole !== 'jugador' && (
-                                            <button onClick={() => eliminarJugador(idx)} style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px' }}>✕</button>
-                                        )}
+                                    <div key={realIdx} className="flex-mobile-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: '#f8f9fa', marginBottom: '8px', borderRadius: '6px', gap: '10px' }}>
+                                        <span><strong>{cruce.equipo1}</strong> vs <strong>{cruce.equipo2}</strong></span>
+                                        <select value={cruce.fecha} onChange={(e) => actualizarFecha(realIdx, e.target.value)} style={{width: 'auto', minWidth: '150px'}}>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option>
+                                            <option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option>
+                                        </select>
                                     </div>
                                 );
                             })}
                         </div>
-                    </div>
 
-                    {userRole !== 'jugador' && jugadoresSeleccionados.length < partido.numJugadores && (
-                        <div className="form-group" style={{marginBottom: '0'}}>
-                            <label>Agregar jugador:</label>
-                            <select onChange={(e) => { if (e.target.value) { agregarJugador(e.target.value); e.target.value = ''; } }} defaultValue="">
-                                <option value="">Seleccionar...</option>
-                                {jugadoresDisponibles.filter(j => !jugadoresSeleccionados.includes(j.nombre)).map((j, idx) => {
-                                    const count = contarPartidosJugador(fechaIndex, j.nombre);
-                                    return ( <option key={idx} value={j.nombre}>{j.nombre} {j.capitan ? '(CAPITÁN)' : ''} {j.esHabilitado ? '↑ ' : `- ${count}/3 partidos`}</option> );
-                                })}
-                            </select>
-                        </div>
-                    )}
-
-                    {jugadoresSeleccionados.some(j => {
-                        const jugadorObj = jugadoresDisponibles.find(jd => jd.nombre === j);
-                        if (jugadorObj && jugadorObj.esHabilitado) return false; 
-                        return contarPartidosJugador(fechaIndex, j) > 3;
-                    }) && (<div className="player-count-warning">⚠️ Advertencia: Algún jugador supera el límite de 3 partidos</div>)}
-                </div>
-            );
-        }
-
-        function ResultadosTab({ userRole, fechas, resultados, toggleResultado, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances }) {
-            const [showPlayOffModal, setShowPlayOffModal] = useState(false);
-            
-            // Cuando la pestaña se carga, por defecto dejamos todas las fechas cerradas
-            const [fechasExpandidas, setFechasExpandidas] = useState({});
-
-            // Efecto para limpiar las pestañas expandidas si se sale y se vuelve a entrar a esta vista
-            useEffect(() => {
-                setFechasExpandidas({});
-            }, []);
-
-            if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
-
-            const calcularResultadoFecha = (fechaIdx) => {
-                const fecha = fechas[fechaIdx];
-                if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
-                let ganados = 0; let perdidos = 0; let puntosGanados = 0; let puntosPerdidos = 0;
-                
-                fecha.partidos.forEach(partido => {
-                    if (partido.jugadores && partido.jugadores.length > 0) {
-                        const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
-                        if (ganado) { ganados++; puntosGanados += puntos; } else { perdidos++; puntosPerdidos += puntos; }
-                    }
-                });
-                return { ganados, perdidos, puntosGanados, puntosPerdidos };
-            };
-
-            const toggleFecha = (idx) => { setFechasExpandidas(prev => ({ ...prev, [idx]: !prev[idx] })); };
-
-            return (
-                <div>
-                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Resultados de Partidos</h2>
-                    <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{marginBottom: '20px'}}>🏆 Ver Play-Off Proyectado</button>
-                    {showPlayOffModal && (<PlayOffModal userRole={userRole} fechas={fechas} resultados={resultados} zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} onClose={() => setShowPlayOffModal(false)} />)}
-                    
-                    {fechas.map((fecha, fechaIdx) => {
-                        const resultado = calcularResultadoFecha(fechaIdx);
-                        const total = resultado.ganados + resultado.perdidos;
-                        const isExpanded = fechasExpandidas[fechaIdx];
-
-                        return (
-                            <div key={fechaIdx} className="date-section" style={{padding: isExpanded ? '20px' : '10px 20px'}}>
-                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none', gap: '15px'}} onClick={() => toggleFecha(fechaIdx)}>
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
-                                        <span style={{color: '#d4af37', fontSize: '18px', transition: 'transform 0.3s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}}>▶</span>
-                                        <div className="date-header" style={{marginBottom: 0}}>Fecha {fecha.numero} - vs {fecha.rival}</div>
+                        <div>
+                            <h4 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 2</h4>
+                            {crucesConFechas.filter(c => c.zona === 2).map((cruce, idx) => {
+                                const realIdx = crucesConFechas.findIndex(c => c === cruce);
+                                return (
+                                    <div key={realIdx} className="flex-mobile-col" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: '#f8f9fa', marginBottom: '8px', borderRadius: '6px', gap: '10px' }}>
+                                        <span><strong>{cruce.equipo1}</strong> vs <strong>{cruce.equipo2}</strong></span>
+                                        <select value={cruce.fecha} onChange={(e) => actualizarFecha(realIdx, e.target.value)} style={{width: 'auto', minWidth: '150px'}}>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option>
+                                            <option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option>
+                                        </select>
                                     </div>
-                                    {total > 0 && (
-                                        <div style={{ background: resultado.puntosGanados > resultado.puntosPerdidos ? '#d1fae5' : resultado.puntosGanados < resultado.puntosPerdidos ? '#fee2e2' : '#fef3c7', padding: '6px 15px', borderRadius: '8px', border: `2px solid ${resultado.puntosGanados > resultado.puntosPerdidos ? '#10b981' : resultado.puntosGanados < resultado.puntosPerdidos ? '#ef4444' : '#f59e0b'}`, fontWeight: '700', fontSize: '14px', textAlign: 'center' }}>
-                                            <div style={{color: '#1e3c72'}}>Puntos: {resultado.puntosGanados} - {resultado.puntosPerdidos}</div>
-                                        </div>
-                                    )}
-                                </div>
-                                
-                                {isExpanded && (
-                                    <div style={{marginTop: '20px', borderTop: '1px dashed #cbd5e1', paddingTop: '20px'}}>
-                                        {fecha.partidos && fecha.partidos.filter(partido => partido.jugadores && partido.jugadores.length > 0).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; if (a.horario !== b.horario) return a.horario.localeCompare(b.horario); return (a.posicion || 0) - (b.posicion || 0); }).map(partido => {
-                                            const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id;
-                                            return (
-                                                <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : '2px solid transparent' }}>
-                                                    <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px'}}>
-                                                        <div>
-                                                            <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>{partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario} - Partido {partido.posicion}</div>
-                                                            <strong>{partido.tipo}</strong> {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS (20 pts)</span>} {!esBonus && <span style={{color: '#666', marginLeft: '10px', fontSize: '14px'}}>(10 pts)</span>}
-                                                            <div style={{fontSize: '14px', marginTop: '5px'}}>{partido.jugadores.join(' / ')}</div>
-                                                        </div>
-                                                        <div className="checkbox-container" style={{margin: 0}}>
-                                                            <input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={userRole === 'jugador'} />
-                                                            <label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-            );
-        }
-
-        const MatchRow = ({ label, eq1, eq2, matchKey, selected, onAdvance, disabled }) => (
-            <div style={{ display: 'flex', alignItems: 'center', background: '#f8f9fa', padding: '10px', borderRadius: '8px', marginBottom: '8px', border: '1px solid #e5e7eb', minWidth: '450px' }}>
-                <div style={{ width: '80px', fontSize: '11px', fontWeight: 'bold', color: '#1e3c72', textTransform: 'uppercase' }}>{label}</div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                    <span style={{ fontWeight: selected === eq1 && eq1 ? 'bold' : 'normal', color: eq1 && !eq1.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq1 || 'TBD'}</span>
-                    <button onClick={() => !disabled && eq1 && !eq1.startsWith('Ganador') ? onAdvance(matchKey, eq1) : null} style={{ background: 'none', border: 'none', cursor: (!disabled && eq1 && !eq1.startsWith('Ganador')) ? 'pointer' : 'default', fontSize: '18px', opacity: eq1 && !eq1.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">
-                        {selected === eq1 && eq1 ? '✅' : '⬜'}
-                    </button>
-                </div>
-                <div style={{ padding: '0 15px', color: '#d4af37', fontWeight: 'bold', fontSize: '12px' }}>VS</div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button onClick={() => !disabled && eq2 && !eq2.startsWith('Ganador') ? onAdvance(matchKey, eq2) : null} style={{ background: 'none', border: 'none', cursor: (!disabled && eq2 && !eq2.startsWith('Ganador')) ? 'pointer' : 'default', fontSize: '18px', opacity: eq2 && !eq2.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">
-                        {selected === eq2 && eq2 ? '✅' : '⬜'}
-                    </button>
-                    <span style={{ fontWeight: selected === eq2 && eq2 ? 'bold' : 'normal', color: eq2 && !eq2.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq2 || 'TBD'}</span>
-                </div>
-            </div>
-        );
-
-        function PlayOffModal({ userRole, fechas, resultados, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances, onClose }) {
-            const calcularTablaZona = (zona) => {
-                const equiposZona = zona === 1 ? zonasConfig.zona1 : zonasConfig.zona2;
-                const tabla = {};
-                equiposZona.forEach((equipo, index) => { if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, originalIndex: index }; });
-                fechas.forEach((fecha, fechaIdx) => {
-                    if (!fecha || !fecha.partidos) return;
-                    const rival = fecha.rival;
-                    if (tabla['GOAT'] && tabla[rival]) {
-                        let puntosGOAT = 0; let puntosRival = 0;
-                        fecha.partidos.forEach(partido => {
-                            if (partido.jugadores && partido.jugadores.length > 0) {
-                                const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
-                                if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
-                            }
-                        });
-                        if (tabla['GOAT']) { tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra; }
-                        if (tabla[rival]) { tabla[rival].partidos++; tabla[rival].puntosFavor += puntosRival; tabla[rival].puntosContra += puntosGOAT; tabla[rival].puntosTotales += puntosRival; if (puntosRival > puntosGOAT) tabla[rival].ganados++; else if (puntosRival < puntosGOAT) tabla[rival].perdidos++; tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra; }
-                    }
-                });
-                crucesFinales.forEach(cruce => {
-                    if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
-                        const pts1 = parseInt(cruce.resultado1) || 0; const pts2 = parseInt(cruce.resultado2) || 0;
-                        if (pts1 > 0 || pts2 > 0) {
-                            tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosFavor += pts1; tabla[cruce.equipo1].puntosContra += pts2; tabla[cruce.equipo1].puntosTotales += pts1;
-                            tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosFavor += pts2; tabla[cruce.equipo2].puntosContra += pts1; tabla[cruce.equipo2].puntosTotales += pts2;
-                            if (pts1 > pts2) { tabla[cruce.equipo1].ganados++; tabla[cruce.equipo2].perdidos++; } else if (pts2 > pts1) { tabla[cruce.equipo2].ganados++; tabla[cruce.equipo1].perdidos++; }
-                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
-                        }
-                    }
-                });
-                return Object.values(tabla).sort((a, b) => { if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales; if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia; return a.originalIndex - b.originalIndex; });
-            };
-
-            const tablaZ1 = calcularTablaZona(1); const tablaZ2 = calcularTablaZona(2);
-            if (tablaZ1.length < 5 || tablaZ2.length < 5) {
-                return ( <div className="modal" onClick={onClose}><div className="modal-content" onClick={(e) => e.stopPropagation()}><div className="modal-header">🏆 Play-Off Proyectado</div><div className="warning">Por favor, configurá las zonas completas en la pestaña "Configuración" (5 equipos por zona) para poder ver la llave de Play-Offs.</div><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div></div> );
-            }
-
-            const eqZ1 = tablaZ1.map(t => t.nombre); const eqZ2 = tablaZ2.map(t => t.nombre);
-            const octA_1 = eqZ1[3]; const octA_2 = eqZ2[4]; const octB_1 = eqZ2[3]; const octB_2 = eqZ1[4];
-            const ganOctA = (playoffAvances.octA === octA_1 || playoffAvances.octA === octA_2) ? playoffAvances.octA : null;
-            const ganOctB = (playoffAvances.octB === octB_1 || playoffAvances.octB === octB_2) ? playoffAvances.octB : null;
-            const cua1_1 = eqZ1[0]; const cua1_2 = ganOctB || 'Ganador 8vos B'; const cua2_1 = eqZ1[1]; const cua2_2 = eqZ2[2];
-            const cua3_1 = eqZ1[2]; const cua3_2 = eqZ2[1]; const cua4_1 = ganOctA || 'Ganador 8vos A'; const cua4_2 = eqZ2[0];
-            const ganCua1 = (playoffAvances.cua1 === cua1_1 || playoffAvances.cua1 === cua1_2) ? playoffAvances.cua1 : null;
-            const ganCua2 = (playoffAvances.cua2 === cua2_1 || playoffAvances.cua2 === cua2_2) ? playoffAvances.cua2 : null;
-            const ganCua3 = (playoffAvances.cua3 === cua3_1 || playoffAvances.cua3 === cua3_2) ? playoffAvances.cua3 : null;
-            const ganCua4 = (playoffAvances.cua4 === cua4_1 || playoffAvances.cua4 === cua4_2) ? playoffAvances.cua4 : null;
-            const semi1_1 = ganCua1 || 'Ganador Cruce 1'; const semi1_2 = ganCua3 || 'Ganador Cruce 3';
-            const semi2_1 = ganCua2 || 'Ganador Cruce 2'; const semi2_2 = ganCua4 || 'Ganador Cruce 4';
-            const ganSemi1 = (playoffAvances.semi1 === semi1_1 || playoffAvances.semi1 === semi1_2) ? playoffAvances.semi1 : null;
-            const ganSemi2 = (playoffAvances.semi2 === semi2_1 || playoffAvances.semi2 === semi2_2) ? playoffAvances.semi2 : null;
-            const final_1 = ganSemi1 || 'Ganador Semi 1'; const final_2 = ganSemi2 || 'Ganador Semi 2';
-            const ganFinal = (playoffAvances.final === final_1 || playoffAvances.final === final_2) ? playoffAvances.final : null;
-
-            const handleAdvance = (matchKey, equipo) => { setPlayoffAvances(prev => { const isAlreadySelected = prev[matchKey] === equipo; return { ...prev, [matchKey]: isAlreadySelected ? null : equipo }; }); };
-            const disableAdvance = userRole === 'jugador';
-
-            return (
-                <div className="modal" onClick={onClose}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '90vh'}}>
-                        <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
-                            <span>🏆 Llave de Play-Offs</span>
-                            {!disableAdvance && <button onClick={() => setPlayoffAvances({})} className="btn" style={{padding: '5px 10px', fontSize: '12px', background: '#e0e0e0', margin: 0}}>Resetear Ticks</button>}
-                        </div>
-                        <p style={{marginBottom: '20px', color: '#666', fontSize: '13px'}}>Las posiciones iniciales se calculan basándose en la tabla de zonas actual. {disableAdvance ? 'Aquí podés ver los cruces proyectados.' : 'Utilizá los ✅ para proyectar ganadores hacia la final.'}</p>
-                        
-                        <div className="table-container" style={{boxShadow: 'none'}}>
-                            <div style={{minWidth: '500px'}}>
-                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Octavos de Final</h4><MatchRow label="8vos A" eq1={octA_1} eq2={octA_2} matchKey="octA" selected={ganOctA} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="8vos B" eq1={octB_1} eq2={octB_2} matchKey="octB" selected={ganOctB} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
-                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Cuartos de Final</h4><MatchRow label="Cruce 1" eq1={cua1_1} eq2={cua1_2} matchKey="cua1" selected={ganCua1} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="Cruce 2" eq1={cua2_1} eq2={cua2_2} matchKey="cua2" selected={ganCua2} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="Cruce 3" eq1={cua3_1} eq2={cua3_2} matchKey="cua3" selected={ganCua3} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="Cruce 4" eq1={cua4_1} eq2={cua4_2} matchKey="cua4" selected={ganCua4} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
-                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Semifinales</h4><MatchRow label="Semi 1" eq1={semi1_1} eq2={semi1_2} matchKey="semi1" selected={ganSemi1} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="Semi 2" eq1={semi2_1} eq2={semi2_2} matchKey="semi2" selected={ganSemi2} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
-                                <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Final</h4><MatchRow label="Campeonato" eq1={final_1} eq2={final_2} matchKey="final" selected={ganFinal} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
-                            </div>
+                                );
+                            })}
                         </div>
 
-                        {ganFinal && (<div style={{background: '#d4af37', color: '#1a1a1a', padding: '15px', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold', fontSize: '20px'}}>🏆 CAMPEÓN PROYECTADO: {ganFinal.toUpperCase()} 🏆</div>)}
-                        <div style={{marginTop: '20px'}}><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div>
+                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '30px'}}>
+                            <button className="btn btn-primary btn-responsive" onClick={guardarCruces}>Generar Cruces</button>
+                            <button className="btn btn-danger btn-responsive" onClick={onClose}>Cancelar</button>
+                        </div>
                     </div>
                 </div>
             );
@@ -1501,7 +1078,6 @@
 
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
-                    
                     const rival = fecha.rival;
                     if (tabla['GOAT'] && tabla[rival]) {
                         let puntosGOAT = 0; let puntosRival = 0;
@@ -1536,7 +1112,6 @@
 
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
-                    
                     const rival = fecha.rival; let puntosGOAT = 0; let puntosRival = 0;
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
@@ -1684,9 +1259,51 @@
             );
         }
 
+        // COMPONENTE PARA DIBUJAR BARRAS DE EFECTIVIDAD
+        const EfectividadBar = ({ ganados, perdidos, label }) => {
+            const total = ganados + perdidos;
+            const pG = total > 0 ? (ganados / total) * 100 : 0;
+            const pP = total > 0 ? (perdidos / total) * 100 : 0;
+            return (
+                <div style={{marginBottom: '15px'}}>
+                    {label && <div style={{fontSize: '14px', color: '#475569', marginBottom: '5px', fontWeight: 'bold'}}>{label} ({ganados}G - {perdidos}P)</div>}
+                    <div className="efectividad-bar">
+                        {ganados > 0 && <div className="ef-ganados" style={{width: `${pG}%`}}>{pG.toFixed(0)}%</div>}
+                        {perdidos > 0 && <div className="ef-perdidos" style={{width: `${pP}%`}}>{pP.toFixed(0)}%</div>}
+                        {total === 0 && <div style={{width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '11px', color: '#94a3b8'}}>Sin partidos</div>}
+                    </div>
+                </div>
+            );
+        };
+
+        // NUEVA PESTAÑA DE ESTADÍSTICAS REESCRITA
         function EstadisticasTab({ calcularEstadisticas }) {
             const stats = calcularEstadisticas();
+            const [subTab, setSubTab] = useState('individual'); // 'general', 'individual', 'parejas', 'ranking'
             
+            // Estados para filtros
+            const [indivPlayer, setIndivPlayer] = useState('');
+            const [parRama, setParRama] = useState('');
+            const [parTipo, setParTipo] = useState('');
+            const [parElegida, setParElegida] = useState('');
+            const [expandedDetail, setExpandedDetail] = useState(null); // Para acordeón en ranking
+
+            // Listas base
+            const allPlayers = Object.keys(stats.jugadores).sort((a,b) => a.localeCompare(b));
+            
+            // Opciones dinámicas para Parejas
+            const tiposOptions = PARTIDOS.filter(p => {
+                if (parRama === 'Damas') return p.grupo === 'damas';
+                if (parRama === 'Caballeros') return p.grupo === 'dobles_puros' || p.grupo === 'dobles_combinados';
+                if (parRama === 'Mixtos') return p.grupo === 'mixtos';
+                return false;
+            }).map(p => p.tipo);
+
+            const parejasDisponibles = Object.entries(stats.parejas)
+                .filter(([_, data]) => parTipo === '' || data.tiposJugados.includes(parTipo))
+                .sort((a, b) => a[0].localeCompare(b[0]));
+
+            // Utilidades para Tabla General
             const getCategoriaOrden = (nombreJugador) => {
                 const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador);
                 if (!jugador) return 999;
@@ -1696,59 +1313,36 @@
             
             const getCategoriaNombre = (nombreJugador) => {
                 const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador);
-                if (!jugador) return '';
-                const nombres = { 'damas_a': 'Damas A', 'damas_b': 'Damas B', 'damas_c': 'Damas C', 'caballeros_2da': 'Caballeros 2da', 'caballeros_3ra': 'Caballeros 3ra', 'caballeros_4ta': 'Caballeros 4ta', 'caballeros_5ta': 'Caballeros 5ta' };
-                return nombres[jugador.categoria] || '';
+                return jugador ? { 'damas_a': 'Damas A', 'damas_b': 'Damas B', 'damas_c': 'Damas C', 'caballeros_2da': 'Caballeros 2da', 'caballeros_3ra': 'Caballeros 3ra', 'caballeros_4ta': 'Caballeros 4ta', 'caballeros_5ta': 'Caballeros 5ta' }[jugador.categoria] || '' : '';
             };
 
-            const jugadoresOrdenados = Object.entries(stats.jugadores).sort((a, b) => {
+            const jugadoresPorCategoria = {};
+            Object.entries(stats.jugadores).sort((a, b) => {
                 const ordenA = getCategoriaOrden(a[0]); const ordenB = getCategoriaOrden(b[0]);
                 if (ordenA !== ordenB) return ordenA - ordenB; return a[0].localeCompare(b[0]);
-            });
-
-            const jugadoresPorCategoria = {};
-            jugadoresOrdenados.forEach(([nombre, data]) => {
+            }).forEach(([nombre, data]) => {
                 const categoria = getCategoriaNombre(nombre);
                 if (!jugadoresPorCategoria[categoria]) jugadoresPorCategoria[categoria] = [];
                 jugadoresPorCategoria[categoria].push([nombre, data]);
             });
 
-            const getOrdenPartido = (pareja) => {
-                const jugadores = pareja.split(' - ');
-                const categorias = jugadores.map(j => { const jugador = Object.values(JUGADORES_GOAT).flat().find(jg => jg.nombre === j); return jugador ? jugador.categoria : ''; });
-                const cat1 = categorias[0] || ''; 
-                const cat2 = categorias[1] || '';
-                if (cat1.startsWith('damas') && cat2.startsWith('damas')) {
-                    if (cat1 === 'damas_a' && cat2 === 'damas_a') return 1; if ((cat1 === 'damas_a' && cat2 === 'damas_b') || (cat1 === 'damas_b' && cat2 === 'damas_a')) return 2;
-                    if (cat1 === 'damas_b' && cat2 === 'damas_b') return 3; if ((cat1 === 'damas_b' && cat2 === 'damas_c') || (cat1 === 'damas_c' && cat2 === 'damas_b')) return 4;
-                    if (cat1 === 'damas_c' && cat2 === 'damas_c') return 5;
-                }
-                if ((cat1.startsWith('damas') && cat2.startsWith('caballeros')) || (cat1.startsWith('caballeros') && cat2.startsWith('damas'))) {
-                    const dama = cat1.startsWith('damas') ? cat1 : cat2; const caballero = cat1.startsWith('caballeros') ? cat1 : cat2;
-                    if (dama === 'damas_a' && caballero === 'caballeros_2da') return 10; if (dama === 'damas_a' && caballero === 'caballeros_3ra') return 11;
-                    if (dama === 'damas_b' && caballero === 'caballeros_4ta') return 12; if (dama === 'damas_b' && caballero === 'caballeros_5ta') return 13;
-                    if (dama === 'damas_c' && caballero === 'caballeros_5ta') return 14;
-                }
-                if (cat1.startsWith('caballeros') && cat2.startsWith('caballeros')) {
-                    if (cat1 === 'caballeros_2da' && cat2 === 'caballeros_2da') return 20; if (cat1 === 'caballeros_3ra' && cat2 === 'caballeros_3ra') return 21;
-                    if (cat1 === 'caballeros_4ta' && cat2 === 'caballeros_4ta') return 22; if (cat1 === 'caballeros_5ta' && cat2 === 'caballeros_5ta') return 23;
-                    if ((cat1 === 'caballeros_2da' && cat2 === 'caballeros_3ra') || (cat1 === 'caballeros_3ra' && cat2 === 'caballeros_2da')) return 30;
-                    if ((cat1 === 'caballeros_3ra' && cat2 === 'caballeros_4ta') || (cat1 === 'caballeros_4ta' && cat2 === 'caballeros_3ra')) return 31;
-                    if ((cat1 === 'caballeros_4ta' && cat2 === 'caballeros_5ta') || (cat1 === 'caballeros_5ta' && cat2 === 'caballeros_4ta')) return 32;
-                }
-                return 999;
-            };
+            // Rankings
+            const topSinglistas = Object.entries(stats.jugadores).filter(j => (j[1].singles.ganados + j[1].singles.perdidos) > 0).sort((a, b) => {
+                if (b[1].singles.ganados !== a[1].singles.ganados) return b[1].singles.ganados - a[1].singles.ganados;
+                const pctA = (a[1].singles.ganados / (a[1].singles.ganados + a[1].singles.perdidos)) || 0;
+                const pctB = (b[1].singles.ganados / (b[1].singles.ganados + b[1].singles.perdidos)) || 0;
+                return pctB - pctA;
+            });
 
-            const parejasOrdenadas = Object.entries(stats.parejas).sort((a, b) => getOrdenPartido(a[0]) - getOrdenPartido(b[0]));
+            const topParejas = Object.entries(stats.parejas).sort((a, b) => {
+                if (b[1].ganados !== a[1].ganados) return b[1].ganados - a[1].ganados;
+                const pctA = (a[1].ganados / (a[1].ganados + a[1].perdidos)) || 0;
+                const pctB = (b[1].ganados / (b[1].ganados + b[1].perdidos)) || 0;
+                return pctB - pctA;
+            });
 
-            // --- NUEVA FUNCIÓN DE EXPORTACIÓN A EXCEL (CSV) ---
             const exportarAExcel = () => {
-                let csvContent = "\uFEFF"; // Codificación BOM para que Excel lea las tildes y eñes
-                
-                // Cabeceras Individuales
-                csvContent += "ESTADISTICAS INDIVIDUALES\n";
-                csvContent += "Categoria;Jugador;Singles Ganados;Singles Perdidos;Dobles Ganados;Dobles Perdidos;Total Ganados;Total Perdidos;% Victorias\n";
-                
+                let csvContent = "\uFEFFESTADISTICAS INDIVIDUALES\nCategoria;Jugador;Singles Ganados;Singles Perdidos;Dobles Ganados;Dobles Perdidos;Total Ganados;Total Perdidos;% Victorias\n";
                 Object.entries(jugadoresPorCategoria).forEach(([categoria, jugadores]) => {
                     jugadores.forEach(([nombre, data]) => {
                         const total = data.total.ganados + data.total.perdidos;
@@ -1756,83 +1350,262 @@
                         csvContent += `${categoria};${nombre};${data.singles.ganados};${data.singles.perdidos};${data.dobles.ganados};${data.dobles.perdidos};${data.total.ganados};${data.total.perdidos};${porcentaje}%\n`;
                     });
                 });
-
-                csvContent += "\n\n";
-
-                // Cabeceras Parejas
-                csvContent += "ESTADISTICAS DE PAREJAS\n";
-                csvContent += "Pareja;Ganados;Perdidos;% Victorias;Detalle de Partidos\n";
-                
-                parejasOrdenadas.forEach(([pareja, data]) => {
+                csvContent += "\n\nESTADISTICAS DE PAREJAS\nPareja;Ganados;Perdidos;% Victorias;Detalle de Partidos\n";
+                Object.entries(stats.parejas).forEach(([pareja, data]) => {
                     const total = data.ganados + data.perdidos; 
                     const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1).replace('.', ',') : "0,0";
-                    // Limpiamos el texto del detalle para que no rompa el Excel
                     const detalle = data.fechas.map(f => `F${f.fecha} vs ${f.rival} (${f.resultado ? 'Ganado' : 'Perdido'})`).join(' | ');
                     csvContent += `${pareja};${data.ganados};${data.perdidos};${porcentaje}%;${detalle}\n`;
                 });
-
-                // Crear enlace de descarga
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
-                link.setAttribute("href", url);
-                link.setAttribute("download", `GOAT_Estadisticas_${new Date().toISOString().split('T')[0]}.csv`);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                link.href = URL.createObjectURL(blob);
+                link.download = `GOAT_Estadisticas_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
             };
 
             return (
                 <div>
-                    {/* ENCABEZADO CON BOTÓN DE EXPORTAR */}
                     <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px'}}>
-                        <h2 style={{color: '#1e3c72', margin: 0}}>Estadísticas del Equipo</h2>
-                        <button className="btn btn-success btn-responsive" onClick={exportarAExcel} style={{margin: 0}}>
-                            📊 Descargar Excel
-                        </button>
+                        <h2 style={{color: '#1e3c72', margin: 0}}>Centro de Estadísticas</h2>
+                        {subTab === 'general' && <button className="btn btn-success btn-responsive" onClick={exportarAExcel} style={{margin: 0}}>📊 Descargar Excel</button>}
                     </div>
 
-                    <div className="stats-section">
-                        <h3>Estadísticas Individuales</h3>
-                        <div className="table-container">
-                            <table className="stats-table">
-                                <thead><tr><th>Categoría</th><th>Jugador</th><th>Singles G/P</th><th>Dobles G/P</th><th>Total G/P</th><th>% Victorias</th></tr></thead>
-                                <tbody>
-                                    {Object.entries(jugadoresPorCategoria).map(([categoria, jugadores]) => (
-                                        jugadores.map(([nombre, data], idx) => {
-                                            const total = data.total.ganados + data.total.perdidos; const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1) : 0;
-                                            return (
-                                                <tr key={nombre}>
-                                                    {idx === 0 && (<td rowSpan={jugadores.length} style={{ fontWeight: '700', background: '#f0f9ff', verticalAlign: 'middle' }}>{categoria}</td>)}
-                                                    <td><strong>{nombre}</strong></td><td>{data.singles.ganados} / {data.singles.perdidos}</td>
-                                                    <td>{data.dobles.ganados} / {data.dobles.perdidos}</td><td>{data.total.ganados} / {data.total.perdidos}</td><td>{porcentaje}%</td>
-                                                </tr>
-                                            );
-                                        })
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                    {/* Navegación interna */}
+                    <div className="sub-tabs">
+                        <button className={`sub-tab ${subTab === 'individual' ? 'active' : ''}`} onClick={() => setSubTab('individual')}>👤 Individual</button>
+                        <button className={`sub-tab ${subTab === 'parejas' ? 'active' : ''}`} onClick={() => setSubTab('parejas')}>👥 Parejas</button>
+                        <button className={`sub-tab ${subTab === 'ranking' ? 'active' : ''}`} onClick={() => setSubTab('ranking')}>🏆 Ranking Efectividad</button>
+                        <button className={`sub-tab ${subTab === 'general' ? 'active' : ''}`} onClick={() => setSubTab('general')}>📋 Tabla General</button>
                     </div>
-                    <div className="stats-section">
-                        <h3>Estadísticas de Parejas</h3>
-                        <div className="table-container">
-                            <table className="stats-table">
-                                <thead><tr><th>Pareja</th><th>Ganados</th><th>Perdidos</th><th>% Victorias</th><th>Partidos Jugados</th></tr></thead>
-                                <tbody>
-                                    {parejasOrdenadas.map(([pareja, data]) => {
-                                        const total = data.ganados + data.perdidos; const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1) : 0;
-                                        return (
-                                            <tr key={pareja}>
-                                                <td><strong>{pareja}</strong></td><td>{data.ganados}</td><td>{data.perdidos}</td><td>{porcentaje}%</td>
-                                                <td>{data.fechas.map((f, idx) => (<div key={idx} style={{fontSize: '12px', color: '#666'}}>F{f.fecha} vs {f.rival}: {f.tipo} ({f.resultado ? '✓' : '✗'})</div>))}</td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+
+                    {/* VISTA INDIVIDUAL */}
+                    {subTab === 'individual' && (
+                        <div>
+                            <div className="form-group" style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0'}}>
+                                <label>Seleccionar Jugador para analizar:</label>
+                                <select value={indivPlayer} onChange={e => setIndivPlayer(e.target.value)}>
+                                    <option value="">-- Buscar jugador --</option>
+                                    {allPlayers.map(j => <option key={j} value={j}>{j}</option>)}
+                                </select>
+                            </div>
+
+                            {indivPlayer && stats.jugadores[indivPlayer] && (
+                                <div className="grid-2">
+                                    <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Gráficos de Efectividad</h3>
+                                        <EfectividadBar ganados={stats.jugadores[indivPlayer].total.ganados} perdidos={stats.jugadores[indivPlayer].total.perdidos} label="Rendimiento Global" />
+                                        <EfectividadBar ganados={stats.jugadores[indivPlayer].dobles.ganados} perdidos={stats.jugadores[indivPlayer].dobles.perdidos} label="Desempeño en Dobles" />
+                                        <EfectividadBar ganados={stats.jugadores[indivPlayer].singles.ganados} perdidos={stats.jugadores[indivPlayer].singles.perdidos} label="Desempeño en Singles" />
+                                    </div>
+                                    <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Historial de Partidos</h3>
+                                        <div style={{maxHeight: '250px', overflowY: 'auto'}}>
+                                            {stats.jugadores[indivPlayer].total.historial.length === 0 ? <p style={{color: '#94a3b8'}}>Sin partidos jugados aún.</p> : 
+                                             stats.jugadores[indivPlayer].total.historial.map((h, i) => (
+                                                <div key={i} style={{padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                    <div>
+                                                        <strong style={{color: '#334155'}}>{h.tipo}</strong> <span style={{fontSize: '12px', color: '#64748b'}}>(F{h.fechaNum} vs {h.rival})</span>
+                                                        <div style={{fontSize: '13px', color: '#475569', marginTop: '4px'}}>Compañero: {h.companero}</div>
+                                                    </div>
+                                                    <span style={{background: h.resultado ? '#d1fae5' : '#fee2e2', color: h.resultado ? '#065f46' : '#991b1b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold'}}>
+                                                        {h.resultado ? 'Ganó' : 'Perdió'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    )}
+
+                    {/* VISTA PAREJAS */}
+                    {subTab === 'parejas' && (
+                        <div>
+                            <div className="grid-2" style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '20px'}}>
+                                <div className="form-group" style={{marginBottom: 0}}>
+                                    <label>Rama</label>
+                                    <select value={parRama} onChange={e => {setParRama(e.target.value); setParTipo(''); setParElegida('');}}>
+                                        <option value="">-- Seleccionar --</option>
+                                        <option value="Damas">Damas</option>
+                                        <option value="Caballeros">Caballeros</option>
+                                        <option value="Mixtos">Mixtos</option>
+                                    </select>
+                                </div>
+                                <div className="form-group" style={{marginBottom: 0}}>
+                                    <label>Tipo de Partido</label>
+                                    <select value={parTipo} onChange={e => {setParTipo(e.target.value); setParElegida('');}} disabled={!parRama}>
+                                        <option value="">Todos los de la rama</option>
+                                        {tiposOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                </div>
+                                <div className="form-group" style={{marginBottom: 0, gridColumn: '1 / -1'}}>
+                                    <label>Elegir Pareja Analizada</label>
+                                    <select value={parElegida} onChange={e => setParElegida(e.target.value)} disabled={!parRama}>
+                                        <option value="">-- Buscar pareja --</option>
+                                        {parejasDisponibles.map(([p]) => <option key={p} value={p}>{p}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            {parElegida && stats.parejas[parElegida] && (
+                                <div className="grid-2">
+                                    <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                        <h3 style={{marginBottom: '5px', color: '#1e3c72'}}>{parElegida}</h3>
+                                        <p style={{color: '#64748b', fontSize: '13px', marginBottom: '15px'}}>Categorías jugadas: {stats.parejas[parElegida].tiposJugados.join(', ')}</p>
+                                        <EfectividadBar ganados={stats.parejas[parElegida].ganados} perdidos={stats.parejas[parElegida].perdidos} label="Efectividad de la Pareja" />
+                                    </div>
+                                    <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                        <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Desempeño Juntos</h3>
+                                        <div style={{maxHeight: '250px', overflowY: 'auto'}}>
+                                            {stats.parejas[parElegida].fechas.map((h, i) => (
+                                                <div key={i} style={{padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                    <div>
+                                                        <strong style={{color: '#334155'}}>{h.tipo}</strong> 
+                                                        <div style={{fontSize: '13px', color: '#64748b', marginTop: '4px'}}>F{h.fecha} vs {h.rival}</div>
+                                                    </div>
+                                                    <span style={{background: h.resultado ? '#d1fae5' : '#fee2e2', color: h.resultado ? '#065f46' : '#991b1b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold'}}>
+                                                        {h.resultado ? 'Ganó' : 'Perdió'}
+                                                    </span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* VISTA RANKING (EFECTIVIDAD) */}
+                    {subTab === 'ranking' && (
+                        <div className="grid-2">
+                            {/* Ranking Parejas */}
+                            <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                <h3 style={{marginBottom: '15px', color: '#1e3c72', display: 'flex', alignItems: 'center', gap: '10px'}}>🥇 Top Parejas</h3>
+                                {topParejas.length === 0 ? <p style={{color: '#94a3b8'}}>Aún no hay datos.</p> : 
+                                 topParejas.map(([nombre, data], idx) => {
+                                    const total = data.ganados + data.perdidos;
+                                    const pct = total > 0 ? ((data.ganados / total) * 100).toFixed(0) : 0;
+                                    const isExpanded = expandedDetail === `par-${idx}`;
+                                    return (
+                                        <div key={idx} style={{marginBottom: '10px', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden'}}>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: idx < 3 ? '#fffbef' : '#f8f9fa', cursor: 'pointer'}} onClick={() => setExpandedDetail(isExpanded ? null : `par-${idx}`)}>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                    <span style={{fontSize: '18px', fontWeight: 'bold', color: idx === 0 ? '#d4af37' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#475569'}}>#{idx + 1}</span>
+                                                    <div>
+                                                        <strong style={{color: '#0f172a', display: 'block'}}>{nombre}</strong>
+                                                        <span style={{fontSize: '12px', color: '#64748b'}}>{data.ganados} Ganados, {data.perdidos} Perdidos</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                    <span style={{background: '#10b981', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold'}}>{pct}%</span>
+                                                    <span style={{color: '#cbd5e1', fontSize: '12px'}}>{isExpanded ? '▼' : '▶'}</span>
+                                                </div>
+                                            </div>
+                                            {isExpanded && (
+                                                <div style={{padding: '10px 12px', background: 'white', borderTop: '1px solid #e2e8f0'}}>
+                                                    {data.fechas.map((f, i) => (
+                                                        <div key={i} style={{fontSize: '12px', padding: '4px 0', borderBottom: i !== data.fechas.length - 1 ? '1px dashed #eee' : 'none', display: 'flex', justifyContent: 'space-between'}}>
+                                                            <span>F{f.fecha} vs {f.rival} ({f.tipo})</span>
+                                                            <span style={{color: f.resultado ? '#10b981' : '#ef4444', fontWeight: 'bold'}}>{f.resultado ? 'W' : 'L'}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                 })
+                                }
+                            </div>
+
+                            {/* Ranking Singles */}
+                            <div style={{background: 'white', padding: '20px', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px rgba(0,0,0,0.05)'}}>
+                                <h3 style={{marginBottom: '15px', color: '#1e3c72', display: 'flex', alignItems: 'center', gap: '10px'}}>🎾 Top Singlistas</h3>
+                                {topSinglistas.length === 0 ? <p style={{color: '#94a3b8'}}>Aún no se han jugado singles.</p> : 
+                                 topSinglistas.map(([nombre, data], idx) => {
+                                    const total = data.singles.ganados + data.singles.perdidos;
+                                    const pct = total > 0 ? ((data.singles.ganados / total) * 100).toFixed(0) : 0;
+                                    const isExpanded = expandedDetail === `sin-${idx}`;
+                                    return (
+                                        <div key={idx} style={{marginBottom: '10px', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden'}}>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: idx < 3 ? '#fffbef' : '#f8f9fa', cursor: 'pointer'}} onClick={() => setExpandedDetail(isExpanded ? null : `sin-${idx}`)}>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                    <span style={{fontSize: '18px', fontWeight: 'bold', color: idx === 0 ? '#d4af37' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : '#475569'}}>#{idx + 1}</span>
+                                                    <div>
+                                                        <strong style={{color: '#0f172a', display: 'block'}}>{nombre}</strong>
+                                                        <span style={{fontSize: '12px', color: '#64748b'}}>{data.singles.ganados} Ganados, {data.singles.perdidos} Perdidos</span>
+                                                    </div>
+                                                </div>
+                                                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                    <span style={{background: '#10b981', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold'}}>{pct}%</span>
+                                                    <span style={{color: '#cbd5e1', fontSize: '12px'}}>{isExpanded ? '▼' : '▶'}</span>
+                                                </div>
+                                            </div>
+                                            {isExpanded && (
+                                                <div style={{padding: '10px 12px', background: 'white', borderTop: '1px solid #e2e8f0'}}>
+                                                    {data.singles.historial.map((f, i) => (
+                                                        <div key={i} style={{fontSize: '12px', padding: '4px 0', borderBottom: i !== data.singles.historial.length - 1 ? '1px dashed #eee' : 'none', display: 'flex', justifyContent: 'space-between'}}>
+                                                            <span>F{f.fecha} vs {f.rival} ({f.tipo})</span>
+                                                            <span style={{color: f.resultado ? '#10b981' : '#ef4444', fontWeight: 'bold'}}>{f.resultado ? 'W' : 'L'}</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                 })
+                                }
+                            </div>
+                        </div>
+                    )}
+
+                    {/* VISTA TABLA CLÁSICA */}
+                    {subTab === 'general' && (
+                        <>
+                            <div className="stats-section">
+                                <h3>Estadísticas Individuales</h3>
+                                <div className="table-container">
+                                    <table className="stats-table">
+                                        <thead><tr><th>Categoría</th><th>Jugador</th><th>Singles G/P</th><th>Dobles G/P</th><th>Total G/P</th><th>% Victorias</th></tr></thead>
+                                        <tbody>
+                                            {Object.entries(jugadoresPorCategoria).map(([categoria, jugadores]) => (
+                                                jugadores.map(([nombre, data], idx) => {
+                                                    const total = data.total.ganados + data.total.perdidos; const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1) : 0;
+                                                    return (
+                                                        <tr key={nombre}>
+                                                            {idx === 0 && (<td rowSpan={jugadores.length} style={{ fontWeight: '700', background: '#f0f9ff', verticalAlign: 'middle' }}>{categoria}</td>)}
+                                                            <td><strong>{nombre}</strong></td><td>{data.singles.ganados} / {data.singles.perdidos}</td>
+                                                            <td>{data.dobles.ganados} / {data.dobles.perdidos}</td><td>{data.total.ganados} / {data.total.perdidos}</td><td>{porcentaje}%</td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div className="stats-section">
+                                <h3>Estadísticas de Parejas</h3>
+                                <div className="table-container">
+                                    <table className="stats-table">
+                                        <thead><tr><th>Pareja</th><th>Ganados</th><th>Perdidos</th><th>% Victorias</th><th>Partidos Jugados</th></tr></thead>
+                                        <tbody>
+                                            {Object.entries(stats.parejas).sort((a,b)=>b[1].ganados - a[1].ganados).map(([pareja, data]) => {
+                                                const total = data.ganados + data.perdidos; const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1) : 0;
+                                                return (
+                                                    <tr key={pareja}>
+                                                        <td><strong>{pareja}</strong></td><td>{data.ganados}</td><td>{data.perdidos}</td><td>{porcentaje}%</td>
+                                                        <td>{data.fechas.map((f, idx) => (<div key={idx} style={{fontSize: '12px', color: '#666'}}>F{f.fecha} vs {f.rival}: {f.tipo} ({f.resultado ? '✓' : '✗'})</div>))}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
             );
         }
