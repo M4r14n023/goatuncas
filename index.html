@@ -331,7 +331,7 @@
 
                         {!selectedRole ? (
                             <div>
-                                <button className="role-btn" onClick={() => { setSelectedRole('jugador'); onLogin('jugador'); }}>👤 Jugador (Solo Vista)</button>
+                                <button className="role-btn" onClick={() => { setSelectedRole('jugador'); onLogin('jugador'); }}>👤 Jugador (Sin Clave)</button>
                                 <button className="role-btn" onClick={() => setSelectedRole('capitan')}>⭐ Capitán</button>
                                 <button className="role-btn" onClick={() => setSelectedRole('admin')}>⚙️ Administrador</button>
                             </div>
@@ -755,7 +755,111 @@
                 </div>
             );
         }
+        // COMPONENTE FALTANTE: PESTAÑA DE ADMINISTRADOR
+        function AdminTab({ 
+            numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances,
+            setNumEquipos, setEquipos, setBaseEquipos, setFechas, setResultados, setPosiciones, setCrucesFinales, setZonasConfig, setPlayoffAvances,
+            syncStatus, setSyncStatus, lastSync, setLastSync, guardarEnFirebase, cargarDesdeFirebase
+        }) {
+            const exportarDatos = () => {
+                const datos = localStorage.getItem('goat_torneo_data');
+                if (!datos) { alert('No hay datos guardados para exportar.'); return; }
+                const blob = new Blob([datos], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url;
+                a.download = `goat_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+            };
 
+            const importarDatos = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evento) => {
+                    try {
+                        const contenido = JSON.parse(evento.target.result);
+                        if (contenido && (contenido.equipos || contenido.baseEquipos)) {
+                            if (confirm('¿Estás seguro de sobreescribir los datos actuales con este respaldo?')) {
+                                localStorage.setItem('goat_torneo_data', JSON.stringify(contenido));
+                                alert('Datos importados correctamente. La página se recargará.');
+                                window.location.reload();
+                            }
+                        } else { alert('El archivo no parece ser un respaldo válido de la app.'); }
+                    } catch (error) { alert('Error al leer el archivo. Asegurate de que sea un archivo JSON válido.'); }
+                };
+                reader.readAsText(file); e.target.value = ''; 
+            };
+
+            return (
+                <div>
+                    <h2 style={{color: '#1e3c72', marginBottom: '20px'}}>⚙️ Panel de Control Administrador</h2>
+                    
+                    <div style={{background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid #e2e8f0'}}>
+                        <h3 style={{marginBottom: '10px', color: '#0f172a'}}>💾 Respaldo y Nube</h3>
+                        <p style={{marginBottom: '20px', color: '#64748b', fontSize: '14px'}}>Sincronizá el estado actual del torneo o exportá copias manuales de seguridad.</p>
+                        
+                        <div className="flex-mobile-col" style={{display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap'}}>
+                            <button className="btn btn-success btn-responsive" onClick={exportarDatos}>⬇️ Exportar JSON</button>
+                            <div style={{position: 'relative'}}>
+                                <input type="file" id="importFile" accept=".json" style={{display: 'none'}} onChange={importarDatos} />
+                                <button className="btn btn-primary btn-responsive" onClick={() => document.getElementById('importFile').click()} style={{background: '#475569', color: 'white'}}>⬆️ Importar JSON</button>
+                            </div>
+                            
+                            <div style={{width: '2px', height: '30px', background: '#cbd5e1', margin: '0 10px'}} className="hidden-mobile"></div>
+
+                            <button 
+                                className="btn btn-primary btn-responsive" style={{background: '#3b82f6'}}
+                                onClick={async () => {
+                                    try {
+                                        setSyncStatus('syncing');
+                                        const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
+                                        const syncTime = await guardarEnFirebase(datos);
+                                        setSyncStatus('synced'); setLastSync(syncTime);
+                                        alert('✓ Datos guardados en Firebase exitosamente');
+                                    } catch (error) { setSyncStatus('error'); alert('✗ Error al guardar en Firebase'); }
+                                }}
+                                disabled={syncStatus === 'syncing'}
+                            >
+                                ☁️ Forzar Guardado Nube
+                            </button>
+                            <button 
+                                className="btn btn-success btn-responsive" style={{background: '#14b8a6'}}
+                                onClick={async () => {
+                                    try {
+                                        setSyncStatus('syncing');
+                                        const datosFirebase = await cargarDesdeFirebase();
+                                        if (datosFirebase) {
+                                            setNumEquipos(datosFirebase.numEquipos || 10); setEquipos(datosFirebase.equipos || []); setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datosFirebase.fechas || []); setResultados(datosFirebase.resultados || {}); setPosiciones(datosFirebase.posiciones || {}); setCrucesFinales(datosFirebase.crucesFinales || []); setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datosFirebase.playoffAvances || {});
+                                            setLastSync(datosFirebase.ultimaActualizacion); setSyncStatus('synced'); localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
+                                            alert('✓ Datos cargados desde Firebase exitosamente');
+                                        } else { alert('No hay datos guardados en Firebase'); setSyncStatus('local'); }
+                                    } catch (error) { setSyncStatus('error'); alert('✗ Error al cargar desde Firebase'); }
+                                }}
+                                disabled={syncStatus === 'syncing'}
+                            >
+                                ☁️ Forzar Carga Nube
+                            </button>
+                        </div>
+                        {lastSync && (<p style={{marginTop: '15px', fontSize: '13px', color: '#64748b', fontWeight: 'bold'}}>Última sincronización en nube: {new Date(lastSync).toLocaleString('es-AR')}</p>)}
+                    </div>
+
+                    <div style={{background: '#fee2e2', padding: '20px', borderRadius: '8px', border: '1px solid #fca5a5'}}>
+                        <h3 style={{marginBottom: '10px', color: '#b91c1c'}}>⚠️ Zona de Peligro</h3>
+                        <p style={{marginBottom: '20px', color: '#991b1b', fontSize: '14px'}}>Estas acciones son destructivas y no se pueden deshacer.</p>
+                        <button className="btn btn-danger btn-responsive" onClick={() => {
+                            if (confirm('¿Estás seguro de que querés borrar el torneo actual? OJO: La base de clubes se mantendrá, pero las fechas y resultados se borrarán de tu navegador (tendrás que pisarlo en la nube manualmente luego).')) {
+                                const datosGuardados = localStorage.getItem('goat_torneo_data');
+                                let backupBase = EQUIPOS_POR_DEFECTO;
+                                if (datosGuardados) backupBase = JSON.parse(datosGuardados).baseEquipos || backupBase;
+                                localStorage.removeItem('goat_torneo_data');
+                                localStorage.setItem('goat_torneo_data', JSON.stringify({ baseEquipos: backupBase }));
+                                window.location.reload();
+                            }
+                        }}>🗑️ Resetear Torneo Actual</button>
+                    </div>
+                </div>
+            );
+        }
         function ConfiguracionTab({ userRole, numEquipos, setNumEquipos, equipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, agregarFecha, fechas, zonasConfig, setZonasConfig }) {
             const [showEquiposModal, setShowEquiposModal] = useState(false);
             const [showAsignarFechasModal, setShowAsignarFechasModal] = useState(false);
