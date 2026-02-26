@@ -1307,18 +1307,71 @@
             useEffect(() => { setJugadoresSeleccionados(partido.jugadores || []); }, [partido.jugadores]);
 
             const jugadoresHabilitados = fecha.jugadoresHabilitados || [];
-            const jugadoresDisponibles = partido.categorias.flatMap(cat => {
-                const jugadoresBase = JUGADORES_GOAT[cat] || [];
-                const jugadoresExtra = jugadoresHabilitados.filter(jh => jh.categoriaDestino === cat).map(jh => {
-                    const jugadorOriginal = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
-                    return { ...jugadorOriginal, esHabilitado: true, categoriaOriginal: jugadorOriginal.categoria };
-                });
-                return [...jugadoresBase, ...jugadoresExtra];
+
+            // 1. Calcular los "slots" (huecos) exactos que requiere este partido
+            let slotsRequeridos = [];
+            if (partido.categorias.length === partido.numJugadores) {
+                // Si es Mixto o Combinado (ej: ["damas_a", "caballeros_2da"])
+                slotsRequeridos = [...partido.categorias];
+            } else if (partido.categorias.length === 1) {
+                // Si es puro (ej: ["caballeros_2da"] y numJugadores es 2 -> duplica el slot)
+                slotsRequeridos = Array(partido.numJugadores).fill(partido.categorias[0]);
+            } else {
+                slotsRequeridos = [...partido.categorias]; // Respaldo
+            }
+
+            // 2. Descontar los slots que ya están ocupados por los jugadores seleccionados
+            const slotsRestantes = [...slotsRequeridos];
+            jugadoresSeleccionados.forEach(playerName => {
+                const jugadorObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === playerName);
+                if (jugadorObj) {
+                    // Buscar si su categoría natural sirve para algún slot restante
+                    let slotIndex = slotsRestantes.indexOf(jugadorObj.categoria);
+                    if (slotIndex !== -1) {
+                        slotsRestantes.splice(slotIndex, 1);
+                    } else {
+                        // Si no, buscar si está "habilitado" para jugar en alguna de las categorías restantes
+                        const habilitaciones = jugadoresHabilitados.filter(jh => jh.jugador === playerName);
+                        let found = false;
+                        for (let hab of habilitaciones) {
+                            const hIndex = slotsRestantes.indexOf(hab.categoriaDestino);
+                            if (hIndex !== -1) {
+                                slotsRestantes.splice(hIndex, 1);
+                                found = true;
+                                break;
+                            }
+                        }
+                        // Fallback por si la base de datos tiene un jugador inválido forzado
+                        if (!found && slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
+                    }
+                } else {
+                    if (slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
+                }
             });
 
-            const agregarJugador = (nombreJugador) => {
-                if (jugadoresSeleccionados.length >= partido.numJugadores) { alert(`Este partido solo permite ${partido.numJugadores} jugador(es)`); return; }
-                const jugadorInfo = jugadoresDisponibles.find(j => j.nombre === nombreJugador);
+            // 3. Función para traer solo los jugadores que cumplen con una categoría específica
+            const getOpcionesParaSlot = (reqCat) => {
+                const jugadoresBase = JUGADORES_GOAT[reqCat] || [];
+                const extra = jugadoresHabilitados.filter(jh => jh.categoriaDestino === reqCat).map(jh => {
+                    const jOrig = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
+                    return { ...jOrig, esHabilitado: true, categoriaOriginal: jOrig.categoria };
+                });
+                const combinados = [...jugadoresBase, ...extra];
+                // Filtrar para que no aparezcan los que ya están seleccionados en el partido
+                return combinados.filter(d => !jugadoresSeleccionados.includes(d.nombre));
+            };
+
+            // 4. Función para poner nombres lindos en los selectores
+            const formatCatName = (cat) => {
+                const names = { 'damas_a': 'Dama A', 'damas_b': 'Dama B', 'damas_c': 'Dama C', 'caballeros_2da': 'Caballero 2da', 'caballeros_3ra': 'Caballero 3ra', 'caballeros_4ta': 'Caballero 4ta', 'caballeros_5ta': 'Caballero 5ta' };
+                return names[cat] || cat;
+            };
+
+            const agregarJugador = (nombreJugador, reqCat) => {
+                if (jugadoresSeleccionados.length >= partido.numJugadores) return;
+                
+                const opciones = getOpcionesParaSlot(reqCat);
+                const jugadorInfo = opciones.find(j => j.nombre === nombreJugador);
                 const estaHabilitado = jugadorInfo && jugadorInfo.esHabilitado;
                 
                 if (!estaHabilitado) {
@@ -1327,12 +1380,21 @@
                 }
 
                 const nuevosJugadores = [...jugadoresSeleccionados, nombreJugador];
-                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+                setJugadoresSeleccionados(nuevosJugadores); 
+                actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
             };
 
             const eliminarJugador = (index) => {
                 const nuevosJugadores = jugadoresSeleccionados.filter((_, i) => i !== index);
-                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+                setJugadoresSeleccionados(nuevosJugadores); 
+                actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+            };
+
+            // Ayudante visual para saber si un jugador cargado es capitán o subió de categoría
+            const getBadgeInfo = (playerName) => {
+                const original = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === playerName);
+                const esHabilitado = jugadoresHabilitados.some(jh => jh.jugador === playerName && partido.categorias.includes(jh.categoriaDestino));
+                return { ...original, esHabilitado };
             };
 
             return (
@@ -1349,12 +1411,11 @@
                         <strong>Jugadores asignados:</strong> {jugadoresSeleccionados.length === 0 && <span style={{color: '#999'}}> Ninguno</span>}
                         <div style={{marginTop: '8px'}}>
                             {jugadoresSeleccionados.map((jugador, idx) => {
-                                const jugadorObj = jugadoresDisponibles.find(j => j.nombre === jugador);
-                                const esHabilitado = jugadorObj && jugadorObj.esHabilitado;
+                                const info = getBadgeInfo(jugador);
                                 return (
-                                    <div key={idx} style={{ display: 'inline-block', background: esHabilitado ? '#10b981' : '#667eea', color: 'white', padding: '5px 12px', borderRadius: '6px', marginRight: '8px', marginBottom: '8px' }}>
-                                        {jugador} {jugadorObj?.capitan && <span className="captain-badge">CAPITÁN</span>}
-                                        {esHabilitado && <span style={{ background: 'rgba(255,255,255,0.3)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginLeft: '6px' }}>↑</span>}
+                                    <div key={idx} style={{ display: 'inline-block', background: info.esHabilitado ? '#10b981' : '#667eea', color: 'white', padding: '5px 12px', borderRadius: '6px', marginRight: '8px', marginBottom: '8px' }}>
+                                        {jugador} {info?.capitan && <span className="captain-badge">CAPITÁN</span>}
+                                        {info.esHabilitado && <span style={{ background: 'rgba(255,255,255,0.3)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginLeft: '6px' }}>↑</span>}
                                         {userRole !== 'jugador' && (
                                             <button onClick={() => eliminarJugador(idx)} style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px' }}>✕</button>
                                         )}
@@ -1364,22 +1425,23 @@
                         </div>
                     </div>
 
-                    {userRole !== 'jugador' && jugadoresSeleccionados.length < partido.numJugadores && (
-                        <div className="form-group" style={{marginBottom: '0'}}>
-                            <label>Agregar jugador:</label>
-                            <select onChange={(e) => { if (e.target.value) { agregarJugador(e.target.value); e.target.value = ''; } }} defaultValue="">
-                                <option value="">Seleccionar...</option>
-                                {jugadoresDisponibles.filter(j => !jugadoresSeleccionados.includes(j.nombre)).map((j, idx) => {
+                    {/* SECCIÓN MÁGICA: DIBUJA UN SELECTOR ESPECÍFICO POR CADA HUECO QUE FALTA LLENAR */}
+                    {userRole !== 'jugador' && slotsRestantes.map((reqCat, idx) => (
+                        <div className="form-group" style={{marginBottom: '8px'}} key={`slot-${idx}`}>
+                            <label style={{fontSize: '13px', color: '#475569', marginBottom: '4px'}}>Seleccionar {formatCatName(reqCat)}:</label>
+                            <select onChange={(e) => { if (e.target.value) { agregarJugador(e.target.value, reqCat); } }} value="">
+                                <option value="">-- Elegir {formatCatName(reqCat)} --</option>
+                                {getOpcionesParaSlot(reqCat).map((j, i) => {
                                     const count = contarPartidosJugador(fechaIndex, j.nombre);
-                                    return ( <option key={idx} value={j.nombre}>{j.nombre} {j.capitan ? '(CAPITÁN)' : ''} {j.esHabilitado ? '↑ ' : `- ${count}/3 partidos`}</option> );
+                                    return ( <option key={i} value={j.nombre}>{j.nombre} {j.capitan ? '(C)' : ''} {j.esHabilitado ? '↑ ' : `- ${count}/3 partidos`}</option> );
                                 })}
                             </select>
                         </div>
-                    )}
+                    ))}
 
                     {jugadoresSeleccionados.some(j => {
-                        const jugadorObj = jugadoresDisponibles.find(jd => jd.nombre === j);
-                        if (jugadorObj && jugadorObj.esHabilitado) return false; 
+                        const info = getBadgeInfo(j);
+                        if (info.esHabilitado) return false; 
                         return contarPartidosJugador(fechaIndex, j) > 3;
                     }) && (<div className="player-count-warning">⚠️ Advertencia: Algún jugador supera el límite de 3 partidos</div>)}
                 </div>
