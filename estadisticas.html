@@ -90,6 +90,9 @@
             const [resultados, setResultados] = useState({});
             const [subTab, setSubTab] = useState('individual'); 
             
+            // NUEVO: LEER EL ROL DEL USUARIO DESDE LA MEMORIA LOCAL
+            const userRole = localStorage.getItem('goat_user_role') || null;
+
             // Filtros
             const [indivPlayer, setIndivPlayer] = useState('');
             const [parRama, setParRama] = useState(''); 
@@ -124,6 +127,10 @@
                 
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
+
+                    // NUEVO FILTRO DE SEGURIDAD: Ocultar borradores para los jugadores
+                    if (userRole === 'jugador' && !fecha.convocada) return;
+
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
                             const key = `${fechaIdx}-${partido.id}`; 
@@ -385,10 +392,25 @@
                             </table>
                         </div>
                     )}
+                    {/* --- FOOTER / DERECHOS DE AUTOR --- */}
+                    <div style={{ 
+                        textAlign: 'center', 
+                        padding: '20px', 
+                        borderTop: '1px solid #e2e8f0', 
+                        background: '#f8f9fa', 
+                        color: '#64748b', 
+                        fontSize: '13px',
+                        marginTop: '30px',
+                        borderRadius: '0 0 16px 16px'
+                    }}>
+                        &copy; {new Date().getFullYear()} <strong>Desarrollado por Mariano</strong>. Todos los derechos reservados.<br/>
+                        <span style={{fontSize: '11px', opacity: 0.8}}>Sistema de Gestión de Torneos Interclubes</span>
+                    </div>
+
                 </div>
             );
         }
-
+        
         ReactDOM.render(<App />, document.getElementById('root'));
     </script>
 </body>

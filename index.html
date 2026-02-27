@@ -574,6 +574,10 @@
                 
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
+
+                    // NUEVO FILTRO DE SEGURIDAD: Si sos jugador y la fecha es borrador, no entra en estadísticas
+                    if (userRole === 'jugador' && !fecha.convocada) return;
+
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
                             const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esSingle = partido.numJugadores === 1;
@@ -671,6 +675,20 @@
                             />
                         )}
                     </div>
+
+                    {/* --- FOOTER / DERECHOS DE AUTOR --- */}
+                    <div style={{ 
+                        textAlign: 'center', 
+                        padding: '20px', 
+                        borderTop: '1px solid #e2e8f0', 
+                        background: '#f8f9fa', 
+                        color: '#64748b', 
+                        fontSize: '13px' 
+                    }}>
+                        &copy; {new Date().getFullYear()} <strong>Desarrollado por Mariano</strong>. Todos los derechos reservados.<br/>
+                        <span style={{fontSize: '11px', opacity: 0.8}}>Sistema de Gestión de Torneos Interclubes</span>
+                    </div>
+
                 </div>
             );
         }
