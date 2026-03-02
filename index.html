@@ -1650,8 +1650,9 @@
             );
         }
 
-       function ResultadosTab({ userRole, fechas, setFechas, resultados, toggleResultado, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances }) {
+       function ResultadosTab({ userRole, fechas, resultados, toggleResultado, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances }) {
             const [showPlayOffModal, setShowPlayOffModal] = useState(false);
+            const [showCalendarioModal, setShowCalendarioModal] = useState(false); // <-- AGREGAR ESTA LÍNEA AQUÍ
             const [fechasExpandidas, setFechasExpandidas] = useState({});
 
             useEffect(() => {
@@ -1688,8 +1689,18 @@
             return (
                 <div>
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Resultados de Partidos</h2>
-                    <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{marginBottom: '20px'}}>🏆 Ver Play-Off Proyectado</button>
+                    
+                    <div style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap'}}>
+                        <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{margin: 0}}>
+                            🏆 Ver Play-Off Proyectado
+                        </button>
+                        <button className="btn btn-primary btn-responsive" onClick={() => setShowCalendarioModal(true)} style={{margin: 0, background: '#1e3c72', color: 'white', border: 'none'}}>
+                            📅 Calendario Completo
+                        </button>
+                    </div>
+
                     {showPlayOffModal && (<PlayOffModal userRole={userRole} fechas={fechas} resultados={resultados} zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} onClose={() => setShowPlayOffModal(false)} />)}
+                    {showCalendarioModal && (<CalendarioModal zonasConfig={zonasConfig} onClose={() => setShowCalendarioModal(false)} />)}
                     
                     {fechas.map((fecha, fechaIdx) => {
                         const resultado = calcularResultadoFecha(fechaIdx);
@@ -1757,6 +1768,81 @@
                             </div>
                         );
                     })}
+                </div>
+            );
+        }
+        function CalendarioModal({ zonasConfig, onClose }) {
+            const getTeamA = (index) => zonasConfig.zona1[index - 1] || `A${index}`;
+            const getTeamB = (index) => zonasConfig.zona2[index - 1] || `B${index}`;
+
+            const calendarioInfo = [
+                { fecha: '21/2 - 22/2', detalle: [{ a: getTeamA(1), b: getTeamA(2) }, { a: getTeamA(3), b: getTeamA(4) }, { a: getTeamB(1), b: getTeamB(2) }, { a: getTeamB(3), b: getTeamB(4) }] },
+                { fecha: '28/2 - 29/2', detalle: [{ a: getTeamA(1), b: getTeamA(5) }, { a: getTeamB(1), b: getTeamB(5) }] },
+                { fecha: '07/3 - 08/3', detalle: [{ a: getTeamA(2), b: getTeamA(4) }, { a: getTeamB(2), b: getTeamB(4) }] },
+                { fecha: '14/3 - 15/3', detalle: [{ a: getTeamA(3), b: getTeamA(5) }, { a: getTeamB(3), b: getTeamB(5) }] },
+                { fecha: '21/3 - 22/3', libre: 'Fecha libre / Recuperación de partidos' },
+                { fecha: '28/3 - 29/3', libre: 'Fecha libre / Torneo Nac. de Veteranos (Tandil)' },
+                { fecha: '04/4 - 05/4', detalle: [{ a: getTeamA(1), b: getTeamA(4) }, { a: getTeamB(1), b: getTeamB(4) }, { a: getTeamB(2), b: getTeamB(3) }] },
+                { fecha: '11/4 - 12/4', libre: 'Fecha libre / Semana Santa' },
+                { fecha: '18/4 - 19/4', detalle: [{ a: getTeamA(2), b: getTeamA(3) }, { a: getTeamA(4), b: getTeamA(5) }, { a: getTeamB(4), b: getTeamB(5) }] },
+                { fecha: '25/4 - 26/4', detalle: [{ a: getTeamA(1), b: getTeamA(3) }, { a: getTeamB(1), b: getTeamB(3) }] },
+                { fecha: '02/5 - 03/5', detalle: [{ a: getTeamA(2), b: getTeamA(5) }, { a: getTeamB(2), b: getTeamB(5) }] },
+                { fecha: '09/5 - 10/5', libre: 'Fecha libre / Recuperación de partidos' },
+                { fecha: '16/5 - 17/5', libre: 'Octavos de Final', isPlayoff: true },
+                { fecha: '23/5 - 24/5', libre: 'Fecha libre / Recuperación de partidos' },
+                { fecha: '30/5 - 31/5', libre: 'Cuartos de Final', isPlayoff: true },
+                { fecha: '06/6 - 07/6', libre: 'Fecha libre / Recuperación de partidos' },
+                { fecha: '13/6 - 14/6', libre: 'Semifinal', isPlayoff: true },
+                { fecha: '20/6 - 21/6', libre: 'Fecha libre / Recuperación de partidos' },
+                { fecha: '27/6 - 28/6', libre: 'Final', isPlayoff: true }
+            ];
+
+            return (
+                <div className="modal" onClick={onClose}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '90vh'}}>
+                        <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
+                            <span>📅 Calendario Uncas Tennis Tour 2026</span>
+                            <a href="Uncas Tennis Tour 2026.pdf" target="_blank" className="btn btn-success" style={{textDecoration: 'none', fontSize: '13px', padding: '8px 15px', margin: 0, background: '#10b981', color: 'white', borderRadius: '8px'}}>
+                                📄 Ver PDF Original
+                            </a>
+                        </div>
+                        
+                        <div className="table-container" style={{boxShadow: 'none', border: '1px solid #e2e8f0', borderRadius: '8px'}}>
+                            <table className="stats-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{width: '130px', background: '#1e3c72', color: 'white'}}>Fecha</th>
+                                        <th style={{background: '#1e3c72', color: 'white'}}>Detalle de la Jornada</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {calendarioInfo.map((fila, idx) => (
+                                        <tr key={idx} style={{background: fila.libre && !fila.isPlayoff ? '#f8fafc' : fila.isPlayoff ? '#fffbeb' : '#ffffff'}}>
+                                            <td style={{fontWeight: 'bold', color: '#475569', fontSize: '13px'}}>{fila.fecha}</td>
+                                            <td>
+                                                {fila.libre ? (
+                                                    <div style={{color: fila.isPlayoff ? '#d97706' : '#64748b', fontWeight: fila.isPlayoff ? 'bold' : 'normal', fontSize: '14px'}}>
+                                                        {fila.isPlayoff && '🏆 '} {fila.libre}
+                                                    </div>
+                                                ) : (
+                                                    <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
+                                                        {fila.detalle.map((cruce, cIdx) => (
+                                                            <span key={cIdx} style={{background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#1e293b'}}>
+                                                                {cruce.a} <span style={{color: '#94a3b8', fontSize: '11px', margin: '0 4px'}}>vs</span> {cruce.b}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style={{marginTop: '20px', textAlign: 'right'}}>
+                            <button className="btn btn-danger btn-responsive" onClick={onClose} style={{margin: 0}}>Cerrar</button>
+                        </div>
+                    </div>
                 </div>
             );
         }
