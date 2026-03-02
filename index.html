@@ -184,18 +184,7 @@
         .modal-content { background: white; padding: 30px; border-radius: 16px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; }
         .modal-header { font-size: 24px; font-weight: 700; margin-bottom: 20px; color: #1e3c72; }
 
-        .date-section { 
-            background: #f8f9fa; 
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-bottom: 20px; 
-            transition: all 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        
-        .date-section:hover {
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+        .date-section { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; transition: all 0.3s ease; }
         .date-header { font-size: 20px; font-weight: 700; color: #1e3c72; margin-bottom: 15px; }
 
         .player-count-warning { color: #dc2626; font-size: 12px; margin-top: 5px; }
@@ -748,7 +737,6 @@
         function BusquedaTab({ fechas, userRole }) {
             const [jugadorSeleccionado, setJugadorSeleccionado] = useState('');
             const [fechaSeleccionada, setFechaSeleccionada] = useState('todas');
-            const [fechasExpandidas, setFechasExpandidas] = useState({});
             const jugadores = Object.values(JUGADORES_GOAT).flat().map(j => j.nombre).sort((a, b) => a.localeCompare(b));
 
             // Filtramos las fechas que el usuario tiene permiso para ver
@@ -757,18 +745,6 @@
                 const tienePermiso = userRole !== 'jugador' || f?.convocada;
                 return coincideFecha && tienePermiso;
             });
-
-            // Expandir solo la última fecha por defecto cuando se selecciona un jugador
-            useEffect(() => {
-                if (jugadorSeleccionado && fechasVisibles.length > 0) {
-                    const ultimaFechaIdx = fechasVisibles.length - 1;
-                    setFechasExpandidas({ [ultimaFechaIdx]: true });
-                }
-            }, [jugadorSeleccionado, fechasVisibles.length]);
-
-            const toggleFecha = (idx) => {
-                setFechasExpandidas(prev => ({ ...prev, [idx]: !prev[idx] }));
-            };
 
             return (
                 <div>
@@ -802,113 +778,34 @@
                                 const partidosDelJugador = fecha.partidos.filter(p => p.jugadores && p.jugadores.includes(jugadorSeleccionado) && p.horario);
                                 if (partidosDelJugador.length === 0) return null;
 
-                                const isExpanded = fechasExpandidas[fechaIdx];
-                                const esUltimaFecha = fechaIdx === fechasVisibles.length - 1;
-                                const esFechaJugada = !esUltimaFecha;
-
                                 return (
-                                    <div 
-                                        key={fechaIdx} 
-                                        className="date-section"
-                                        style={{
-                                            background: esFechaJugada ? '#f8fafc' : '#fff',
-                                            border: esFechaJugada ? '2px solid #cbd5e1' : '2px solid #d4af37',
-                                            opacity: esFechaJugada && !isExpanded ? 0.85 : 1,
-                                            padding: isExpanded ? '20px' : '10px 20px'
-                                        }}
-                                    >
-                                        <div 
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                cursor: 'pointer',
-                                                userSelect: 'none',
-                                                gap: '15px',
-                                                flexWrap: 'wrap'
-                                            }}
-                                            onClick={() => toggleFecha(fechaIdx)}
-                                        >
-                                            <div style={{display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap'}}>
-                                                <span 
-                                                    style={{
-                                                        color: esFechaJugada ? '#64748b' : '#d4af37',
-                                                        fontSize: '18px',
-                                                        transition: 'transform 0.3s',
-                                                        display: 'inline-block',
-                                                        transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'
-                                                    }}
-                                                >
-                                                    ▶
-                                                </span>
-                                                <div className="date-header" style={{marginBottom: 0}}>
-                                                    Fecha {fecha.numero} - vs {fecha.rival}
-                                                </div>
-                                                {esFechaJugada && (
-                                                    <span 
-                                                        style={{
-                                                            background: '#64748b',
-                                                            color: 'white',
-                                                            padding: '4px 12px',
-                                                            borderRadius: '12px',
-                                                            fontSize: '11px',
-                                                            fontWeight: '700',
-                                                            textTransform: 'uppercase',
-                                                            letterSpacing: '0.5px'
-                                                        }}
-                                                    >
-                                                        JUGADO
-                                                    </span>
-                                                )}
-                                                {esUltimaFecha && (
-                                                    <span 
-                                                        style={{
-                                                            background: '#d4af37',
-                                                            color: '#1a1a1a',
-                                                            padding: '4px 12px',
-                                                            borderRadius: '12px',
-                                                            fontSize: '11px',
-                                                            fontWeight: '700',
-                                                            textTransform: 'uppercase',
-                                                            letterSpacing: '0.5px'
-                                                        }}
-                                                    >
-                                                        ACTUAL
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div style={{fontSize: '14px', color: '#64748b', fontWeight: '600'}}>
-                                                {partidosDelJugador.length} partido{partidosDelJugador.length !== 1 ? 's' : ''}
-                                            </div>
-                                        </div>
-
-                                        {isExpanded && (
-                                            <div className="match-grid" style={{marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #cbd5e1'}}>
-                                                {partidosDelJugador.sort((a, b) => {
-                                                    if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
-                                                    return a.horario.localeCompare(b.horario);
-                                                }).map(partido => {
-                                                    const companeros = partido.jugadores.filter(j => j !== jugadorSeleccionado);
-                                                    const esBonus = fecha.partidoBonus === partido.id;
-                                                    return (
-                                                        <div key={partido.id} className={`match-card ${esBonus ? 'bonus' : ''}`}>
-                                                            <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '10px'}}>
-                                                                <div className="match-type" style={{color: '#1e3c72', fontSize: '16px', fontWeight: '700'}}>
-                                                                    {partido.tipo} {esBonus && <span style={{color: '#f59e0b', fontSize: '14px', marginLeft: '5px'}}>⭐ (Bonus)</span>}
-                                                                </div>
-                                                                <div className="match-time" style={{background: '#10b981', padding: '6px 14px'}}>
-                                                                    {partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario} - P{partido.posicion}
-                                                                </div>
+                                    <div key={fechaIdx} className="date-section">
+                                        <div className="date-header">Fecha {fecha.numero} - vs {fecha.rival}</div>
+                                        <div className="match-grid" style={{marginTop: '10px'}}>
+                                            {partidosDelJugador.sort((a, b) => {
+                                                if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
+                                                return a.horario.localeCompare(b.horario);
+                                            }).map(partido => {
+                                                const companeros = partido.jugadores.filter(j => j !== jugadorSeleccionado);
+                                                const esBonus = fecha.partidoBonus === partido.id;
+                                                return (
+                                                    <div key={partido.id} className={`match-card ${esBonus ? 'bonus' : ''}`}>
+                                                        <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', gap: '10px'}}>
+                                                            <div className="match-type" style={{color: '#1e3c72', fontSize: '16px', fontWeight: '700'}}>
+                                                                {partido.tipo} {esBonus && <span style={{color: '#f59e0b', fontSize: '14px', marginLeft: '5px'}}>⭐ (Bonus)</span>}
                                                             </div>
-                                                            <div style={{background: 'white', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
-                                                                <strong style={{color: '#64748b'}}>Compañero/a: </strong> 
-                                                                <span style={{fontWeight: '600', color: '#0f172a'}}>{companeros.length > 0 ? companeros.join(' / ') : 'Juega Single'}</span>
+                                                            <div className="match-time" style={{background: '#10b981', padding: '6px 14px'}}>
+                                                                {partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario} - P{partido.posicion}
                                                             </div>
                                                         </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
+                                                        <div style={{background: 'white', padding: '10px', borderRadius: '6px', border: '1px solid #e2e8f0'}}>
+                                                            <strong style={{color: '#64748b'}}>Compañero/a: </strong> 
+                                                            <span style={{fontWeight: '600', color: '#0f172a'}}>{companeros.length > 0 ? companeros.join(' / ') : 'Juega Single'}</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 );
                             })}
@@ -1633,34 +1530,29 @@
 
         function ResultadosTab({ userRole, fechas, resultados, toggleResultado, zonasConfig, crucesFinales, playoffAvances, setPlayoffAvances }) {
             const [showPlayOffModal, setShowPlayOffModal] = useState(false);
+            const [fechasExpandidas, setFechasExpandidas] = useState({});
+
+            useEffect(() => {
+                setFechasExpandidas({});
+            }, []);
 
             if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
 
             const calcularResultadoFecha = (fechaIdx) => {
                 const fecha = fechas[fechaIdx];
                 if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
-                let ganados = 0;
-                let perdidos = 0;
-                let puntosGanados = 0;
-                let puntosPerdidos = 0;
+                let ganados = 0; let perdidos = 0; let puntosGanados = 0; let puntosPerdidos = 0;
                 
                 fecha.partidos.forEach(partido => {
                     if (partido.jugadores && partido.jugadores.length > 0) {
-                        const key = `${fechaIdx}-${partido.id}`;
-                        const ganado = resultados[key] || false;
-                        const esBonus = fecha.partidoBonus === partido.id;
-                        const puntos = esBonus ? 20 : 10;
-                        if (ganado) {
-                            ganados++;
-                            puntosGanados += puntos;
-                        } else {
-                            perdidos++;
-                            puntosPerdidos += puntos;
-                        }
+                        const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
+                        if (ganado) { ganados++; puntosGanados += puntos; } else { perdidos++; puntosPerdidos += puntos; }
                     }
                 });
                 return { ganados, perdidos, puntosGanados, puntosPerdidos };
             };
+
+            const toggleFecha = (idx) => { setFechasExpandidas(prev => ({ ...prev, [idx]: !prev[idx] })); };
 
             return (
                 <div>
@@ -1671,14 +1563,18 @@
                     {fechas.map((fecha, fechaIdx) => {
                         const resultado = calcularResultadoFecha(fechaIdx);
                         const total = resultado.ganados + resultado.perdidos;
+                        const isExpanded = fechasExpandidas[fechaIdx];
                         
                         // Validamos si la fecha está oculta para el jugador
                         const isOcultaParaJugador = userRole === 'jugador' && !fecha.convocada;
 
                         return (
-                            <div key={fechaIdx} className="date-section">
-                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px'}}>
-                                    <div className="date-header" style={{marginBottom: 0}}>Fecha {fecha.numero} - vs {fecha.rival}</div>
+                            <div key={fechaIdx} className="date-section" style={{padding: isExpanded ? '20px' : '10px 20px'}}>
+                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none', gap: '15px'}} onClick={() => toggleFecha(fechaIdx)}>
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                                        <span style={{color: '#d4af37', fontSize: '18px', transition: 'transform 0.3s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}}>▶</span>
+                                        <div className="date-header" style={{marginBottom: 0}}>Fecha {fecha.numero} - vs {fecha.rival}</div>
+                                    </div>
                                     {total > 0 && (
                                         <div style={{ background: resultado.puntosGanados > resultado.puntosPerdidos ? '#d1fae5' : resultado.puntosGanados < resultado.puntosPerdidos ? '#fee2e2' : '#fef3c7', padding: '6px 15px', borderRadius: '8px', border: `2px solid ${resultado.puntosGanados > resultado.puntosPerdidos ? '#10b981' : resultado.puntosGanados < resultado.puntosPerdidos ? '#ef4444' : '#f59e0b'}`, fontWeight: '700', fontSize: '14px', textAlign: 'center' }}>
                                             <div style={{color: '#1e3c72'}}>Puntos: {resultado.puntosGanados} - {resultado.puntosPerdidos}</div>
@@ -1686,8 +1582,9 @@
                                     )}
                                 </div>
                                 
-                                <div style={{marginTop: '20px'}}>
-                                    {fecha.partidos && fecha.partidos.filter(partido => partido.jugadores && partido.jugadores.length > 0).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; if (a.horario !== b.horario) return a.horario.localeCompare(b.horario); return (a.posicion || 0) - (b.posicion || 0); }).map(partido => {
+                                {isExpanded && (
+                                    <div style={{marginTop: '20px', borderTop: '1px dashed #cbd5e1', paddingTop: '20px'}}>
+                                        {fecha.partidos && fecha.partidos.filter(partido => partido.jugadores && partido.jugadores.length > 0).sort((a, b) => { if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; if (a.horario !== b.horario) return a.horario.localeCompare(b.horario); return (a.posicion || 0) - (b.posicion || 0); }).map(partido => {
                                             const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id;
                                             return (
                                                 <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : '2px solid transparent' }}>
@@ -1709,7 +1606,8 @@
                                                 </div>
                                             );
                                         })}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
