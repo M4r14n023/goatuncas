@@ -342,7 +342,7 @@
 
                         {!selectedRole ? (
                             <div>
-                                <button className="role-btn" onClick={() => { setSelectedRole('jugador'); onLogin('jugador'); }}>👤 Jugadores (Sin Clave)</button>
+                                <button className="role-btn" onClick={() => { setSelectedRole('jugador'); onLogin('jugador'); }}>🎾 Jugadores (Sin Clave)</button>
                                 <button className="role-btn" onClick={() => setSelectedRole('capitan')}>⭐ Capitán</button>
                                 <button className="role-btn" onClick={() => setSelectedRole('admin')}>⚙️ Administrador</button>
                             </div>
@@ -670,7 +670,7 @@
                         
                         <div className="user-menu">
                             <span style={{color: '#c5a572', fontSize: '14px', fontWeight: 'bold'}}>
-                                {userRole === 'admin' ? '⚙️ Admin' : userRole === 'capitan' ? '⭐ Capitán' : '👤 Jugador'}
+                                {userRole === 'admin' ? '⚙️ Admin' : userRole === 'capitan' ? '⭐ Capitán' : '🎾 Jugadores'}
                             </span>
                             <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin: 0}} onClick={logout}>Salir</button>
                         </div>
