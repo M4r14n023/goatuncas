@@ -420,7 +420,8 @@
             const [syncStatus, setSyncStatus] = useState('local');
             const [lastSync, setLastSync] = useState(null);
 
-            const isReceivingData = useRef(false);
+            // ⚠️ FIX CRUCIAL DE PERSISTENCIA: Inicia en TRUE para que el celular no "pise" la nube con datos viejos al abrir
+            const isReceivingData = useRef(true); 
 
             // Guardar rol en memoria
             useEffect(() => {
@@ -430,6 +431,7 @@
 
             useEffect(() => {
                 const cargarDatos = async () => {
+                    // 1. Cargamos caché local rápido para que no haya pantalla blanca
                     const datosGuardados = localStorage.getItem('goat_torneo_data');
                     if (datosGuardados) {
                         try {
@@ -438,28 +440,33 @@
                         } catch (e) { console.error('Error al cargar datos:', e); }
                     }
 
+                    // 2. Traemos la info REAL desde Firebase
                     try {
                         setSyncStatus('syncing');
                         const datosFirebase = await cargarDesdeFirebase();
                         if (datosFirebase) {
-                            isReceivingData.current = true;
                             setNumEquipos(datosFirebase.numEquipos || 10); setEquipos(datosFirebase.equipos || []); setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datosFirebase.fechas || []); setResultados(datosFirebase.resultados || {}); setPosiciones(datosFirebase.posiciones || {}); setCrucesFinales(datosFirebase.crucesFinales || []); setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datosFirebase.playoffAvances || {});
                             setLastSync(datosFirebase.ultimaActualizacion); setSyncStatus('synced');
                             localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
-                            setTimeout(() => { isReceivingData.current = false; }, 1000);
                         } else { setSyncStatus('local'); }
-                    } catch (e) { setSyncStatus('local'); }
+                    } catch (e) { 
+                        setSyncStatus('local'); 
+                    } finally {
+                        // 3. DESBLOQUEAMOS EL GUARDADO (esperamos 1.5s para asegurar que React ya acomodó todo lo que vino de la nube)
+                        setTimeout(() => { isReceivingData.current = false; }, 1500);
+                    }
                 };
 
                 cargarDatos();
 
                 const unsubscribe = escucharCambiosFirebase((datos) => {
-                    if (datos && datos.ultimaActualizacion !== lastSync) {
+                    // Si alguien más guarda en otro dispositivo, bloqueamos nuestro guardado temporalmente, actualizamos y volvemos a desbloquear
+                    if (datos) {
                         isReceivingData.current = true;
                         setNumEquipos(datos.numEquipos || 10); setEquipos(datos.equipos || []); setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datos.fechas || []); setResultados(datos.resultados || {}); setPosiciones(datos.posiciones || {}); setCrucesFinales(datos.crucesFinales || []); setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datos.playoffAvances || {});
                         setLastSync(datos.ultimaActualizacion); setSyncStatus('synced');
                         localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
-                        setTimeout(() => { isReceivingData.current = false; }, 1000);
+                        setTimeout(() => { isReceivingData.current = false; }, 1500);
                     }
                 });
 
@@ -467,11 +474,12 @@
             }, []);
 
             useEffect(() => {
-                if (isReceivingData.current) return;
+                // 🔒 EL CANDADO: Si recién abrimos la app o estamos bajando datos, abortamos cualquier guardado hacia la nube
+                if (isReceivingData.current) return; 
+
                 const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
                 localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
                 
-                // Solo admin y capitán suben datos. Jugador no guarda en nube (protección extra)
                 if (userRole !== 'jugador' && (equipos.length > 0 || fechas.length > 0)) {
                     setSyncStatus('syncing');
                     guardarEnFirebase(datos)
