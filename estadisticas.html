@@ -131,6 +131,9 @@
                     // NUEVO FILTRO DE SEGURIDAD: Ocultar borradores para los jugadores
                     if (userRole === 'jugador' && !fecha.convocada) return;
 
+                    // 🗓️ NUEVO FILTRO CALENDARIO: No sumar a los gráficos si la fecha es en el futuro
+                    if (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date()) return;
+
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
                             const key = `${fechaIdx}-${partido.id}`; 
