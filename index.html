@@ -1667,13 +1667,10 @@
             const [fechasExpandidas, setFechasExpandidas] = useState({});
             const [diasExpandidos, setDiasExpandidos] = useState({});
 
-            // Expandir solo la última fecha por defecto
+            // Iniciar con todas las fechas plegadas
             useEffect(() => {
-                if (fechas.length > 0) {
-                    const ultimaFechaIdx = fechas.length - 1;
-                    setFechasExpandidas({ [ultimaFechaIdx]: true });
-                }
-            }, [fechas.length]);
+                setFechasExpandidas({});
+            }, []);
 
             if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
 
