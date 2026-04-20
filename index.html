@@ -2361,7 +2361,7 @@ function App() {
             );
         }
 
-        function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales, zonasConfig, setZonasConfig }) {
+function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales, zonasConfig, setZonasConfig }) {
             const [showCruceModal, setShowCruceModal] = useState(false);
             const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
             const [editandoCruce, setEditandoCruce] = useState(null);
@@ -2375,6 +2375,7 @@ function App() {
                 });
 
                 fechas.forEach((fecha, fechaIdx) => {
+                    // Ignorar fechas vacías o en el futuro
                     if (!fecha || !fecha.partidos || (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date())) return;
                     
                     const rival = fecha.rival;
@@ -2384,18 +2385,24 @@ function App() {
                         fecha.partidos.forEach(partido => {
                             if (partido.jugadores && partido.jugadores.length > 0) {
                                 const key = `${fechaIdx}-${partido.id}`; 
-                                const ganado = resultados[key] || false; 
-                                const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
                                 
-                                if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                                // FIX: Solo sumar si la fecha está cerrada (historial) o si el partido tiene un resultado marcado
+                                if (fecha.isClosed || resultados.hasOwnProperty(key)) {
+                                    const ganado = resultados[key] || false; 
+                                    const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
+                                    if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                                }
                             }
                         });
                         
-                        tabla['GOAT'].partidos++; tabla['GOAT'].puntosTotales += puntosGOAT;
-                        tabla[rival].partidos++; tabla[rival].puntosTotales += puntosRival;
-                        
-                        if (puntosGOAT > 135) tabla['GOAT'].seriesGanadas++;
-                        else if (puntosRival > 135) tabla[rival].seriesGanadas++;
+                        if (puntosGOAT > 0 || puntosRival > 0 || fecha.isClosed) {
+                            tabla['GOAT'].partidos++; tabla['GOAT'].puntosTotales += puntosGOAT;
+                            tabla[rival].partidos++; tabla[rival].puntosTotales += puntosRival;
+                            
+                            // LÓGICA OFICIAL: 140 puntos aseguran la serie (sin empate)
+                            if (puntosGOAT >= 140) tabla['GOAT'].seriesGanadas++;
+                            else if (puntosRival >= 140) tabla[rival].seriesGanadas++;
+                        }
                     }
                 });
 
@@ -2407,8 +2414,8 @@ function App() {
                             tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosTotales += pts1;
                             tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosTotales += pts2;
                             
-                            if (pts1 > pts2) tabla[cruce.equipo1].seriesGanadas++; 
-                            else if (pts2 > pts1) tabla[cruce.equipo2].seriesGanadas++;
+                            if (pts1 >= 140) tabla[cruce.equipo1].seriesGanadas++; 
+                            else if (pts2 >= 140) tabla[cruce.equipo2].seriesGanadas++;
                         }
                     }
                 });
