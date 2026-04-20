@@ -1724,19 +1724,30 @@
                 setFechas(nuevasFechas);
             };
 
+// Calcular resultado de fecha (Suma Real y Retrocompatible con Fechas Cerradas)
             const calcularResultadoFecha = (fechaIdx) => {
                 const fecha = fechas[fechaIdx];
                 if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
                 
                 let ganados = 0, perdidos = 0, puntosGanados = 0, puntosPerdidos = 0;
                 
+                // MAGIA: Si la fecha tiene puesto el candado de "Cerrada", asumimos que todo se jugó
+                const fechaCerrada = fecha.isClosed === true; 
+                
                 fecha.partidos.forEach(partido => {
                     if (partido.jugadores && partido.jugadores.length > 0) {
                         const key = `${fechaIdx}-${partido.id}`;
-                        const ganado = resultados[key] || false;
-                        const esBonus = fecha.partidoBonus === partido.id;
-                        const puntos = esBonus ? 20 : 10;
-                        if (ganado) { ganados++; puntosGanados += puntos; } else { perdidos++; puntosPerdidos += puntos; }
+                        const estadoObj = getEstadoPartido(fechaIdx, partido.id);
+                        
+                        // Suma puntos SI el partido está finalizado HOY, o SI la fecha entera ya se cerró
+                        if (estadoObj.estado === 'finalizado' || fechaCerrada) {
+                            const ganado = resultados[key] || false;
+                            const esBonus = fecha.partidoBonus === partido.id;
+                            const puntos = esBonus ? 20 : 10;
+                            
+                            if (ganado) { ganados++; puntosGanados += puntos; } 
+                            else { perdidos++; puntosPerdidos += puntos; }
+                        }
                     }
                 });
                 
