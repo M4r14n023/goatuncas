@@ -2347,8 +2347,9 @@
                         tabla['GOAT'].partidos++; tabla['GOAT'].puntosTotales += puntosGOAT;
                         tabla[rival].partidos++; tabla[rival].puntosTotales += puntosRival;
                         
-                        if (puntosGOAT > 135) tabla['GOAT'].seriesGanadas++;
-                        else if (puntosRival > 135) tabla[rival].seriesGanadas++;
+                        // Oficial: 140 puntos aseguran la serie
+                        if (puntosGOAT >= 140) tabla['GOAT'].seriesGanadas++;
+                        else if (puntosRival >= 140) tabla[rival].seriesGanadas++;
                     }
                 });
 
@@ -2360,8 +2361,8 @@
                             tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosTotales += pts1;
                             tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosTotales += pts2;
                             
-                            if (pts1 > pts2) tabla[cruce.equipo1].seriesGanadas++; 
-                            else if (pts2 > pts1) tabla[cruce.equipo2].seriesGanadas++;
+                            if (pts1 >= 140) tabla[cruce.equipo1].seriesGanadas++; 
+                            else if (pts2 >= 140) tabla[cruce.equipo2].seriesGanadas++;
                         }
                     }
                 });
