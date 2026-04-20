@@ -1871,68 +1871,83 @@
             );
         }
 
-function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales, zonasConfig, setZonasConfig }) {
+        function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales, zonasConfig, setZonasConfig }) {
             const [showCruceModal, setShowCruceModal] = useState(false);
             const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
             const [editandoCruce, setEditandoCruce] = useState(null);
 
             if (equipos.length < 10) return <div className="warning">Por favor, que un Capitán configure primero los equipos en la pestaña "Configuración".</div>;
 
-            const calcularPosiciones = (filtroEquipos) => {
+            const calcularTablaZona = (zona) => {
+                const equiposZona = zona === 1 ? zonasConfig.zona1 : zonasConfig.zona2;
                 const tabla = {};
-                // Inicializamos la tabla
-                filtroEquipos.forEach(equipo => { 
-                    if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, seriesGanadas: 0, puntosTotales: 0 }; 
-                });
+                equiposZona.forEach(equipo => { if (equipo) tabla[equipo] = { partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0 }; });
 
-                // 1. Calcular puntos y series de la Fase Regular
                 fechas.forEach((fecha, fechaIdx) => {
-                    // Ignorar fechas vacías o futuras
-                    if (!fecha || !fecha.partidos || (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date())) return;
+                    if (!fecha || !fecha.partidos) return;
+                    
+                    // 🗓️ NUEVO FILTRO CALENDARIO: Ignorar fechas futuras en la tabla
+                    if (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date()) return;
                     
                     const rival = fecha.rival;
                     if (tabla['GOAT'] && tabla[rival]) {
                         let puntosGOAT = 0; let puntosRival = 0;
-                        
                         fecha.partidos.forEach(partido => {
                             if (partido.jugadores && partido.jugadores.length > 0) {
-                                const key = `${fechaIdx}-${partido.id}`; 
-                                const ganado = resultados[key] || false; 
-                                const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
-                                
+                                const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
                                 if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                             }
                         });
-                        
-                        tabla['GOAT'].partidos++; tabla['GOAT'].puntosTotales += puntosGOAT;
-                        tabla[rival].partidos++; tabla[rival].puntosTotales += puntosRival;
-                        
-                        // Lógica Oficial: Más de 135 puntos gana la serie (mitad de 270)
-                        if (puntosGOAT > 135) tabla['GOAT'].seriesGanadas++;
-                        else if (puntosRival > 135) tabla[rival].seriesGanadas++;
+                        if (tabla['GOAT']) { tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra; }
+                        if (tabla[rival]) { tabla[rival].partidos++; tabla[rival].puntosFavor += puntosRival; tabla[rival].puntosContra += puntosGOAT; tabla[rival].puntosTotales += puntosRival; if (puntosRival > puntosGOAT) tabla[rival].ganados++; else if (puntosRival < puntosGOAT) tabla[rival].perdidos++; tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra; }
                     }
                 });
 
-                // 2. Sumar Cruces Finales (Play-offs)
                 crucesFinales.forEach(cruce => {
                     if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
-                        const pts1 = parseInt(cruce.resultado1) || 0; 
-                        const pts2 = parseInt(cruce.resultado2) || 0;
+                        const pts1 = parseInt(cruce.resultado1) || 0; const pts2 = parseInt(cruce.resultado2) || 0;
                         if (pts1 > 0 || pts2 > 0) {
-                            tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosTotales += pts1;
-                            tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosTotales += pts2;
-                            
-                            if (pts1 > pts2) tabla[cruce.equipo1].seriesGanadas++; 
-                            else if (pts2 > pts1) tabla[cruce.equipo2].seriesGanadas++;
+                            tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosFavor += pts1; tabla[cruce.equipo1].puntosContra += pts2; tabla[cruce.equipo1].puntosTotales += pts1;
+                            tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosFavor += pts2; tabla[cruce.equipo2].puntosContra += pts1; tabla[cruce.equipo2].puntosTotales += pts2;
+                            if (pts1 > pts2) { tabla[cruce.equipo1].ganados++; tabla[cruce.equipo2].perdidos++; } else if (pts2 > pts1) { tabla[cruce.equipo2].ganados++; tabla[cruce.equipo1].perdidos++; }
+                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
                         }
                     }
                 });
+                return Object.entries(tabla).sort((a, b) => { if (b[1].puntosTotales !== a[1].puntosTotales) return b[1].puntosTotales - a[1].puntosTotales; return b[1].diferencia - a[1].diferencia; });
+            };
 
-                // 3. Ordenamiento Oficial UNCAS: 1° Series Ganadas, 2° Puntos Totales
-                return Object.values(tabla).sort((a, b) => { 
-                    if (b.seriesGanadas !== a.seriesGanadas) return b.seriesGanadas - a.seriesGanadas; 
-                    return b.puntosTotales - a.puntosTotales; 
+            const calcularTablaGeneral = () => {
+                const tabla = {};
+                equipos.forEach(equipo => { tabla[equipo.nombre] = { partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0 }; });
+
+                fechas.forEach((fecha, fechaIdx) => {
+                    if (!fecha || !fecha.partidos) return;
+                    
+                    // 🗓️ NUEVO FILTRO CALENDARIO: Ignorar fechas futuras en la tabla
+                    if (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date()) return;
+
+                    const rival = fecha.rival; let puntosGOAT = 0; let puntosRival = 0;
+                    fecha.partidos.forEach(partido => {
+                        if (partido.jugadores && partido.jugadores.length > 0) {
+                            const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const puntos = esBonus ? 20 : 10;
+                            if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                        }
+                    });
+                    tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
+                    tabla[rival].partidos++; tabla[rival].puntosFavor += puntosRival; tabla[rival].puntosContra += puntosGOAT; tabla[rival].puntosTotales += puntosRival; if (puntosRival > puntosGOAT) tabla[rival].ganados++; else if (puntosRival < puntosGOAT) tabla[rival].perdidos++; tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
                 });
+
+                crucesFinales.forEach(cruce => {
+                    const pts1 = parseInt(cruce.resultado1) || 0; const pts2 = parseInt(cruce.resultado2) || 0;
+                    if (pts1 > 0 || pts2 > 0) {
+                        tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosFavor += pts1; tabla[cruce.equipo1].puntosContra += pts2; tabla[cruce.equipo1].puntosTotales += pts1;
+                        tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosFavor += pts2; tabla[cruce.equipo2].puntosContra += pts1; tabla[cruce.equipo2].puntosTotales += pts2;
+                        if (pts1 > pts2) { tabla[cruce.equipo1].ganados++; tabla[cruce.equipo2].perdidos++; } else if (pts2 > pts1) { tabla[cruce.equipo2].ganados++; tabla[cruce.equipo1].perdidos++; }
+                        tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+                    }
+                });
+                return Object.entries(tabla).sort((a, b) => { if (b[1].puntosTotales !== a[1].puntosTotales) return b[1].puntosTotales - a[1].puntosTotales; return b[1].diferencia - a[1].diferencia; });
             };
 
             const agregarCruce = () => {
@@ -1943,28 +1958,25 @@ function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCr
             };
             const eliminarCruce = (idx) => { if (confirm('¿Eliminar este cruce?')) setCrucesFinales(crucesFinales.filter((_, i) => i !== idx)); };
 
-            const tablaZona1 = calcularPosiciones(zonasConfig.zona1); 
-            const tablaZona2 = calcularPosiciones(zonasConfig.zona2); 
-            const tablaGeneral = calcularPosiciones(equipos.map(e => e.nombre));
+            const tablaZona1 = calcularTablaZona(1); const tablaZona2 = calcularTablaZona(2); const tablaGeneral = calcularTablaGeneral();
 
             return (
                 <div>
-                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Tablas de Posiciones Oficiales</h2>
+                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Tablas de Posiciones</h2>
                     {zonasConfig.zona1.filter(e => e).length === 5 && zonasConfig.zona2.filter(e => e).length === 5 ? (
                         <>
-                            <p style={{color: '#64748b', marginBottom: '20px', fontSize: '14px'}}>Ordenadas por Reglamento: 1° Series Ganadas (SG) | 2° Puntos Totales (Pts).</p>
-
                             <div className="grid-2" style={{marginBottom: '40px'}}>
                                 <div>
                                     <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 1</h3>
                                     <div className="table-container">
                                         <table className="stats-table">
-                                            <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>Pts Totales</th></tr></thead>
+                                            <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>SP</th><th>Dif</th><th>PG</th><th>PP</th><th>Pts</th></tr></thead>
                                             <tbody>
-                                                {tablaZona1.map((data, idx) => (
-                                                    <tr key={data.nombre}>
-                                                        <td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td>
-                                                        <td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td>
+                                                {tablaZona1.map(([equipo, data], idx) => (
+                                                    <tr key={equipo}>
+                                                        <td><strong>{idx + 1}</strong></td><td><strong>{equipo}</strong></td>
+                                                        <td>{data.ganados}</td><td>{data.perdidos}</td><td>{data.diferencia}</td>
+                                                        <td>{data.puntosFavor}</td><td>{data.puntosContra}</td><td><strong>{data.puntosTotales}</strong></td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -1975,12 +1987,13 @@ function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCr
                                     <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 2</h3>
                                     <div className="table-container">
                                         <table className="stats-table">
-                                            <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>Pts Totales</th></tr></thead>
+                                            <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>SP</th><th>Dif</th><th>PG</th><th>PP</th><th>Pts</th></tr></thead>
                                             <tbody>
-                                                {tablaZona2.map((data, idx) => (
-                                                    <tr key={data.nombre}>
-                                                        <td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td>
-                                                        <td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td>
+                                                {tablaZona2.map(([equipo, data], idx) => (
+                                                    <tr key={equipo}>
+                                                        <td><strong>{idx + 1}</strong></td><td><strong>{equipo}</strong></td>
+                                                        <td>{data.ganados}</td><td>{data.perdidos}</td><td>{data.diferencia}</td>
+                                                        <td>{data.puntosFavor}</td><td>{data.puntosContra}</td><td><strong>{data.puntosTotales}</strong></td>
                                                     </tr>
                                                 ))}
                                             </tbody>
@@ -1993,12 +2006,13 @@ function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCr
                                 <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Tabla General</h3>
                                 <div className="table-container">
                                     <table className="stats-table">
-                                        <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>Pts Totales</th></tr></thead>
+                                        <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>SP</th><th>Dif</th><th>PG</th><th>PP</th><th>Pts</th></tr></thead>
                                         <tbody>
-                                            {tablaGeneral.map((data, idx) => (
-                                                <tr key={data.nombre}>
-                                                    <td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td>
-                                                    <td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td>
+                                            {tablaGeneral.map(([equipo, data], idx) => (
+                                                <tr key={equipo}>
+                                                    <td><strong>{idx + 1}</strong></td><td><strong>{equipo}</strong></td>
+                                                    <td>{data.ganados}</td><td>{data.perdidos}</td><td>{data.diferencia}</td>
+                                                    <td>{data.puntosFavor}</td><td>{data.puntosContra}</td><td><strong>{data.puntosTotales}</strong></td>
                                                 </tr>
                                             ))}
                                         </tbody>
