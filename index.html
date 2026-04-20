@@ -1446,63 +1446,39 @@ function App() {
             const [fechasExpandidas, setFechasExpandidas] = useState({});
             const [diasExpandidos, setDiasExpandidos] = useState({});
 
-            // Iniciar con todas las fechas plegadas
-            useEffect(() => {
-                setFechasExpandidas({});
-            }, []);
+            useEffect(() => { setFechasExpandidas({}); }, []);
 
             if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
 
             const handleDateChange = (idx, dateStr) => {
-                const nuevasFechas = [...fechas];
-                nuevasFechas[idx].fechaCalendario = dateStr;
-                setFechas(nuevasFechas);
+                const nuevasFechas = [...fechas]; nuevasFechas[idx].fechaCalendario = dateStr; setFechas(nuevasFechas);
             };
             const hoy = new Date();
 
             const getEstadoPartido = (fechaIdx, partidoId) => {
-                const key = `${fechaIdx}-${partidoId}`;
-                return estadoPartidos[key] || { estado: 'pendiente', horaInicioReal: null, retrasado: false };
+                const key = `${fechaIdx}-${partidoId}`; return estadoPartidos[key] || { estado: 'pendiente', horaInicioReal: null, retrasado: false };
             };
 
             const actualizarEstadoPartido = (fechaIdx, partidoId, nuevoEstado) => {
                 const key = `${fechaIdx}-${partidoId}`;
-                setEstadoPartidos(prev => ({
-                    ...prev,
-                    [key]: { ...prev[key], ...nuevoEstado }
-                }));
+                setEstadoPartidos(prev => ({ ...prev, [key]: { ...prev[key], ...nuevoEstado } }));
             };
 
-            const marcarRetrasado = (fechaIdx, partidoId) => {
-                actualizarEstadoPartido(fechaIdx, partidoId, { retrasado: true });
-            };
+            const marcarRetrasado = (fechaIdx, partidoId) => { actualizarEstadoPartido(fechaIdx, partidoId, { retrasado: true }); };
 
             const iniciarPartido = (fechaIdx, partidoId) => {
                 const ahora = new Date().toISOString();
-                actualizarEstadoPartido(fechaIdx, partidoId, {
-                    estado: 'en_juego',
-                    horaInicioReal: ahora,
-                    retrasado: getEstadoPartido(fechaIdx, partidoId).retrasado
-                });
-            };
-            
-            const setParcialSet = (fechaIdx, partidoId, valor) => {
-                actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'en_juego', parciales: valor });
+                actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'en_juego', horaInicioReal: ahora, retrasado: getEstadoPartido(fechaIdx, partidoId).retrasado });
             };
 
-            const finalizarPartido = (fechaIdx, partidoId) => {
-                actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'finalizado' });
-            };
+            const setParcialSet = (fechaIdx, partidoId, valor) => { actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'en_juego', parciales: valor }); };
+            const finalizarPartido = (fechaIdx, partidoId) => { actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'finalizado' }); };
 
             const toggleCerrarFecha = (fechaIdx) => {
-                const nuevasFechas = [...fechas];
-                nuevasFechas[fechaIdx] = {
-                    ...nuevasFechas[fechaIdx],
-                    isClosed: !nuevasFechas[fechaIdx].isClosed
-                };
-                setFechas(nuevasFechas);
+                const nuevasFechas = [...fechas]; nuevasFechas[fechaIdx] = { ...nuevasFechas[fechaIdx], isClosed: !nuevasFechas[fechaIdx].isClosed }; setFechas(nuevasFechas);
             };
 
+            // LÓGICA CORREGIDA: Solo suma puntos si está finalizado (arranca 0 a 0)
             const calcularResultadoFecha = (fechaIdx) => {
                 const fecha = fechas[fechaIdx];
                 if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
@@ -1511,58 +1487,37 @@ function App() {
                 
                 fecha.partidos.forEach(partido => {
                     if (partido.jugadores && partido.jugadores.length > 0) {
-                        const key = `${fechaIdx}-${partido.id}`;
                         const estado = getEstadoPartido(fechaIdx, partido.id).estado;
-                        
-                        // MAGIA: Solo suma puntos si el partido ya terminó
                         if (estado === 'finalizado') {
+                            const key = `${fechaIdx}-${partido.id}`;
                             const ganado = resultados[key] || false;
-                            const esBonus = fecha.partidoBonus === partido.id;
-                            const puntos = esBonus ? 20 : 10;
-                            if (ganado) { ganados++; puntosGanados += puntos; } 
-                            else { perdidos++; puntosPerdidos += puntos; }
+                            const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
+                            if (ganado) { ganados++; puntosGanados += puntos; } else { perdidos++; puntosPerdidos += puntos; }
                         }
                     }
                 });
-                
                 return { ganados, perdidos, puntosGanados, puntosPerdidos };
             };
 
             const getPartidosEnVivoYProximos = () => {
-                const enJuego = [];
-                const proximos = [];
-                const finalizadosHoy = [];
-                
-                const limitePasado = new Date();
-                limitePasado.setDate(limitePasado.getDate() - 3); 
+                const enJuego = []; const proximos = []; const finalizadosHoy = [];
+                const limitePasado = new Date(); limitePasado.setDate(limitePasado.getDate() - 3); 
                 
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha.partidos) return;
-                    
                     const esFechaPasada = fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') < limitePasado;
                     
                     fecha.partidos.forEach(partido => {
                         if (!partido.jugadores || partido.jugadores.length === 0) return;
-                        
                         const estado = getEstadoPartido(fechaIdx, partido.id);
                         const partidoData = { ...partido, fechaIdx, fechaNombre: `Fecha ${fecha.numero} vs ${fecha.rival}`, esBonus: fecha.partidoBonus === partido.id };
                         
-                        if (estado.estado === 'en_juego') {
-                            enJuego.push({ ...partidoData, estado });
-                        } else if (estado.estado === 'pendiente' && !fecha.isClosed && !esFechaPasada) {
-                            proximos.push({ ...partidoData, estado });
-                        } else if (estado.estado === 'finalizado' && !fecha.isClosed) {
-                            finalizadosHoy.push({ ...partidoData, estado });
-                        }
+                        if (estado.estado === 'en_juego') enJuego.push({ ...partidoData, estado });
+                        else if (estado.estado === 'pendiente' && !fecha.isClosed && !esFechaPasada) proximos.push({ ...partidoData, estado });
+                        else if (estado.estado === 'finalizado' && !fecha.isClosed) finalizadosHoy.push({ ...partidoData, estado });
                     });
                 });
-                
-                proximos.sort((a, b) => {
-                    if (a.fechaIdx !== b.fechaIdx) return a.fechaIdx - b.fechaIdx;
-                    if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
-                    return a.horario.localeCompare(b.horario);
-                });
-                
+                proximos.sort((a, b) => { if (a.fechaIdx !== b.fechaIdx) return a.fechaIdx - b.fechaIdx; if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1; return a.horario.localeCompare(b.horario); });
                 return { enJuego, proximos: proximos.slice(0, 6), finalizadosHoy };
             };
 
@@ -1579,67 +1534,23 @@ function App() {
                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px'}}>
                         <h2 style={{marginBottom: 0, color: '#1e3c72'}}>Resultados en Vivo</h2>
                         <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
-                            <button className="btn btn-success btn-responsive" onClick={() => setShowCronogramaVivo(!showCronogramaVivo)} style={{margin: 0}}>
-                                {showCronogramaVivo ? '📅 Ver Todas las Fechas' : '🔴 Cronograma en Vivo'}
-                            </button>
-                            <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{margin: 0}}>
-                                🏆 Play-Off
-                            </button>
-                            <button className="btn btn-primary btn-responsive" onClick={() => setShowCalendarioModal(true)} style={{margin: 0, background: '#1e3c72', color: 'white', border: 'none'}}>
-                                📅 Calendario Completo
-                            </button>
+                            <button className="btn btn-success btn-responsive" onClick={() => setShowCronogramaVivo(!showCronogramaVivo)} style={{margin: 0}}>{showCronogramaVivo ? '📅 Ver Todas las Fechas' : '🔴 Cronograma en Vivo'}</button>
+                            <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{margin: 0}}>🏆 Play-Off</button>
+                            <button className="btn btn-primary btn-responsive" onClick={() => setShowCalendarioModal(true)} style={{margin: 0, background: '#1e3c72', color: 'white', border: 'none'}}>📅 Calendario Completo</button>
                         </div>
                     </div>
 
                     {showPlayOffModal && (<PlayOffModal userRole={userRole} fechas={fechas} resultados={resultados} zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} onClose={() => setShowPlayOffModal(false)} />)}
                     {showCalendarioModal && (<CalendarioModal zonasConfig={zonasConfig} onClose={() => setShowCalendarioModal(false)} />)}
 
-{/* VISTA: CRONOGRAMA EN VIVO */}
                     {showCronogramaVivo && (() => {
                         const { enJuego, proximos, finalizadosHoy } = getPartidosEnVivoYProximos();
-                        
-                        // Identificar fechas activas para el tablero
-                        const fechasActivasIds = [...new Set([...enJuego, ...finalizadosHoy].map(p => p.fechaIdx))];
-                        
                         return (
                             <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '12px', marginBottom: '30px', border: '2px solid #d4af37' }}>
                                 <h3 style={{color: '#d4af37', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}><span style={{fontSize: '24px'}}>🔴</span> Cronograma en Vivo</h3>
-
-                                {/* TABLERO DE MARCADOR PARCIAL */}
-                                {fechasActivasIds.length > 0 && (
-                                    <div style={{marginBottom: '30px', display: 'flex', gap: '15px', flexWrap: 'wrap'}}>
-                                        {fechasActivasIds.map(fIdx => {
-                                            const res = calcularResultadoFecha(fIdx);
-                                            const fechaActiva = fechas[fIdx];
-                                            
-                                            // Colores condicionales si llegan a 140
-                                            const colorGOAT = res.puntosGanados >= 140 ? '#10b981' : 'white';
-                                            const colorRival = res.puntosPerdidos >= 140 ? '#ef4444' : 'white';
-                                            
-                                            return (
-                                                <div key={fIdx} style={{background: 'linear-gradient(135deg, #1e3c72 0%, #0f1e3b 100%)', padding: '15px 20px', borderRadius: '10px', border: '1px solid #d4af37', flex: '1', minWidth: '280px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)'}}>
-                                                    <div style={{color: '#94a3b8', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold'}}>Marcador Parcial • Fecha {fechaActiva.numero}</div>
-                                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                                                        <div style={{fontSize: '18px', fontWeight: 'bold', color: colorGOAT, flex: 1}}>GOAT</div>
-                                                        <div style={{fontSize: '24px', fontWeight: 'bold', background: 'rgba(0,0,0,0.5)', padding: '4px 15px', borderRadius: '8px', border: '1px solid rgba(212, 175, 55, 0.3)'}}>
-                                                            <span style={{color: colorGOAT}}>{res.puntosGanados}</span> 
-                                                            <span style={{color: '#d4af37', fontSize:'18px', margin: '0 8px'}}>-</span> 
-                                                            <span style={{color: colorRival}}>{res.puntosPerdidos}</span>
-                                                        </div>
-                                                        <div style={{fontSize: '18px', fontWeight: 'bold', color: colorRival, flex: 1, textAlign: 'right'}}>{fechaActiva.rival}</div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-
-                                {/* Partidos en Juego */}
                                 <div style={{marginBottom: '30px'}}>
                                     <h4 style={{color: '#10b981', marginBottom: '15px'}}>⚡ En Juego ({enJuego.length})</h4>
-                                    {enJuego.length === 0 ? (
-                                        <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay partidos en juego en este momento</p>
-                                    ) : (
+                                    {enJuego.length === 0 ? <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay partidos en juego en este momento</p> : (
                                         <div style={{display: 'grid', gap: '10px'}}>
                                             {enJuego.map((p, idx) => {
                                                 const key = `${p.fechaIdx}-${p.id}`; const ganado = resultados[key] || false;
@@ -1650,7 +1561,6 @@ function App() {
                                                                 <div style={{color: '#d4af37', fontSize: '12px', marginBottom: '5px'}}>{p.fechaNombre}</div>
                                                                 <div style={{color: 'white', fontWeight: '700', fontSize: '16px', marginBottom: '5px'}}>{p.tipo} {p.esBonus && '⭐'}</div>
                                                                 <div style={{color: '#94a3b8', fontSize: '14px'}}>{p.jugadores.join(' / ')}</div>
-                                                                
                                                                 {p.estado.parciales && (
                                                                     <div style={{marginTop: '8px', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', display: 'inline-block', background: p.estado.parciales === '1-up' ? '#d1fae5' : p.estado.parciales === '1-down' ? '#fee2e2' : '#fef3c7', color: p.estado.parciales === '1-up' ? '#065f46' : p.estado.parciales === '1-down' ? '#991b1b' : '#92400e'}}>
                                                                         {p.estado.parciales === '1-up' ? '✅ 1er Set Ganado' : p.estado.parciales === '1-down' ? '❌ 1er Set Perdido' : '⚡ En Súper Tie-Break'}
@@ -1677,23 +1587,16 @@ function App() {
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Finalizados Hoy */}
                                 <div style={{marginBottom: '30px'}}>
                                     <h4 style={{color: '#64748b', marginBottom: '15px'}}>🏁 Finalizados Hoy</h4>
-                                    {finalizadosHoy.length === 0 ? (
-                                        <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay partidos finalizados hoy.</p>
-                                    ) : (
+                                    {finalizadosHoy.length === 0 ? <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay partidos finalizados hoy.</p> : (
                                         <div style={{display: 'grid', gap: '10px'}}>
                                             {finalizadosHoy.map((p, idx) => {
                                                 const ganado = resultados[`${p.fechaIdx}-${p.id}`] || false;
                                                 return (
                                                     <div key={idx} style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #475569', padding: '10px 15px', borderRadius: '8px', opacity: 0.8 }}>
                                                         <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                                                            <div>
-                                                                <div style={{color: '#94a3b8', fontSize: '12px'}}>{p.fechaNombre}</div>
-                                                                <div style={{color: 'white', fontWeight: 'bold'}}>{p.tipo} ({p.esBonus ? '20pts' : '10pts'})</div>
-                                                            </div>
+                                                            <div><div style={{color: '#94a3b8', fontSize: '12px'}}>{p.fechaNombre}</div><div style={{color: 'white', fontWeight: 'bold'}}>{p.tipo} ({p.esBonus ? '20pts' : '10pts'})</div></div>
                                                             <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444'}}>{ganado ? 'GANADO' : 'PERDIDO'}</div>
                                                         </div>
                                                     </div>
@@ -1702,13 +1605,9 @@ function App() {
                                         </div>
                                     )}
                                 </div>
-
-                                {/* Próximos Partidos */}
                                 <div>
                                     <h4 style={{color: '#f59e0b', marginBottom: '15px'}}>⏳ Próximos Partidos</h4>
-                                    {proximos.length === 0 ? (
-                                        <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay próximos partidos programados</p>
-                                    ) : (
+                                    {proximos.length === 0 ? <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay próximos partidos programados</p> : (
                                         <div style={{display: 'grid', gap: '10px'}}>
                                             {proximos.map((p, idx) => (
                                                 <div key={idx} style={{ background: 'rgba(148, 163, 184, 0.1)', border: '2px solid #475569', padding: '15px', borderRadius: '8px' }}>
@@ -1720,9 +1619,7 @@ function App() {
                                                         </div>
                                                         {userRole !== 'jugador' && (
                                                             <div style={{display: 'flex', gap: '5px'}}>
-                                                                {!p.estado.retrasado && (
-                                                                    <button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(p.fechaIdx, p.id)}>⚠️ Marcar Demora</button>
-                                                                )}
+                                                                {!p.estado.retrasado && <button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(p.fechaIdx, p.id)}>⚠️ Marcar Demora</button>}
                                                                 <button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(p.fechaIdx, p.id)}>▶️ Iniciar</button>
                                                             </div>
                                                         )}
@@ -1736,7 +1633,6 @@ function App() {
                         );
                     })()}
 
-                    {/* VISTA POR FECHAS (ACORDEONES) */}
                     {!showCronogramaVivo && fechas.map((fecha, fechaIdx) => {
                         const resultado = calcularResultadoFecha(fechaIdx);
                         const total = resultado.ganados + resultado.perdidos;
@@ -1745,31 +1641,25 @@ function App() {
                         const isOcultaParaJugador = userRole === 'jugador' && !fecha.convocada;
                         const isFuture = fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > hoy;
 
+                        const colorGOAT = resultado.puntosGanados >= 140 ? '#10b981' : '#1e3c72';
+                        const colorRival = resultado.puntosPerdidos >= 140 ? '#ef4444' : '#1e3c72';
+
                         return (
                             <div key={fechaIdx} className="date-section" style={{ opacity: isClosed ? 0.7 : 1, border: isClosed ? '2px solid #64748b' : isFuture ? '2px dashed #cbd5e1' : '2px solid #d4af37' }}>
                                 <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', cursor: 'pointer', userSelect: 'none'}} onClick={() => toggleFecha(fechaIdx)}>
-                                    
                                     <div style={{display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap'}}>
                                         <span style={{ color: '#d4af37', fontSize: '18px', transition: 'transform 0.3s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}}>▶</span>
                                         <div className="date-header" style={{marginBottom: 0}}>Fecha {fecha.numero} - vs {fecha.rival}</div>
-                                        
-                                        {/* INPUT CALENDARIO */}
                                         <div onClick={(e) => e.stopPropagation()} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <input 
-                                                type="date" value={fecha.fechaCalendario || ''} onChange={(e) => handleDateChange(fechaIdx, e.target.value)}
-                                                disabled={userRole === 'jugador'} title="Fecha programada del encuentro"
-                                                style={{padding: '2px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', background: userRole === 'jugador' ? '#f1f5f9' : '#fff', color: '#475569'}}
-                                            />
-                                            {isFuture && <span style={{fontSize: '10px', background: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '12px', fontWeight: 'bold', textTransform: 'uppercase'}}>⏳ Futuro</span>}
+                                            <input type="date" value={fecha.fechaCalendario || ''} onChange={(e) => handleDateChange(fechaIdx, e.target.value)} disabled={userRole === 'jugador'} title="Fecha programada" style={{padding: '2px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', background: userRole === 'jugador' ? '#f1f5f9' : '#fff', color: '#475569'}} />
+                                            {isFuture && <span style={{fontSize: '10px', background: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '12px', fontWeight: 'bold'}}>⏳ Futuro</span>}
                                         </div>
-
                                         {isClosed && (<span style={{ background: '#64748b', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>🔒 CERRADA</span>)}
                                     </div>
-
                                     <div style={{display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap'}}>
                                         {total > 0 && (
-                                            <div style={{ background: resultado.puntosGanados > resultado.puntosPerdidos ? '#d1fae5' : resultado.puntosGanados < resultado.puntosPerdidos ? '#fee2e2' : '#fef3c7', padding: '6px 15px', borderRadius: '8px', border: `2px solid ${resultado.puntosGanados > resultado.puntosPerdidos ? '#10b981' : resultado.puntosGanados < resultado.puntosPerdidos ? '#ef4444' : '#f59e0b'}`, fontWeight: '700', fontSize: '14px'}}>
-                                                <div style={{color: '#1e3c72'}}>Puntos: {resultado.puntosGanados} - {resultado.puntosPerdidos}</div>
+                                            <div style={{ background: '#f8f9fa', padding: '6px 15px', borderRadius: '8px', border: '2px solid #cbd5e1', fontWeight: '700', fontSize: '14px'}}>
+                                                <div style={{color: '#1e3c72'}}>Puntos: <span style={{color: colorGOAT}}>{resultado.puntosGanados}</span> - <span style={{color: colorRival}}>{resultado.puntosPerdidos}</span></div>
                                             </div>
                                         )}
                                         {userRole === 'admin' && (
@@ -1779,12 +1669,10 @@ function App() {
                                         )}
                                     </div>
                                 </div>
-
                                 {isExpanded && (
                                     <div style={{marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #cbd5e1'}}>
                                         {isFuture && <div className="warning" style={{marginBottom: '15px'}}>⏳ Los resultados estarán habilitados el día del encuentro. Las tablas no computarán esta fecha aún.</div>}
                                         
-                                        {/* VISTA PARA JUGADORES (READ-ONLY) */}
                                         {userRole === 'jugador' && (
                                             <div>
                                                 <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
@@ -1792,36 +1680,28 @@ function App() {
                                                         <div><div style={{fontSize: '12px', color: '#64748b'}}>Partidos Finalizados</div><div style={{fontSize: '24px', fontWeight: '700', color: '#1e3c72'}}>{total}</div></div>
                                                         <div><div style={{fontSize: '12px', color: '#64748b'}}>Ganados</div><div style={{fontSize: '24px', fontWeight: '700', color: '#10b981'}}>{resultado.ganados}</div></div>
                                                         <div><div style={{fontSize: '12px', color: '#64748b'}}>Perdidos</div><div style={{fontSize: '24px', fontWeight: '700', color: '#ef4444'}}>{resultado.perdidos}</div></div>
-                                                        <div><div style={{fontSize: '12px', color: '#64748b'}}>Puntos Totales</div><div style={{fontSize: '24px', fontWeight: '700', color: '#d4af37'}}>{resultado.puntosGanados} - {resultado.puntosPerdidos}</div></div>
+                                                        <div><div style={{fontSize: '12px', color: '#64748b'}}>Puntos Totales</div><div style={{fontSize: '24px', fontWeight: '700', color: '#d4af37'}}><span style={{color: colorGOAT}}>{resultado.puntosGanados}</span> - <span style={{color: colorRival}}>{resultado.puntosPerdidos}</span></div></div>
                                                     </div>
                                                 </div>
-
                                                 {fecha.partidos && fecha.partidos.filter(p => p.jugadores && p.jugadores.length > 0).map(partido => {
-                                                        const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false;
-                                                        return (
-                                                            <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '10px 15px', borderRadius: '8px', marginBottom: '8px', border: `2px solid ${ganado ? '#10b981' : '#ef4444'}` }}>
-                                                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
-                                                                    <div style={{flex: 1}}>
-                                                                        <strong>{partido.tipo}</strong>
-                                                                        <div style={{fontSize: '14px', color: '#64748b', marginTop: '4px'}}>{partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario}</div>
-                                                                    </div>
-                                                                    <div style={{fontWeight: '700', fontSize: '16px', color: ganado ? '#10b981' : '#ef4444'}}>{ganado ? '✓ GANADO' : '✗ PERDIDO'}</div>
-                                                                </div>
+                                                    const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false;
+                                                    return (
+                                                        <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '10px 15px', borderRadius: '8px', marginBottom: '8px', border: `2px solid ${ganado ? '#10b981' : '#ef4444'}` }}>
+                                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
+                                                                <div style={{flex: 1}}><strong>{partido.tipo}</strong><div style={{fontSize: '14px', color: '#64748b', marginTop: '4px'}}>{partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario}</div></div>
+                                                                <div style={{fontWeight: '700', fontSize: '16px', color: ganado ? '#10b981' : '#ef4444'}}>{ganado ? '✓ GANADO' : '✗ PERDIDO'}</div>
                                                             </div>
-                                                        );
-                                                    })
-                                                }
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         )}
 
-                                        {/* VISTA PARA ADMIN/CAPITÁN (DÍAS PLEGABLES) */}
                                         {userRole !== 'jugador' && (() => {
                                             const partidosFiltrados = fecha.partidos ? fecha.partidos.filter(p => p.jugadores && p.jugadores.length > 0) : [];
                                             const { sabado, domingo } = agruparPorDia(partidosFiltrados);
-
                                             return (
                                                 <div>
-                                                    {/* Sábado */}
                                                     {sabado.length > 0 && (
                                                         <div style={{marginBottom: '20px'}}>
                                                             <div style={{ background: '#1e3c72', color: 'white', padding: '10px 15px', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1831,7 +1711,7 @@ function App() {
                                                                 {sabado.map(partido => {
                                                                     const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const estado = getEstadoPartido(fechaIdx, partido.id);
                                                                     return (
-                                                                        <div key={partido.id} style={{ background: estado.estado === 'en_juego' ? '#fef3c7' : (ganado ? '#d1fae5' : '#fee2e2'), padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : `2px solid ${estado.estado === 'en_juego' ? '#f59e0b' : 'transparent'}`, opacity: isFuture ? 0.6 : 1 }}>
+                                                                        <div key={partido.id} style={{ background: estado.estado === 'en_juego' ? '#fef3c7' : (estado.estado === 'finalizado' ? (ganado ? '#d1fae5' : '#fee2e2') : '#f8f9fa'), padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : `2px solid ${estado.estado === 'en_juego' ? '#f59e0b' : 'transparent'}`, opacity: isFuture ? 0.6 : 1 }}>
                                                                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '15px', flexWrap: 'wrap'}}>
                                                                                 <div style={{flex: 1}}>
                                                                                     <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>
@@ -1844,13 +1724,12 @@ function App() {
                                                                                     <div style={{fontSize: '14px', marginTop: '5px', color: isOcultaParaJugador ? '#991b1b' : 'inherit'}}>{isOcultaParaJugador ? '🔒 Convocatoria en armado' : partido.jugadores.join(' / ')}</div>
                                                                                     {estado.retrasado && estado.horaInicioReal && (<div style={{color: '#f59e0b', fontSize: '12px', marginTop: '5px'}}>⏱️ Comienzo retrasado. Iniciado a las {new Date(estado.horaInicioReal).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>)}
                                                                                 </div>
-                                                                                
                                                                                 {!isClosed && !isFuture && (
                                                                                     <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
-                                                                                        {estado.estado === 'pendiente' && !estado.retrasado && (<button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(fechaIdx, partido.id)}>⚠️ Marcar Demora</button>)}
-                                                                                        {estado.estado === 'pendiente' && (<button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(fechaIdx, partido.id)}>▶️ Iniciar</button>)}
-                                                                                        {estado.estado === 'en_juego' && (<button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(fechaIdx, partido.id)}>✓ Finalizar</button>)}
-                                                                                        <div className="checkbox-container" style={{margin: 0}}><input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={isClosed} /><label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label></div>
+                                                                                        {estado.estado === 'pendiente' && !estado.retrasado && <button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(fechaIdx, partido.id)}>⚠️ Marcar Demora</button>}
+                                                                                        {estado.estado === 'pendiente' && <button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(fechaIdx, partido.id)}>▶️ Iniciar</button>}
+                                                                                        {estado.estado === 'en_juego' && <button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(fechaIdx, partido.id)}>✓ Finalizar</button>}
+                                                                                        <div className="checkbox-container" style={{margin: 0}}><input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={isClosed || estado.estado !== 'finalizado'} /><label style={{margin: 0, opacity: estado.estado !== 'finalizado' ? 0.5 : 1}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label></div>
                                                                                     </div>
                                                                                 )}
                                                                             </div>
@@ -1861,7 +1740,6 @@ function App() {
                                                         </div>
                                                     )}
 
-                                                    {/* Domingo */}
                                                     {domingo.length > 0 && (
                                                         <div style={{marginBottom: '20px'}}>
                                                             <div style={{ background: '#065f46', color: 'white', padding: '10px 15px', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1871,7 +1749,7 @@ function App() {
                                                                 {domingo.map(partido => {
                                                                     const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const estado = getEstadoPartido(fechaIdx, partido.id);
                                                                     return (
-                                                                        <div key={partido.id} style={{ background: estado.estado === 'en_juego' ? '#fef3c7' : (ganado ? '#d1fae5' : '#fee2e2'), padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : `2px solid ${estado.estado === 'en_juego' ? '#f59e0b' : 'transparent'}`, opacity: isFuture ? 0.6 : 1 }}>
+                                                                        <div key={partido.id} style={{ background: estado.estado === 'en_juego' ? '#fef3c7' : (estado.estado === 'finalizado' ? (ganado ? '#d1fae5' : '#fee2e2') : '#f8f9fa'), padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : `2px solid ${estado.estado === 'en_juego' ? '#f59e0b' : 'transparent'}`, opacity: isFuture ? 0.6 : 1 }}>
                                                                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '15px', flexWrap: 'wrap'}}>
                                                                                 <div style={{flex: 1}}>
                                                                                     <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>
@@ -1884,13 +1762,12 @@ function App() {
                                                                                     <div style={{fontSize: '14px', marginTop: '5px', color: isOcultaParaJugador ? '#991b1b' : 'inherit'}}>{isOcultaParaJugador ? '🔒 Convocatoria en armado' : partido.jugadores.join(' / ')}</div>
                                                                                     {estado.retrasado && estado.horaInicioReal && (<div style={{color: '#f59e0b', fontSize: '12px', marginTop: '5px'}}>⏱️ Comienzo retrasado. Iniciado a las {new Date(estado.horaInicioReal).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>)}
                                                                                 </div>
-                                                                                
                                                                                 {!isClosed && !isFuture && (
                                                                                     <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
-                                                                                        {estado.estado === 'pendiente' && !estado.retrasado && (<button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(fechaIdx, partido.id)}>⚠️ Marcar Demora</button>)}
-                                                                                        {estado.estado === 'pendiente' && (<button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(fechaIdx, partido.id)}>▶️ Iniciar</button>)}
-                                                                                        {estado.estado === 'en_juego' && (<button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(fechaIdx, partido.id)}>✓ Finalizar</button>)}
-                                                                                        <div className="checkbox-container" style={{margin: 0}}><input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={isClosed} /><label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label></div>
+                                                                                        {estado.estado === 'pendiente' && !estado.retrasado && <button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(fechaIdx, partido.id)}>⚠️ Marcar Demora</button>}
+                                                                                        {estado.estado === 'pendiente' && <button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(fechaIdx, partido.id)}>▶️ Iniciar</button>}
+                                                                                        {estado.estado === 'en_juego' && <button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(fechaIdx, partido.id)}>✓ Finalizar</button>}
+                                                                                        <div className="checkbox-container" style={{margin: 0}}><input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={isClosed || estado.estado !== 'finalizado'} /><label style={{margin: 0, opacity: estado.estado !== 'finalizado' ? 0.5 : 1}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label></div>
                                                                                     </div>
                                                                                 )}
                                                                             </div>
@@ -1912,11 +1789,8 @@ function App() {
             );
         }
 
-        // --- COMPONENTE CALENDARIO (RESTAURADO) ---
         function CalendarioModal({ zonasConfig, onClose }) {
-            const getTeamA = (index) => zonasConfig.zona1[index - 1] || `A${index}`;
-            const getTeamB = (index) => zonasConfig.zona2[index - 1] || `B${index}`;
-
+            const getTeamA = (index) => zonasConfig.zona1[index - 1] || `A${index}`; const getTeamB = (index) => zonasConfig.zona2[index - 1] || `B${index}`;
             const calendarioInfo = [
                 { fecha: '21/2 - 22/2', detalle: [{ a: getTeamA(1), b: getTeamA(2) }, { a: getTeamA(3), b: getTeamA(4) }, { a: getTeamB(1), b: getTeamB(2) }, { a: getTeamB(3), b: getTeamB(4) }] },
                 { fecha: '28/2 - 29/2', detalle: [{ a: getTeamA(1), b: getTeamA(5) }, { a: getTeamB(1), b: getTeamB(5) }] },
@@ -1938,52 +1812,26 @@ function App() {
                 { fecha: '20/6 - 21/6', libre: 'Fecha libre / Recuperación de partidos' },
                 { fecha: '27/6 - 28/6', libre: 'Final', isPlayoff: true }
             ];
-
             return (
                 <div className="modal" onClick={onClose}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '90vh'}}>
                         <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
-                            <span>📅 Calendario Uncas Tennis Tour 2026</span>
-                            <a href="Uncas Tennis Tour 2026.pdf" target="_blank" className="btn btn-success" style={{textDecoration: 'none', fontSize: '13px', padding: '8px 15px', margin: 0, background: '#10b981', color: 'white', borderRadius: '8px'}}>
-                                📄 Ver PDF Original
-                            </a>
+                            <span>📅 Calendario Uncas Tennis Tour 2026</span><a href="Uncas Tennis Tour 2026.pdf" target="_blank" className="btn btn-success" style={{textDecoration: 'none', fontSize: '13px', padding: '8px 15px', margin: 0, background: '#10b981', color: 'white', borderRadius: '8px'}}>📄 Ver PDF Original</a>
                         </div>
-                        
                         <div className="table-container" style={{boxShadow: 'none', border: '1px solid #e2e8f0', borderRadius: '8px'}}>
                             <table className="stats-table">
-                                <thead>
-                                    <tr>
-                                        <th style={{width: '130px', background: '#1e3c72', color: 'white'}}>Fecha</th>
-                                        <th style={{background: '#1e3c72', color: 'white'}}>Detalle de la Jornada</th>
-                                    </tr>
-                                </thead>
+                                <thead><tr><th style={{width: '130px', background: '#1e3c72', color: 'white'}}>Fecha</th><th style={{background: '#1e3c72', color: 'white'}}>Detalle de la Jornada</th></tr></thead>
                                 <tbody>
                                     {calendarioInfo.map((fila, idx) => (
                                         <tr key={idx} style={{background: fila.libre && !fila.isPlayoff ? '#f8fafc' : fila.isPlayoff ? '#fffbeb' : '#ffffff'}}>
                                             <td style={{fontWeight: 'bold', color: '#475569', fontSize: '13px'}}>{fila.fecha}</td>
-                                            <td>
-                                                {fila.libre ? (
-                                                    <div style={{color: fila.isPlayoff ? '#d97706' : '#64748b', fontWeight: fila.isPlayoff ? 'bold' : 'normal', fontSize: '14px'}}>
-                                                        {fila.isPlayoff && '🏆 '} {fila.libre}
-                                                    </div>
-                                                ) : (
-                                                    <div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>
-                                                        {fila.detalle.map((cruce, cIdx) => (
-                                                            <span key={cIdx} style={{background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#1e293b'}}>
-                                                                {cruce.a} <span style={{color: '#94a3b8', fontSize: '11px', margin: '0 4px'}}>vs</span> {cruce.b}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                )}
-                                            </td>
+                                            <td>{fila.libre ? (<div style={{color: fila.isPlayoff ? '#d97706' : '#64748b', fontWeight: fila.isPlayoff ? 'bold' : 'normal', fontSize: '14px'}}>{fila.isPlayoff && '🏆 '} {fila.libre}</div>) : (<div style={{display: 'flex', flexWrap: 'wrap', gap: '8px'}}>{fila.detalle.map((cruce, cIdx) => (<span key={cIdx} style={{background: '#f1f5f9', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', color: '#1e293b'}}>{cruce.a} <span style={{color: '#94a3b8', fontSize: '11px', margin: '0 4px'}}>vs</span> {cruce.b}</span>))}</div>)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                        <div style={{marginTop: '20px', textAlign: 'right'}}>
-                            <button className="btn btn-danger btn-responsive" onClick={onClose} style={{margin: 0}}>Cerrar</button>
-                        </div>
+                        <div style={{marginTop: '20px', textAlign: 'right'}}><button className="btn btn-danger btn-responsive" onClick={onClose} style={{margin: 0}}>Cerrar</button></div>
                     </div>
                 </div>
             );
@@ -1992,19 +1840,9 @@ function App() {
         const MatchRow = ({ label, eq1, eq2, matchKey, selected, onAdvance, disabled }) => (
             <div style={{ display: 'flex', alignItems: 'center', background: '#f8f9fa', padding: '10px', borderRadius: '8px', marginBottom: '8px', border: '1px solid #e5e7eb', minWidth: '450px' }}>
                 <div style={{ width: '80px', fontSize: '11px', fontWeight: 'bold', color: '#1e3c72', textTransform: 'uppercase' }}>{label}</div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-                    <span style={{ fontWeight: selected === eq1 && eq1 ? 'bold' : 'normal', color: eq1 && !eq1.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq1 || 'TBD'}</span>
-                    <button onClick={() => !disabled && eq1 && !eq1.startsWith('Ganador') ? onAdvance(matchKey, eq1) : null} style={{ background: 'none', border: 'none', cursor: (!disabled && eq1 && !eq1.startsWith('Ganador')) ? 'pointer' : 'default', fontSize: '18px', opacity: eq1 && !eq1.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">
-                        {selected === eq1 && eq1 ? '✅' : '⬜'}
-                    </button>
-                </div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}><span style={{ fontWeight: selected === eq1 && eq1 ? 'bold' : 'normal', color: eq1 && !eq1.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq1 || 'TBD'}</span><button onClick={() => !disabled && eq1 && !eq1.startsWith('Ganador') ? onAdvance(matchKey, eq1) : null} style={{ background: 'none', border: 'none', cursor: (!disabled && eq1 && !eq1.startsWith('Ganador')) ? 'pointer' : 'default', fontSize: '18px', opacity: eq1 && !eq1.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">{selected === eq1 && eq1 ? '✅' : '⬜'}</button></div>
                 <div style={{ padding: '0 15px', color: '#d4af37', fontWeight: 'bold', fontSize: '12px' }}>VS</div>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <button onClick={() => !disabled && eq2 && !eq2.startsWith('Ganador') ? onAdvance(matchKey, eq2) : null} style={{ background: 'none', border: 'none', cursor: (!disabled && eq2 && !eq2.startsWith('Ganador')) ? 'pointer' : 'default', fontSize: '18px', opacity: eq2 && !eq2.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">
-                        {selected === eq2 && eq2 ? '✅' : '⬜'}
-                    </button>
-                    <span style={{ fontWeight: selected === eq2 && eq2 ? 'bold' : 'normal', color: eq2 && !eq2.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq2 || 'TBD'}</span>
-                </div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}><button onClick={() => !disabled && eq2 && !eq2.startsWith('Ganador') ? onAdvance(matchKey, eq2) : null} style={{ background: 'none', border: 'none', cursor: (!disabled && eq2 && !eq2.startsWith('Ganador')) ? 'pointer' : 'default', fontSize: '18px', opacity: eq2 && !eq2.startsWith('Ganador') ? 1 : 0.3 }} title="Avanzar equipo">{selected === eq2 && eq2 ? '✅' : '⬜'}</button><span style={{ fontWeight: selected === eq2 && eq2 ? 'bold' : 'normal', color: eq2 && !eq2.startsWith('Ganador') ? '#1a1a1a' : '#9ca3af' }}>{eq2 || 'TBD'}</span></div>
             </div>
         );
 
@@ -2045,7 +1883,7 @@ function App() {
 
             const tablaZ1 = calcularTablaZona(1); const tablaZ2 = calcularTablaZona(2);
             if (tablaZ1.length < 5 || tablaZ2.length < 5) {
-                return ( <div className="modal" onClick={onClose}><div className="modal-content" onClick={(e) => e.stopPropagation()}><div className="modal-header">🏆 Play-Off Proyectado</div><div className="warning">Por favor, configurá las zonas completas en la pestaña "Configuración" (5 equipos por zona) para poder ver la llave de Play-Offs.</div><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div></div> );
+                return ( <div className="modal" onClick={onClose}><div className="modal-content" onClick={(e) => e.stopPropagation()}><div className="modal-header">🏆 Play-Off Proyectado</div><div className="warning">Por favor, configurá las zonas completas en la pestaña "Configuración".</div><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div></div> );
             }
 
             const eqZ1 = tablaZ1.map(t => t.nombre); const eqZ2 = tablaZ2.map(t => t.nombre);
@@ -2072,11 +1910,9 @@ function App() {
                 <div className="modal" onClick={onClose}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '90vh'}}>
                         <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
-                            <span>🏆 Llave de Play-Offs</span>
-                            {!disableAdvance && <button onClick={() => setPlayoffAvances({})} className="btn" style={{padding: '5px 10px', fontSize: '12px', background: '#e0e0e0', margin: 0}}>Resetear Ticks</button>}
+                            <span>🏆 Llave de Play-Offs</span>{!disableAdvance && <button onClick={() => setPlayoffAvances({})} className="btn" style={{padding: '5px 10px', fontSize: '12px', background: '#e0e0e0', margin: 0}}>Resetear Ticks</button>}
                         </div>
-                        <p style={{marginBottom: '20px', color: '#666', fontSize: '13px'}}>Las posiciones iniciales se calculan basándose en la tabla de zonas actual. {disableAdvance ? 'Aquí podés ver los cruces proyectados.' : 'Utilizá los ✅ para proyectar ganadores hacia la final.'}</p>
-                        
+                        <p style={{marginBottom: '20px', color: '#666', fontSize: '13px'}}>Las posiciones iniciales se calculan basándose en la tabla de zonas actual.</p>
                         <div className="table-container" style={{boxShadow: 'none'}}>
                             <div style={{minWidth: '500px'}}>
                                 <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Octavos de Final</h4><MatchRow label="8vos A" eq1={octA_1} eq2={octA_2} matchKey="octA" selected={ganOctA} onAdvance={handleAdvance} disabled={disableAdvance} /><MatchRow label="8vos B" eq1={octB_1} eq2={octB_2} matchKey="octB" selected={ganOctB} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
@@ -2085,7 +1921,6 @@ function App() {
                                 <div style={{marginBottom: '20px'}}><h4 style={{marginBottom: '10px', color: '#1e3c72'}}>🔷 Final</h4><MatchRow label="Campeonato" eq1={final_1} eq2={final_2} matchKey="final" selected={ganFinal} onAdvance={handleAdvance} disabled={disableAdvance} /></div>
                             </div>
                         </div>
-
                         {ganFinal && (<div style={{background: '#d4af37', color: '#1a1a1a', padding: '15px', borderRadius: '8px', textAlign: 'center', fontWeight: 'bold', fontSize: '20px'}}>🏆 CAMPEÓN PROYECTADO: {ganFinal.toUpperCase()} 🏆</div>)}
                         <div style={{marginTop: '20px'}}><button className="btn btn-danger btn-responsive" onClick={onClose}>Cerrar</button></div>
                     </div>
@@ -2093,6 +1928,7 @@ function App() {
             );
         }
 
+        // LÓGICA DE TABLAS (140 PTS) Y UNA SOLA DECLARACIÓN
         function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales, zonasConfig, setZonasConfig }) {
             const [showCruceModal, setShowCruceModal] = useState(false);
             const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
@@ -2102,31 +1938,23 @@ function App() {
 
             const calcularPosiciones = (filtroEquipos) => {
                 const tabla = {};
-                filtroEquipos.forEach(equipo => { 
-                    if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, seriesGanadas: 0, puntosTotales: 0 }; 
-                });
+                filtroEquipos.forEach(equipo => { if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, seriesGanadas: 0, puntosTotales: 0 }; });
 
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos || (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date())) return;
-                    
                     const rival = fecha.rival;
                     if (tabla['GOAT'] && tabla[rival]) {
                         let puntosGOAT = 0; let puntosRival = 0;
-                        
                         fecha.partidos.forEach(partido => {
                             if (partido.jugadores && partido.jugadores.length > 0) {
-                                const key = `${fechaIdx}-${partido.id}`; 
-                                const ganado = resultados[key] || false; 
-                                const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
-                                
+                                const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
                                 if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                             }
                         });
-                        
                         tabla['GOAT'].partidos++; tabla['GOAT'].puntosTotales += puntosGOAT;
                         tabla[rival].partidos++; tabla[rival].puntosTotales += puntosRival;
                         
-                        // Oficial: 140 puntos aseguran la serie
+                        // SE GANA LA SERIE CON 140 PUNTOS O MÁS
                         if (puntosGOAT >= 140) tabla['GOAT'].seriesGanadas++;
                         else if (puntosRival >= 140) tabla[rival].seriesGanadas++;
                     }
@@ -2134,12 +1962,10 @@ function App() {
 
                 crucesFinales.forEach(cruce => {
                     if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
-                        const pts1 = parseInt(cruce.resultado1) || 0; 
-                        const pts2 = parseInt(cruce.resultado2) || 0;
+                        const pts1 = parseInt(cruce.resultado1) || 0; const pts2 = parseInt(cruce.resultado2) || 0;
                         if (pts1 > 0 || pts2 > 0) {
                             tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosTotales += pts1;
                             tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosTotales += pts2;
-                            
                             if (pts1 >= 140) tabla[cruce.equipo1].seriesGanadas++; 
                             else if (pts2 >= 140) tabla[cruce.equipo2].seriesGanadas++;
                         }
@@ -2170,21 +1996,13 @@ function App() {
                     {zonasConfig.zona1.filter(e => e).length === 5 && zonasConfig.zona2.filter(e => e).length === 5 ? (
                         <>
                             <p style={{color: '#64748b', marginBottom: '20px', fontSize: '14px'}}>Ordenadas por Reglamento: 1° Series Ganadas (SG) | 2° Puntos Totales (Pts).</p>
-
                             <div className="grid-2" style={{marginBottom: '40px'}}>
                                 <div>
                                     <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Zona 1</h3>
                                     <div className="table-container">
                                         <table className="stats-table">
                                             <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>Pts Totales</th></tr></thead>
-                                            <tbody>
-                                                {tablaZona1.map((data, idx) => (
-                                                    <tr key={data.nombre}>
-                                                        <td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td>
-                                                        <td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
+                                            <tbody>{tablaZona1.map((data, idx) => (<tr key={data.nombre}><td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td><td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td></tr>))}</tbody>
                                         </table>
                                     </div>
                                 </div>
@@ -2193,79 +2011,46 @@ function App() {
                                     <div className="table-container">
                                         <table className="stats-table">
                                             <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>Pts Totales</th></tr></thead>
-                                            <tbody>
-                                                {tablaZona2.map((data, idx) => (
-                                                    <tr key={data.nombre}>
-                                                        <td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td>
-                                                        <td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
+                                            <tbody>{tablaZona2.map((data, idx) => (<tr key={data.nombre}><td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td><td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td></tr>))}</tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
-
                             <div style={{marginBottom: '40px'}}>
                                 <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Tabla General</h3>
                                 <div className="table-container">
                                     <table className="stats-table">
                                         <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>Pts Totales</th></tr></thead>
-                                        <tbody>
-                                            {tablaGeneral.map((data, idx) => (
-                                                <tr key={data.nombre}>
-                                                    <td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td>
-                                                    <td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
+                                        <tbody>{tablaGeneral.map((data, idx) => (<tr key={data.nombre}><td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td><td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td></tr>))}</tbody>
                                     </table>
                                 </div>
                             </div>
-
                             {userRole !== 'jugador' && (
                                 <div>
                                     <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Cruces Adicionales</h3>
-                                    <button className="btn btn-primary btn-responsive" onClick={() => { setEditandoCruce(null); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setShowCruceModal(true); }}>
-                                        ➕ Agregar Cruce
-                                    </button>
+                                    <button className="btn btn-primary btn-responsive" onClick={() => { setEditandoCruce(null); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setShowCruceModal(true); }}>➕ Agregar Cruce</button>
                                     {crucesFinales.length > 0 && (
                                         <div style={{marginTop: '20px'}}>
                                             {crucesFinales.map((cruce, idx) => (
                                                 <div key={idx} className="flex-mobile-col" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: '2px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
-                                                    <div>
-                                                        <strong>{cruce.tipo}</strong>
-                                                        <div style={{marginTop: '8px'}}>{cruce.equipo1} <strong>{cruce.resultado1 || '0'}</strong> - <strong>{cruce.resultado2 || '0'}</strong> {cruce.equipo2}</div>
-                                                    </div>
-                                                    <div style={{display: 'flex', gap: '10px'}}>
-                                                        <button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => { setEditandoCruce(idx); setCruceActual(cruce); setShowCruceModal(true); }}>✏️</button>
-                                                        <button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarCruce(idx)}>🗑️</button>
-                                                    </div>
+                                                    <div><strong>{cruce.tipo}</strong><div style={{marginTop: '8px'}}>{cruce.equipo1} <strong>{cruce.resultado1 || '0'}</strong> - <strong>{cruce.resultado2 || '0'}</strong> {cruce.equipo2}</div></div>
+                                                    <div style={{display: 'flex', gap: '10px'}}><button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => { setEditandoCruce(idx); setCruceActual(cruce); setShowCruceModal(true); }}>✏️</button><button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarCruce(idx)}>🗑️</button></div>
                                                 </div>
                                             ))}
                                         </div>
                                     )}
                                 </div>
                             )}
-
                             {showCruceModal && (
                                 <div className="modal" onClick={() => {}}>
                                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                                         <div className="modal-header">{editandoCruce !== null ? 'Editar Cruce' : 'Agregar Cruce'}</div>
-                                        <div className="form-group">
-                                            <label>Tipo de Cruce</label>
-                                            <select value={cruceActual.tipo} onChange={(e) => setCruceActual({...cruceActual, tipo: e.target.value})}>
-                                                <option value="">Seleccionar...</option><option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option><option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option><option value="Octavos de Final">Octavos de Final</option><option value="Cuartos de Final">Cuartos de Final</option><option value="Semifinal">Semifinal</option><option value="Final">Final</option>
-                                            </select>
-                                        </div>
+                                        <div className="form-group"><label>Tipo de Cruce</label><select value={cruceActual.tipo} onChange={(e) => setCruceActual({...cruceActual, tipo: e.target.value})}><option value="">Seleccionar...</option><option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option><option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option><option value="Octavos de Final">Octavos de Final</option><option value="Cuartos de Final">Cuartos de Final</option><option value="Semifinal">Semifinal</option><option value="Final">Final</option></select></div>
                                         <div className="form-group"><label>Equipo 1</label><select value={cruceActual.equipo1} onChange={(e) => setCruceActual({...cruceActual, equipo1: e.target.value})}><option value="">Seleccionar...</option>{equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}</select></div>
                                         <div className="form-group"><label>Resultado Equipo 1</label><input type="number" value={cruceActual.resultado1} onChange={(e) => setCruceActual({...cruceActual, resultado1: e.target.value})} placeholder="Puntos"/></div>
                                         <div className="form-group"><label>Equipo 2</label><select value={cruceActual.equipo2} onChange={(e) => setCruceActual({...cruceActual, equipo2: e.target.value})}><option value="">Seleccionar...</option>{equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}</select></div>
                                         <div className="form-group"><label>Resultado Equipo 2</label><input type="number" value={cruceActual.resultado2} onChange={(e) => setCruceActual({...cruceActual, resultado2: e.target.value})} placeholder="Puntos"/></div>
-                                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
-                                            <button className="btn btn-primary btn-responsive" onClick={agregarCruce}>{editandoCruce !== null ? 'Actualizar' : 'Guardar'}</button>
-                                            <button className="btn btn-danger btn-responsive" onClick={() => { setShowCruceModal(false); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setEditandoCruce(null); }}>Cancelar</button>
-                                        </div>
+                                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}><button className="btn btn-primary btn-responsive" onClick={agregarCruce}>{editandoCruce !== null ? 'Actualizar' : 'Guardar'}</button><button className="btn btn-danger btn-responsive" onClick={() => { setShowCruceModal(false); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setEditandoCruce(null); }}>Cancelar</button></div>
                                     </div>
                                 </div>
                             )}
@@ -2279,73 +2064,28 @@ function App() {
 
         function EstadisticasTab({ calcularEstadisticas }) {
             const stats = calcularEstadisticas();
-            
-            const getCategoriaOrden = (nombreJugador) => {
-                const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador);
-                if (!jugador) return 999;
-                const ordenCategorias = { 'damas_a': 1, 'damas_b': 2, 'damas_c': 3, 'caballeros_2da': 4, 'caballeros_3ra': 5, 'caballeros_4ta': 6, 'caballeros_5ta': 7 };
-                return ordenCategorias[jugador.categoria] || 999;
-            };
-            
-            const getCategoriaNombre = (nombreJugador) => {
-                const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador);
-                if (!jugador) return '';
-                const nombres = { 'damas_a': 'Damas A', 'damas_b': 'Damas B', 'damas_c': 'Damas C', 'caballeros_2da': 'Caballeros 2da', 'caballeros_3ra': 'Caballeros 3ra', 'caballeros_4ta': 'Caballeros 4ta', 'caballeros_5ta': 'Caballeros 5ta' };
-                return nombres[jugador.categoria] || '';
-            };
-
-            const jugadoresOrdenados = Object.entries(stats.jugadores).sort((a, b) => {
-                const ordenA = getCategoriaOrden(a[0]); const ordenB = getCategoriaOrden(b[0]);
-                if (ordenA !== ordenB) return ordenA - ordenB; return a[0].localeCompare(b[0]);
-            });
-
-            const jugadoresPorCategoria = {};
-            jugadoresOrdenados.forEach(([nombre, data]) => {
-                const categoria = getCategoriaNombre(nombre);
-                if (!jugadoresPorCategoria[categoria]) jugadoresPorCategoria[categoria] = [];
-                jugadoresPorCategoria[categoria].push([nombre, data]);
-            });
+            const getCategoriaOrden = (nombreJugador) => { const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador); if (!jugador) return 999; const ordenCategorias = { 'damas_a': 1, 'damas_b': 2, 'damas_c': 3, 'caballeros_2da': 4, 'caballeros_3ra': 5, 'caballeros_4ta': 6, 'caballeros_5ta': 7 }; return ordenCategorias[jugador.categoria] || 999; };
+            const getCategoriaNombre = (nombreJugador) => { const jugador = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombreJugador); if (!jugador) return ''; const nombres = { 'damas_a': 'Damas A', 'damas_b': 'Damas B', 'damas_c': 'Damas C', 'caballeros_2da': 'Caballeros 2da', 'caballeros_3ra': 'Caballeros 3ra', 'caballeros_4ta': 'Caballeros 4ta', 'caballeros_5ta': 'Caballeros 5ta' }; return nombres[jugador.categoria] || ''; };
+            const jugadoresOrdenados = Object.entries(stats.jugadores).sort((a, b) => { const ordenA = getCategoriaOrden(a[0]); const ordenB = getCategoriaOrden(b[0]); if (ordenA !== ordenB) return ordenA - ordenB; return a[0].localeCompare(b[0]); });
+            const jugadoresPorCategoria = {}; jugadoresOrdenados.forEach(([nombre, data]) => { const categoria = getCategoriaNombre(nombre); if (!jugadoresPorCategoria[categoria]) jugadoresPorCategoria[categoria] = []; jugadoresPorCategoria[categoria].push([nombre, data]); });
 
             return (
                 <div>
                     <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', gap: '15px'}}>
                         <h2 style={{color: '#1e3c72', margin: 0}}>Estadística Individual General</h2>
-                        
-                        {/* BOTÓN PARA IR AL NUEVO ARCHIVO DE ANÁLISIS DETALLADO */}
-                        <button 
-                            className="btn btn-primary btn-responsive" 
-                            onClick={() => window.location.href = 'estadisticas.html'} 
-                            style={{margin: 0, background: '#1e3c72', color: 'white'}}
-                        >
-                            📊 Ver Análisis Detallado (Parejas y Gráficos)
-                        </button>
+                        <button className="btn btn-primary btn-responsive" onClick={() => window.location.href = 'estadisticas.html'} style={{margin: 0, background: '#1e3c72', color: 'white'}}>📊 Ver Análisis Detallado (Parejas y Gráficos)</button>
                     </div>
-
                     <div className="table-container">
                         <table className="stats-table">
-                            <thead>
-                                <tr>
-                                    <th>Categoría</th>
-                                    <th>Jugador</th>
-                                    <th>Singles G/P</th>
-                                    <th>Dobles G/P</th>
-                                    <th>Total G/P</th>
-                                    <th>% Victorias</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Categoría</th><th>Jugador</th><th>Singles G/P</th><th>Dobles G/P</th><th>Total G/P</th><th>% Victorias</th></tr></thead>
                             <tbody>
                                 {Object.entries(jugadoresPorCategoria).map(([categoria, jugadores]) => (
                                     jugadores.map(([nombre, data], idx) => {
-                                        const total = data.total.ganados + data.total.perdidos; 
-                                        const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1) : 0;
+                                        const total = data.total.ganados + data.total.perdidos; const porcentaje = total > 0 ? ((data.total.ganados / total) * 100).toFixed(1) : 0;
                                         return (
                                             <tr key={nombre}>
                                                 {idx === 0 && (<td rowSpan={jugadores.length} style={{ fontWeight: '700', background: '#f0f9ff', verticalAlign: 'middle' }}>{categoria}</td>)}
-                                                <td><strong>{nombre}</strong></td>
-                                                <td>{data.singles.ganados} / {data.singles.perdidos}</td>
-                                                <td>{data.dobles.ganados} / {data.dobles.perdidos}</td>
-                                                <td>{data.total.ganados} / {data.total.perdidos}</td>
-                                                <td>{porcentaje}%</td>
+                                                <td><strong>{nombre}</strong></td><td>{data.singles.ganados} / {data.singles.perdidos}</td><td>{data.dobles.ganados} / {data.dobles.perdidos}</td><td>{data.total.ganados} / {data.total.perdidos}</td><td>{porcentaje}%</td>
                                             </tr>
                                         );
                                     })
