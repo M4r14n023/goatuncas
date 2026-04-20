@@ -1733,10 +1733,16 @@
                 fecha.partidos.forEach(partido => {
                     if (partido.jugadores && partido.jugadores.length > 0) {
                         const key = `${fechaIdx}-${partido.id}`;
-                        const ganado = resultados[key] || false;
-                        const esBonus = fecha.partidoBonus === partido.id;
-                        const puntos = esBonus ? 20 : 10;
-                        if (ganado) { ganados++; puntosGanados += puntos; } else { perdidos++; puntosPerdidos += puntos; }
+                        const estado = getEstadoPartido(fechaIdx, partido.id).estado;
+                        
+                        // MAGIA: Solo suma puntos si el partido ya terminó
+                        if (estado === 'finalizado') {
+                            const ganado = resultados[key] || false;
+                            const esBonus = fecha.partidoBonus === partido.id;
+                            const puntos = esBonus ? 20 : 10;
+                            if (ganado) { ganados++; puntosGanados += puntos; } 
+                            else { perdidos++; puntosPerdidos += puntos; }
+                        }
                     }
                 });
                 
