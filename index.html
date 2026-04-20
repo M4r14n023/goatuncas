@@ -730,19 +730,19 @@ function App() {
                             <div style={{flex: '1 1 200px', order: 1}}></div> /* Espaciador vacío para mantener el centro */
                         )}
 
-                        {/* 2. LOGO Y TEXTO CENTRAL (ORIGINAL) */}
-                        <div style={{display: 'flex', alignItems: 'center', gap: '15px', flex: '1 1 300px', justifyContent: 'center', order: 2}}>
-                            <img src="GOAT.jpeg" alt="GOAT Logo" style={{width: '80px', height: '80px', objectFit: 'contain'}} />
+{/* 2. LOGO Y TEXTO CENTRAL (ESTÉTICO Y COMPACTO) */}
+                        <div style={{display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 300px', justifyContent: 'center', order: 2, padding: '5px 0'}}>
+                            <img src="GOAT.jpeg" alt="GOAT Logo" style={{width: '50px', height: '50px', objectFit: 'contain', borderRadius: '50%'}} />
                             <div className="header-text" style={{textAlign: 'left'}}>
-                                <h1 style={{fontSize: '2.5em', margin: '0 0 5px 0'}}>GOAT - Interclubes UNCAS</h1>
-                                <p style={{margin: 0}}>Sistema completo de seguimiento y armado de fechas</p>
+                                <h1 style={{fontSize: '1.4rem', margin: '0 0 2px 0', lineHeight: '1.2'}}>Interclubes UNCAS - GOAT</h1>
+                                <p style={{margin: 0, fontSize: '12px', color: '#c5a572'}}>Seguimiento</p>
                                 
                                 {userRole !== 'jugador' && (
-                                    <div style={{marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#c5a572'}}>
-                                        {syncStatus === 'synced' && <><span style={{color: '#10b981'}}>●</span><span>Sincronizado con Nube</span></>}
+                                    <div style={{marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#94a3b8'}}>
+                                        {syncStatus === 'synced' && <><span style={{color: '#10b981'}}>●</span><span>Sincronizado</span></>}
                                         {syncStatus === 'syncing' && <><span style={{color: '#f59e0b'}}>●</span><span>Sincronizando...</span></>}
                                         {syncStatus === 'local' && <><span style={{color: '#6b7280'}}>●</span><span>Solo local</span></>}
-                                        {syncStatus === 'error' && <><span style={{color: '#ef4444'}}>●</span><span>Error de sincronización</span></>}
+                                        {syncStatus === 'error' && <><span style={{color: '#ef4444'}}>●</span><span>Error de sincro</span></>}
                                     </div>
                                 )}
                             </div>
