@@ -404,7 +404,7 @@
             );
         }
 
-        function App() {
+function App() {
             const [userRole, setUserRole] = useState(localStorage.getItem('goat_user_role') || null);
             const [activeTab, setActiveTab] = useState('busqueda'); // Inicia en "Mis Partidos" por defecto
             
@@ -659,29 +659,103 @@
                 return stats;
             };
 
+            // --- LÓGICA DEL BANNER EN VIVO (AGREGADO QUIRÚRGICO) ---
+            let liveMatches = [];
+            let activeScore = { goat: 0, rival: 0, rivalName: '' };
+            let hasActiveFecha = false;
+
+            for (let i = fechas.length - 1; i >= 0; i--) {
+                const fecha = fechas[i];
+                if (fecha.isClosed) continue;
+
+                let currentGoat = 0;
+                let currentRival = 0;
+
+                fecha.partidos?.forEach(p => {
+                    const key = `${i}-${p.id}`;
+                    const est = estadoPartidos[key] || {};
+                    const isGanado = resultados[key] || false;
+                    const pts = fecha.partidoBonus === p.id ? 20 : 10;
+
+                    if (est.estado === 'en_juego') {
+                        liveMatches.push({ ...p, parciales: est.parciales });
+                        hasActiveFecha = true;
+                    }
+                    // Usa la lógica corregida: solo suma si está finalizado o tiene historial
+                    if (est.estado === 'finalizado' || resultados.hasOwnProperty(key)) {
+                        if (isGanado) currentGoat += pts; else currentRival += pts;
+                        hasActiveFecha = true;
+                    }
+                });
+
+                if (!activeScore.rivalName && hasActiveFecha) {
+                    activeScore = { goat: currentGoat, rival: currentRival, rivalName: fecha.rival };
+                    break; 
+                }
+            }
+
+            const colorBannerGoat = activeScore.goat >= 140 ? '#10b981' : 'white';
+            const colorBannerRival = activeScore.rival >= 140 ? '#ef4444' : 'white';
+
             return (
                 <div className="container">
-                    <div className="header">
-                        <img src="GOAT.jpeg" alt="GOAT Logo" />
-                        <div className="header-text">
-                            <h1>GOAT - Interclubes UNCAS</h1>
-                            <p>Sistema completo de seguimiento y armado de fechas</p>
-                            
-                            {userRole !== 'jugador' && (
-                                <div style={{marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#c5a572'}}>
-                                    {syncStatus === 'synced' && <><span style={{color: '#10b981'}}>●</span><span>Sincronizado con Nube</span></>}
-                                    {syncStatus === 'syncing' && <><span style={{color: '#f59e0b'}}>●</span><span>Sincronizando...</span></>}
-                                    {syncStatus === 'local' && <><span style={{color: '#6b7280'}}>●</span><span>Solo local</span></>}
-                                    {syncStatus === 'error' && <><span style={{color: '#ef4444'}}>●</span><span>Error de sincronización</span></>}
+                    
+                    {/* HEADER MODIFICADO RESPONSIVE CON RECUADRO EN VIVO */}
+                    <div className="header" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', padding: '15px 20px', gap: '15px' }}>
+                        
+                        {/* 1. RECUADRO TABLERO EN VIVO (IZQUIERDA) */}
+                        {hasActiveFecha ? (
+                            <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(212, 175, 55, 0.5)', borderRadius: '8px', padding: '10px', textAlign: 'left', minWidth: '160px', flex: '1 1 200px', order: 1 }}>
+                                <div style={{ color: '#10b981', fontWeight: 'bold', marginBottom: '5px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>🔴 En Vivo</div>
+                                <div style={{ marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#cbd5e1' }}>
+                                    GOAT <span style={{ color: colorBannerGoat }}>{activeScore.goat}</span> - <span style={{ color: colorBannerRival }}>{activeScore.rival}</span> {activeScore.rivalName.substring(0, 10)}
                                 </div>
-                            )}
+                                {liveMatches.length > 0 ? (
+                                    liveMatches.slice(0, 3).map(m => ( // Muestra max 3 para no desarmar el diseño
+                                        <div key={m.id} style={{ color: 'white', marginBottom: '4px', fontSize: '11px', display: 'flex', justifyContent: 'space-between', gap: '10px' }}>
+                                            <span>▶ {m.tipo.replace('Dobles ', 'D.').replace('Single ', 'S.').replace('Caballeros', 'Cab').replace('Damas', 'Dam').substring(0, 12)}</span>
+                                            <span style={{ fontWeight: 'bold' }}>
+                                                {m.parciales === '1-up' ? <span style={{ color: '#10b981' }}>S↑</span> : 
+                                                 m.parciales === '1-down' ? <span style={{ color: '#ef4444' }}>S↓</span> : 
+                                                 m.parciales === 'super' ? <span style={{ color: '#f59e0b' }}>STB</span> : 
+                                                 <span style={{ color: '#94a3b8' }}>-</span>}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '10px' }}>Sin partidos activos</div>
+                                )}
+                            </div>
+                        ) : (
+                            <div style={{flex: '1 1 200px', order: 1}}></div> /* Espaciador vacío para mantener el centro */
+                        )}
+
+                        {/* 2. LOGO Y TEXTO CENTRAL (ORIGINAL) */}
+                        <div style={{display: 'flex', alignItems: 'center', gap: '15px', flex: '1 1 300px', justifyContent: 'center', order: 2}}>
+                            <img src="GOAT.jpeg" alt="GOAT Logo" style={{width: '80px', height: '80px', objectFit: 'contain'}} />
+                            <div className="header-text" style={{textAlign: 'left'}}>
+                                <h1 style={{fontSize: '2.5em', margin: '0 0 5px 0'}}>GOAT - Interclubes UNCAS</h1>
+                                <p style={{margin: 0}}>Sistema completo de seguimiento y armado de fechas</p>
+                                
+                                {userRole !== 'jugador' && (
+                                    <div style={{marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#c5a572'}}>
+                                        {syncStatus === 'synced' && <><span style={{color: '#10b981'}}>●</span><span>Sincronizado con Nube</span></>}
+                                        {syncStatus === 'syncing' && <><span style={{color: '#f59e0b'}}>●</span><span>Sincronizando...</span></>}
+                                        {syncStatus === 'local' && <><span style={{color: '#6b7280'}}>●</span><span>Solo local</span></>}
+                                        {syncStatus === 'error' && <><span style={{color: '#ef4444'}}>●</span><span>Error de sincronización</span></>}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         
-                        <div className="user-menu">
-                            <span style={{color: '#c5a572', fontSize: '14px', fontWeight: 'bold'}}>
-                                {userRole === 'admin' ? '⚙️ Admin' : userRole === 'capitan' ? '⭐ Capitán' : '🎾 Jugadores'}
-                            </span>
-                            <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin: 0}} onClick={logout}>Salir</button>
+                        {/* 3. MENÚ USUARIO (DERECHA ORIGINAL) */}
+                        <div className="user-menu" style={{flex: '1 1 200px', position: 'static', display: 'flex', justifyContent: 'flex-end', background: 'transparent', order: 3, padding: 0}}>
+                            <div style={{ background: 'rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <span style={{color: '#c5a572', fontSize: '14px', fontWeight: 'bold'}}>
+                                    {userRole === 'admin' ? '⚙️ Admin' : userRole === 'capitan' ? '⭐ Capitán' : '🎾 Jugadores'}
+                                </span>
+                                <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin: 0}} onClick={logout}>Salir</button>
+                            </div>
                         </div>
                     </div>
 
