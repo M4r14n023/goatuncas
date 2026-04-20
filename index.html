@@ -1724,6 +1724,7 @@
                 setFechas(nuevasFechas);
             };
 
+// Calcular resultado de fecha (Suma Real y Retrocompatible)
             const calcularResultadoFecha = (fechaIdx) => {
                 const fecha = fechas[fechaIdx];
                 if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
@@ -1733,10 +1734,20 @@
                 fecha.partidos.forEach(partido => {
                     if (partido.jugadores && partido.jugadores.length > 0) {
                         const key = `${fechaIdx}-${partido.id}`;
-                        const ganado = resultados[key] || false;
-                        const esBonus = fecha.partidoBonus === partido.id;
-                        const puntos = esBonus ? 20 : 10;
-                        if (ganado) { ganados++; puntosGanados += puntos; } else { perdidos++; puntosPerdidos += puntos; }
+                        const estadoObj = getEstadoPartido(fechaIdx, partido.id);
+                        
+                        // Verificar si ya existe un resultado guardado en la base de datos (para no borrar historial viejo)
+                        const tieneResultadoHistorico = resultados.hasOwnProperty(key);
+
+                        // SOLO suma si el partido está finalizado HOY o si es un resultado viejo ya guardado
+                        if (estadoObj.estado === 'finalizado' || tieneResultadoHistorico) {
+                            const ganado = resultados[key] || false;
+                            const esBonus = fecha.partidoBonus === partido.id;
+                            const puntos = esBonus ? 20 : 10;
+                            
+                            if (ganado) { ganados++; puntosGanados += puntos; } 
+                            else { perdidos++; puntosPerdidos += puntos; }
+                        }
                     }
                 });
                 
