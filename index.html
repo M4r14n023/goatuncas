@@ -404,354 +404,133 @@
             );
         }
 
-        function App() {
+function App() {
             const [userRole, setUserRole] = useState(localStorage.getItem('goat_user_role') || null);
-            const [activeTab, setActiveTab] = useState('busqueda'); // Inicia en "Mis Partidos" por defecto
-            
-            const [numEquipos, setNumEquipos] = useState(10);
-            const [equipos, setEquipos] = useState([]);
-            const [baseEquipos, setBaseEquipos] = useState(EQUIPOS_POR_DEFECTO); 
+            const [activeTab, setActiveTab] = useState('busqueda');
             const [fechas, setFechas] = useState([]);
-            const [posiciones, setPosiciones] = useState({});
             const [resultados, setResultados] = useState({});
-            const [estadoPartidos, setEstadoPartidos] = useState({}); // NUEVO: Estado en vivo de partidos
-            const [crucesFinales, setCrucesFinales] = useState([]);
+            const [estadoPartidos, setEstadoPartidos] = useState({});
+            const [equipos, setEquipos] = useState([]);
             const [zonasConfig, setZonasConfig] = useState({ zona1: [], zona2: [] });
             const [playoffAvances, setPlayoffAvances] = useState({});
-            const [syncStatus, setSyncStatus] = useState('local');
-            const [lastSync, setLastSync] = useState(null);
+            const [crucesFinales, setCrucesFinales] = useState([]);
+            const isReceivingData = useRef(true);
 
-            // ⚠️ FIX CRUCIAL DE PERSISTENCIA: Inicia en TRUE para que el celular no "pise" la nube con datos viejos al abrir
-            const isReceivingData = useRef(true); 
-
-            // Guardar rol en memoria
             useEffect(() => {
                 if (userRole) localStorage.setItem('goat_user_role', userRole);
-                else localStorage.removeItem('goat_user_role');
+                const load = async () => {
+                    const data = await cargarDesdeFirebase();
+                    if (data) {
+                        setFechas(data.fechas || []);
+                        setResultados(data.resultados || {});
+                        setEstadoPartidos(data.estadoPartidos || {});
+                        setEquipos(data.equipos || []);
+                        setZonasConfig(data.zonasConfig || { zona1: [], zona2: [] });
+                        setPlayoffAvances(data.playoffAvances || {});
+                        setCrucesFinales(data.crucesFinales || []);
+                    }
+                    setTimeout(() => isReceivingData.current = false, 1500);
+                };
+                load();
+                const unsub = escucharCambiosFirebase(d => {
+                    if (isReceivingData.current) return;
+                    setFechas(d.fechas || []);
+                    setResultados(d.resultados || {});
+                    setEstadoPartidos(d.estadoPartidos || {});
+                });
+                return () => unsub();
             }, [userRole]);
 
             useEffect(() => {
-                const cargarDatos = async () => {
-                    // 1. Cargamos caché local rápido para que no haya pantalla blanca
-                    const datosGuardados = localStorage.getItem('goat_torneo_data');
-                    if (datosGuardados) {
-                        try {
-                            const datos = JSON.parse(datosGuardados);
-                            setNumEquipos(datos.numEquipos || 10); setEquipos(datos.equipos || []); setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datos.fechas || []); setResultados(datos.resultados || {}); setEstadoPartidos(datos.estadoPartidos || {}); setPosiciones(datos.posiciones || {}); setCrucesFinales(datos.crucesFinales || []); setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datos.playoffAvances || {});
-                        } catch (e) { console.error('Error al cargar datos:', e); }
+                if (isReceivingData.current || userRole === 'jugador') return;
+                guardarEnFirebase({ fechas, resultados, estadoPartidos, equipos, zonasConfig, playoffAvances, crucesFinales });
+            }, [fechas, resultados, estadoPartidos, equipos, zonasConfig, playoffAvances, crucesFinales]);
+
+            if (!userRole) return <LoginScreen onLogin={setUserRole} />;
+
+            // --- LÓGICA DEL BANNER EN VIVO ---
+            let liveMatches = [];
+            let activeScore = { goat: 0, rival: 0, rivalName: '' };
+            let hasActiveFecha = false;
+
+            for (let i = fechas.length - 1; i >= 0; i--) {
+                const fecha = fechas[i];
+                if (fecha.isClosed) continue;
+
+                let currentGoat = 0;
+                let currentRival = 0;
+
+                fecha.partidos?.forEach(p => {
+                    const key = `${i}-${p.id}`;
+                    const est = estadoPartidos[key] || {};
+                    const isGanado = resultados[key] || false;
+                    const pts = fecha.partidoBonus === p.id ? 20 : 10;
+
+                    if (est.estado === 'en_juego') {
+                        liveMatches.push({ ...p, parciales: est.parciales });
+                        hasActiveFecha = true;
                     }
-
-                    // 2. Traemos la info REAL desde Firebase
-                    try {
-                        setSyncStatus('syncing');
-                        const datosFirebase = await cargarDesdeFirebase();
-                        if (datosFirebase) {
-                            setNumEquipos(datosFirebase.numEquipos || 10); setEquipos(datosFirebase.equipos || []); setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datosFirebase.fechas || []); setResultados(datosFirebase.resultados || {}); setEstadoPartidos(datosFirebase.estadoPartidos || {}); setPosiciones(datosFirebase.posiciones || {}); setCrucesFinales(datosFirebase.crucesFinales || []); setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datosFirebase.playoffAvances || {});
-                            setLastSync(datosFirebase.ultimaActualizacion); setSyncStatus('synced');
-                            localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
-                        } else { setSyncStatus('local'); }
-                    } catch (e) { 
-                        setSyncStatus('local'); 
-                    } finally {
-                        // 3. DESBLOQUEAMOS EL GUARDADO (esperamos 1.5s para asegurar que React ya acomodó todo lo que vino de la nube)
-                        setTimeout(() => { isReceivingData.current = false; }, 1500);
-                    }
-                };
-
-                cargarDatos();
-
-                const unsubscribe = escucharCambiosFirebase((datos) => {
-                    // Si alguien más guarda en otro dispositivo, bloqueamos nuestro guardado temporalmente, actualizamos y volvemos a desbloquear
-                    if (datos) {
-                        isReceivingData.current = true;
-                        setNumEquipos(datos.numEquipos || 10); setEquipos(datos.equipos || []); setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datos.fechas || []); setResultados(datos.resultados || {}); setEstadoPartidos(datos.estadoPartidos || {}); setPosiciones(datos.posiciones || {}); setCrucesFinales(datos.crucesFinales || []); setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datos.playoffAvances || {});
-                        setLastSync(datos.ultimaActualizacion); setSyncStatus('synced');
-                        localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
-                        setTimeout(() => { isReceivingData.current = false; }, 1500);
+                    if (est.estado === 'finalizado') {
+                        if (isGanado) currentGoat += pts; else currentRival += pts;
+                        hasActiveFecha = true;
                     }
                 });
 
-                return () => { if (unsubscribe) unsubscribe(); };
-            }, []);
-
-            useEffect(() => {
-                // 🔒 EL CANDADO: Si recién abrimos la app o estamos bajando datos, abortamos cualquier guardado hacia la nube
-                if (isReceivingData.current) return; 
-
-                const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, estadoPartidos, posiciones, crucesFinales, zonasConfig, playoffAvances };
-                localStorage.setItem('goat_torneo_data', JSON.stringify(datos));
-                
-                if (userRole !== 'jugador' && (equipos.length > 0 || fechas.length > 0)) {
-                    setSyncStatus('syncing');
-                    guardarEnFirebase(datos)
-                        .then((tiempoExacto) => { setSyncStatus('synced'); setLastSync(tiempoExacto); })
-                        .catch((error) => { console.error('Error al sincronizar:', error); setSyncStatus('error'); });
+                if (!activeScore.rivalName && hasActiveFecha) {
+                    activeScore = { goat: currentGoat, rival: currentRival, rivalName: fecha.rival };
+                    break; 
                 }
-            }, [numEquipos, equipos, baseEquipos, fechas, resultados, estadoPartidos, posiciones, crucesFinales, zonasConfig, playoffAvances, userRole]);
-
-            const logout = () => {
-                setUserRole(null);
-                setActiveTab('busqueda');
-            };
-
-            // SI NO HAY ROL SELECCIONADO, MUESTRA LOGIN
-            if (!userRole) {
-                return <LoginScreen onLogin={setUserRole} />;
             }
-
-            const guardarEquiposSeleccionados = (nombresRivales) => {
-                const nuevosEquipos = nombresRivales.map(nombre => ({ nombre: nombre, esGoat: false }));
-                const todosEquipos = [{ nombre: 'GOAT', esGoat: true }, ...nuevosEquipos];
-                setEquipos(todosEquipos);
-            };
-
-            const agregarFecha = (numFecha, rival) => {
-                const nuevaFecha = { numero: numFecha, rival: rival, partidos: PARTIDOS.map(p => ({ ...p, jugadores: [], horario: '', dia: 'sabado', ganado: false })), partidoBonus: null, categoriasHabilitadas: { caballeros_5ta_en_4ta: false, caballeros_4ta_en_3ra: false, caballeros_3ra_en_2da: false, damas_c_en_b: false, damas_b_en_a: false }, jugadoresHabilitados: [], convocada: false // <--- NUEVO ESTADO DE PUBLICACIÓN 
-                };
-                const nuevasFechas = [...fechas]; nuevasFechas[numFecha - 1] = nuevaFecha; setFechas(nuevasFechas);
-            };
-
-            const procesarHorarios = (fechaIndex, texto) => {
-                const lineas = texto.split('\n').filter(l => l.trim());
-                const fechaActual = {...fechas[fechaIndex]};
-                lineas.forEach(linea => {
-                    const match = linea.match(/(\d+)\s*[-.:]\s*(.+)/);
-                    if (match) {
-                        const numPartido = parseInt(match[1]); const info = match[2].trim();
-                        const horarioMatch = info.match(/(\d{1,2}):(\d{2})/); const diaMatch = info.toLowerCase().includes('dom') ? 'domingo' : 'sabado';
-                        const partidoIndex = fechaActual.partidos.findIndex(p => p.id === numPartido);
-                        if (partidoIndex !== -1) { fechaActual.partidos[partidoIndex].horario = horarioMatch ? `${horarioMatch[1]}:${horarioMatch[2]}` : ''; fechaActual.partidos[partidoIndex].dia = diaMatch; }
-                    }
-                });
-                const nuevasFechas = [...fechas]; nuevasFechas[fechaIndex] = fechaActual; setFechas(nuevasFechas);
-            };
-
-            const actualizarJugadores = (fechaIndex, partidoId, jugadores) => {
-                const nuevasFechas = [...fechas]; const partidoIndex = nuevasFechas[fechaIndex].partidos.findIndex(p => p.id === partidoId);
-                if (partidoIndex !== -1) nuevasFechas[fechaIndex].partidos[partidoIndex].jugadores = jugadores;
-                setFechas(nuevasFechas);
-            };
-
-            const contarPartidosJugador = (fechaIndex, nombreJugador) => {
-                let count = 0;
-                if (fechas[fechaIndex] && fechas[fechaIndex].partidos) {
-                    fechas[fechaIndex].partidos.forEach(partido => { if (partido.jugadores && partido.jugadores.some(j => j === nombreJugador)) count++; });
-                }
-                return count;
-            };
-
-            const toggleResultado = (fechaIndex, partidoId) => {
-                if (userRole === 'jugador') return; // Bloqueo de seguridad
-                const key = `${fechaIndex}-${partidoId}`; setResultados(prev => ({ ...prev, [key]: !prev[key] }));
-            };
-
-            const generarPDF = (fechaIndex) => {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                const fecha = fechas[fechaIndex];
-                if (!fecha) return;
-
-                doc.setFontSize(20); doc.text(`GOAT - Fecha ${fecha.numero}`, 105, 20, { align: 'center' });
-                doc.setFontSize(14); doc.text(`vs ${fecha.rival}`, 105, 30, { align: 'center' });
-                
-                let y = 45;
-                const partidosPorHorario = {};
-                
-                if (fecha.partidos) {
-                    fecha.partidos.filter(p => p.horario).forEach(partido => {
-                        const key = `${partido.dia}-${partido.horario}`;
-                        if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: partido.dia, hora: partido.horario, partidos: [] };
-                        partidosPorHorario[key].partidos.push(partido);
-                    });
-                }
-                
-                const horariosPorDia = { sabado: [], domingo: [] };
-                Object.values(partidosPorHorario).forEach(horario => horariosPorDia[horario.dia].push(horario));
-                horariosPorDia.sabado.sort((a, b) => a.hora.localeCompare(b.hora));
-                horariosPorDia.domingo.sort((a, b) => a.hora.localeCompare(b.hora));
-                
-                ['sabado', 'domingo'].forEach(dia => {
-                    if (horariosPorDia[dia].length > 0) {
-                        if (y > 250) { doc.addPage(); y = 20; }
-                        doc.setFontSize(14); doc.setFont(undefined, 'bold'); doc.text(dia.toUpperCase(), 20, y); y += 8;
-                        doc.setFont(undefined, 'normal'); doc.setFontSize(10);
-                        
-                        horariosPorDia[dia].forEach(horario => {
-                            horario.partidos.sort((a, b) => (a.posicion || 0) - (b.posicion || 0));
-                            horario.partidos.forEach(partido => {
-                                const esBonus = fecha.partidoBonus === partido.id;
-                                const jugadoresTexto = (partido.jugadores && partido.jugadores.length > 0) ? partido.jugadores.join(' / ') : 'Sin asignar';
-                                const texto = `${horario.hora} - P${partido.posicion} - ${partido.tipo}${esBonus ? ' ★BONUS★' : ''}: ${jugadoresTexto}`;
-                                if (y > 275) { doc.addPage(); y = 20; }
-                                if (esBonus) doc.setFont(undefined, 'bold');
-                                doc.text(texto, 20, y);
-                                if (esBonus) doc.setFont(undefined, 'normal');
-                                y += 6;
-                            });
-                            y += 2;
-                        });
-                        y += 5;
-                    }
-                });
-                
-                const partidosPorJugador = {};
-                if (fecha.partidos) {
-                    fecha.partidos.forEach(partido => {
-                        if (partido.horario && partido.jugadores) {
-                            partido.jugadores.forEach(jugador => { partidosPorJugador[jugador] = (partidosPorJugador[jugador] || 0) + 1; });
-                        }
-                    });
-                }
-                
-                if (Object.keys(partidosPorJugador).length > 0) {
-                    if (y + (Object.keys(partidosPorJugador).length * 5) + 20 > 280) { doc.addPage(); y = 20; } else { y += 10; }
-                    doc.setFontSize(12); doc.setFont(undefined, 'bold'); doc.text('RESUMEN DE CONVOCATORIA', 20, y); y += 8;
-                    doc.setFont(undefined, 'normal'); doc.setFontSize(9);
-                    
-                    Object.entries(partidosPorJugador).sort((a, b) => b[1] - a[1]).forEach(([jugador, cantidad]) => {
-                        const jugadorObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jugador);
-                        const esCapitan = jugadorObj?.capitan ? ' (CAPITAN)' : '';
-                        const advertencia = cantidad > 3 ? ' *** EXCEDE LIMITE ***' : '';
-                        if (cantidad > 3) doc.setFont(undefined, 'bold');
-                        doc.text(`${jugador}${esCapitan}: ${cantidad} partido${cantidad > 1 ? 's' : ''}${advertencia}`, 25, y);
-                        if (cantidad > 3) doc.setFont(undefined, 'normal');
-                        y += 5;
-                    });
-                }
-                doc.save(`GOAT-Fecha${fecha.numero}-vs-${fecha.rival}.pdf`);
-            };
-
-            const calcularEstadisticas = () => {
-                const stats = { jugadores: {}, parejas: {} };
-                const todosJugadores = Object.values(JUGADORES_GOAT).flat();
-                todosJugadores.forEach(jugador => {
-                    stats.jugadores[jugador.nombre] = { singles: { ganados: 0, perdidos: 0 }, dobles: { ganados: 0, perdidos: 0 }, total: { ganados: 0, perdidos: 0 } };
-                });
-                
-                fechas.forEach((fecha, fechaIdx) => {
-                    if (!fecha || !fecha.partidos) return;
-
-                    // NUEVO FILTRO DE SEGURIDAD: Si sos jugador y la fecha es borrador, no entra en estadísticas
-                    if (userRole === 'jugador' && !fecha.convocada) return;
-
-                    // 🗓️ NUEVO FILTRO CALENDARIO: No sumar estadísticas si la fecha es en el futuro
-                    if (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date()) return;
-
-                    fecha.partidos.forEach(partido => {
-                        if (partido.jugadores && partido.jugadores.length > 0) {
-                            const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esSingle = partido.numJugadores === 1;
-                            partido.jugadores.forEach(jugador => {
-                                if (stats.jugadores[jugador]) {
-                                    if (esSingle) stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
-                                    else stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
-                                    stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
-                                }
-                            });
-                            if (!esSingle && partido.jugadores.length === 2) {
-                                const parejaKey = [...partido.jugadores].sort().join(' - ');
-                                if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [] };
-                                stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
-                                stats.parejas[parejaKey].fechas.push({ fecha: fecha.numero, rival: fecha.rival, tipo: partido.tipo, resultado: ganado });
-                            }
-                        }
-                    });
-                });
-                return stats;
-            };
 
             return (
                 <div className="container">
-                    <div className="header">
-                        <img src="GOAT.jpeg" alt="GOAT Logo" />
-                        <div className="header-text">
-                            <h1>GOAT - Interclubes UNCAS</h1>
-                            <p>Sistema completo de seguimiento y armado de fechas</p>
-                            
-                            {userRole !== 'jugador' && (
-                                <div style={{marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#c5a572'}}>
-                                    {syncStatus === 'synced' && <><span style={{color: '#10b981'}}>●</span><span>Sincronizado con Nube</span></>}
-                                    {syncStatus === 'syncing' && <><span style={{color: '#f59e0b'}}>●</span><span>Sincronizando...</span></>}
-                                    {syncStatus === 'local' && <><span style={{color: '#6b7280'}}>●</span><span>Solo local</span></>}
-                                    {syncStatus === 'error' && <><span style={{color: '#ef4444'}}>●</span><span>Error de sincronización</span></>}
+                    <div className="header" style={{ flexWrap: 'wrap' }}>
+                        {/* TABLERO EN VIVO (IZQUIERDA) */}
+                        {hasActiveFecha && (
+                            <div style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid #d4af37', borderRadius: '8px', padding: '10px 15px', textAlign: 'left', minWidth: '180px', flex: '0 1 auto' }}>
+                                <div style={{ color: '#10b981', fontWeight: 'bold', marginBottom: '5px', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px' }}>🔴 En Vivo</div>
+                                <div style={{ marginBottom: '8px', fontSize: '14px', fontWeight: 'bold' }}>
+                                    GOAT <span style={{ color: activeScore.goat >= 140 ? '#10b981' : 'white' }}>{activeScore.goat}</span> - <span style={{ color: activeScore.rival >= 140 ? '#ef4444' : 'white' }}>{activeScore.rival}</span> {activeScore.rivalName}
                                 </div>
-                            )}
-                        </div>
-                        
-                        <div className="user-menu">
-                            <span style={{color: '#c5a572', fontSize: '14px', fontWeight: 'bold'}}>
-                                {userRole === 'admin' ? '⚙️ Admin' : userRole === 'capitan' ? '⭐ Capitán' : '🎾 Jugadores'}
-                            </span>
-                            <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin: 0}} onClick={logout}>Salir</button>
-                        </div>
-                    </div>
-
-                    <div className="tabs">
-                        <button className={`tab ${activeTab === 'busqueda' ? 'active' : ''}`} onClick={() => setActiveTab('busqueda')}>Mis Partidos 🔍</button>
-                        <button className={`tab ${activeTab === 'resultados' ? 'active' : ''}`} onClick={() => setActiveTab('resultados')}>Resultados</button>
-                        <button className={`tab ${activeTab === 'tablas' ? 'active' : ''}`} onClick={() => setActiveTab('tablas')}>Tablas</button>
-                        <button className={`tab ${activeTab === 'estadisticas' ? 'active' : ''}`} onClick={() => setActiveTab('estadisticas')}>Estadísticas Grales.</button>
-                        <button className={`tab ${activeTab === 'fechas' ? 'active' : ''}`} onClick={() => setActiveTab('fechas')}>Fechas</button>
-                        <button className={`tab ${activeTab === 'configuracion' ? 'active' : ''}`} onClick={() => setActiveTab('configuracion')}>Configuración</button>
-                        
-                        {userRole === 'admin' && (
-                            <button className={`tab admin-tab ${activeTab === 'admin' ? 'active' : ''}`} onClick={() => setActiveTab('admin')}>⚙️ Admin</button>
+                                {liveMatches.length > 0 ? (
+                                    liveMatches.map(m => (
+                                        <div key={m.id} style={{ color: '#cbd5e1', marginBottom: '4px', fontSize: '12px', display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
+                                            <span>▶ {m.tipo.replace('Dobles ', 'D. ').replace('Single ', 'S. ')}</span>
+                                            <span style={{ fontWeight: 'bold' }}>
+                                                {m.parciales === '1-up' && <span style={{ color: '#10b981' }}>S↑</span>}
+                                                {m.parciales === '1-down' && <span style={{ color: '#ef4444' }}>S↓</span>}
+                                                {m.parciales === 'super' && <span style={{ color: '#f59e0b' }}>STB</span>}
+                                            </span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '11px' }}>Sin partidos activos</div>
+                                )}
+                            </div>
                         )}
-                    </div>
 
+                        <img src="GOAT.jpeg" alt="Logo" />
+                        <div><h1>GOAT</h1><p>UNCAS 2026</p></div>
+                        <div className="user-menu" style={{flex: '0 1 auto'}}>
+                            <span style={{fontSize:'12px'}}>{userRole.toUpperCase()}</span>
+                            <button className="btn btn-danger" style={{padding:'5px'}} onClick={() => {setUserRole(null); localStorage.removeItem('goat_user_role');}}>Salir</button>
+                        </div>
+                    </div>
+                    <div className="tabs">
+                        <button className={`tab ${activeTab==='busqueda'?'active':''}`} onClick={()=>setActiveTab('busqueda')}>Mis Partidos</button>
+                        <button className={`tab ${activeTab==='resultados'?'active':''}`} onClick={()=>setActiveTab('resultados')}>Resultados</button>
+                        <button className={`tab ${activeTab==='tablas'?'active':''}`} onClick={()=>setActiveTab('tablas')}>Tablas</button>
+                        <button className={`tab ${activeTab==='fechas'?'active':''}`} onClick={()=>setActiveTab('fechas')}>Armado</button>
+                        {userRole==='admin' && <button className="tab admin-tab" onClick={()=>setActiveTab('config')}>⚙️ Config</button>}
+                    </div>
                     <div className="content">
                         {activeTab === 'busqueda' && <BusquedaTab fechas={fechas} userRole={userRole} />}
-                        {activeTab === 'estadisticas' && <EstadisticasTab calcularEstadisticas={calcularEstadisticas} />}
-                        
-                        {activeTab === 'configuracion' && (
-                            <ConfiguracionTab 
-                                userRole={userRole} numEquipos={numEquipos} setNumEquipos={setNumEquipos} equipos={equipos} baseEquipos={baseEquipos} setBaseEquipos={setBaseEquipos}
-                                guardarEquiposSeleccionados={guardarEquiposSeleccionados} agregarFecha={agregarFecha} fechas={fechas} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig}
-                            />
-                        )}
-                        {activeTab === 'fechas' && (
-                            <FechasTab 
-                                userRole={userRole} fechas={fechas} procesarHorarios={procesarHorarios} actualizarJugadores={actualizarJugadores} 
-                                contarPartidosJugador={contarPartidosJugador} generarPDF={generarPDF} setFechas={setFechas} 
-                            />
-                        )}
-                        {activeTab === 'resultados' && (
-                            <ResultadosTab 
-                                userRole={userRole} fechas={fechas} setFechas={setFechas} resultados={resultados} toggleResultado={toggleResultado} 
-                                estadoPartidos={estadoPartidos} setEstadoPartidos={setEstadoPartidos}
-                                zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} 
-                            />
-                        )}
-                        {activeTab === 'tablas' && (
-                            <TablasTab 
-                                userRole={userRole} equipos={equipos} fechas={fechas} resultados={resultados} crucesFinales={crucesFinales} 
-                                setCrucesFinales={setCrucesFinales} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig} 
-                            />
-                        )}
-                        {activeTab === 'admin' && userRole === 'admin' && (
-                            <AdminTab 
-                                numEquipos={numEquipos} equipos={equipos} baseEquipos={baseEquipos} fechas={fechas} resultados={resultados} posiciones={posiciones} crucesFinales={crucesFinales} zonasConfig={zonasConfig} playoffAvances={playoffAvances}
-                                setNumEquipos={setNumEquipos} setEquipos={setEquipos} setBaseEquipos={setBaseEquipos} setFechas={setFechas} setResultados={setResultados} setPosiciones={setPosiciones} setCrucesFinales={setCrucesFinales} setZonasConfig={setZonasConfig} setPlayoffAvances={setPlayoffAvances}
-                                syncStatus={syncStatus} setSyncStatus={setSyncStatus} lastSync={lastSync} setLastSync={setLastSync} guardarEnFirebase={guardarEnFirebase} cargarDesdeFirebase={cargarDesdeFirebase}
-                            />
-                        )}
+                        {activeTab === 'resultados' && <ResultadosTab fechas={fechas} setFechas={setFechas} resultados={resultados} toggleResultado={(fi, pi) => setResultados(r => ({...r, [`${fi}-${pi}`]: !r[`${fi}-${pi}`]}))} estadoPartidos={estadoPartidos} setEstadoPartidos={setEstadoPartidos} userRole={userRole} zonasConfig={zonasConfig} crucesFinales={crucesFinales} playoffAvances={playoffAvances} setPlayoffAvances={setPlayoffAvances} />}
+                        {activeTab === 'tablas' && <TablasTab fechas={fechas} resultados={resultados} equipos={equipos} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig} crucesFinales={crucesFinales} setCrucesFinales={setCrucesFinales} userRole={userRole} />}
+                        {activeTab === 'fechas' && <ArmadoTab fechas={fechas} setFechas={setFechas} userRole={userRole} equipos={equipos} />}
+                        {activeTab === 'config' && <ConfigTab equipos={equipos} setEquipos={setEquipos} zonasConfig={zonasConfig} setZonasConfig={setZonasConfig} />}
                     </div>
-
-                    {/* --- FOOTER / DERECHOS DE AUTOR --- */}
-                    <div style={{ 
-                        textAlign: 'center', 
-                        padding: '20px', 
-                        borderTop: '1px solid #e2e8f0', 
-                        background: '#f8f9fa', 
-                        color: '#64748b', 
-                        fontSize: '13px' 
-                    }}>
-                        &copy; {new Date().getFullYear()} <strong>Desarrollado por Mariano Lumbreras</strong>. Todos los derechos reservados.<br/>
-                        <span style={{fontSize: '11px', opacity: 0.8}}>Sistema de Gestión de Torneos Interclubes</span>
-                    </div>
-
-                    {/* --- LLAMADA AL COMPONENTE BACK TO TOP --- */}
                     <BotonVolverArriba />
-
                 </div>
             );
         }
