@@ -420,7 +420,26 @@ function App() {
             const [playoffAvances, setPlayoffAvances] = useState({});
             const [syncStatus, setSyncStatus] = useState('local');
             const [lastSync, setLastSync] = useState(null);
+            
+            // ---> Detector de bienvenida Play-Off<---
+            const [showPlayoffWelcome, setShowPlayoffWelcome] = useState(false);
 
+            // Detector automático de etapa Play-Off
+            useEffect(() => {
+                // Chequea si hay fechas y si TODAS están cerradas (🔒)
+                const terminaronZonas = fechas.length > 0 && fechas.every(f => f.isClosed);
+                // Chequea si el usuario ya decidió quedarse en zonas en esta sesión
+                const yaEligio = sessionStorage.getItem('goat_playoff_decision');
+
+                if (terminaronZonas && !yaEligio) {
+                    setShowPlayoffWelcome(true);
+                }
+            }, [fechas]);
+
+            const handlePermanecerEnZonas = () => {
+                setShowPlayoffWelcome(false);
+                sessionStorage.setItem('goat_playoff_decision', 'true'); // Lo oculta hasta que cierre el navegador
+            };
             // ⚠️ FIX CRUCIAL DE PERSISTENCIA: Inicia en TRUE para que el celular no "pise" la nube con datos viejos al abrir
             const isReceivingData = useRef(true); 
 
@@ -811,7 +830,7 @@ function App() {
                         )}
                     </div>
 
-                    {/* --- FOOTER / DERECHOS DE AUTOR --- */}
+{/* --- FOOTER / DERECHOS DE AUTOR --- */}
                     <div style={{ 
                         textAlign: 'center', 
                         padding: '20px', 
@@ -826,6 +845,34 @@ function App() {
 
                     {/* --- LLAMADA AL COMPONENTE BACK TO TOP --- */}
                     <BotonVolverArriba />
+
+                    {/* ---> PEGAR ESTE BLOQUE NUEVO AQUÍ <--- */}
+                    {showPlayoffWelcome && (
+                        <div className="modal" style={{zIndex: 9999, background: 'rgba(0,0,0,0.85)'}}>
+                            <div className="modal-content" style={{maxWidth: '400px', textAlign: 'center', border: '2px solid #d4af37', background: '#1a1a1a'}}>
+                                <img src="GOAT.jpeg" alt="Logo" style={{width: '80px', borderRadius: '50%', marginBottom: '15px', boxShadow: '0 0 15px rgba(212, 175, 55, 0.5)'}} />
+                                <h2 style={{color: '#d4af37', marginBottom: '10px'}}>¡ETAPA DE PLAY-OFF!</h2>
+                                <p style={{color: '#ccc', fontSize: '14px', marginBottom: '25px'}}>La fase de zonas ha finalizado. Están por comenzar los cruces eliminatorios.</p>
+                                
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+                                    <button 
+                                        onClick={() => window.location.href = 'playoff.html'} 
+                                        className="btn btn-warning" 
+                                        style={{padding: '15px', fontWeight: 'bold', fontSize: '16px', background: '#d4af37', color: '#000', border: 'none', borderRadius: '8px'}}
+                                    >
+                                        ⚔️ IR A PLAY-OFF ⚔️
+                                    </button>
+                                    <button 
+                                        onClick={handlePermanecerEnZonas}
+                                        className="btn" 
+                                        style={{background: 'transparent', color: '#aaa', border: '1px solid #444', fontSize: '13px', borderRadius: '8px', padding: '10px'}}
+                                    >
+                                        Permanecer en Zonas
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                 </div>
             );
