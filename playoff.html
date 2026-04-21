@@ -47,6 +47,7 @@
         .btn-primary { background: #d4af37; color: #000; }
         .btn-danger { background: #ef4444; color: #fff; }
         .btn-success { background: #10b981; color: #fff; }
+        .btn-warning { background: #f59e0b; color: #000; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .live-banner { background: linear-gradient(135deg, #1e3c72 0%, #0f1e3b 100%); padding: 20px; border-radius: 12px; text-align: center; border: 2px solid #d4af37; margin-bottom: 20px; }
@@ -58,14 +59,16 @@
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
 
-        .player-count-warning { color: #ef4444; font-size: 12px; margin-top: 5px; }
+        .player-count-warning { color: #ef4444; font-size: 12px; margin-top: 5px; font-weight: bold; }
         .captain-badge { background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px; }
 
+        .flex-mobile-col { display: flex; }
         @media (max-width: 1024px) {
             .bracket-container { flex-direction: column; align-items: center; }
             .bracket-col { min-height: auto; width: 100% !important; margin-bottom: 30px; align-items: center; }
             .match-card { width: 90%; max-width: 350px; }
             .points-display { font-size: 32px; }
+            .flex-mobile-col { flex-direction: column; gap: 10px; align-items: stretch; }
         }
     </style>
 </head>
@@ -134,7 +137,6 @@
             const [torneoData, setTorneoData] = useState(null);
             const [playoffData, setPlayoffData] = useState({});
             const [selectedCruce, setSelectedCruce] = useState(null);
-            const [activeTab, setActiveTab] = useState('vivo');
 
             useEffect(() => {
                 const localData = localStorage.getItem('goat_torneo_data');
@@ -233,152 +235,22 @@
                         <div className="team-row" style={{color: ganadorTerceros === eq2 ? '#10b981' : '#fff'}}>
                             <span>{eq2}</span><span className="score-box">{hasGoat && eq2 === 'GOAT' ? ptsGoat : (hasGoat && eq1 === 'GOAT' ? ptsRival : (ganadorTerceros === eq2 ? '✓' : '-'))}</span>
                         </div>
-                        {hasGoat && <div style={{fontSize:'10px', color:'#10b981', marginTop:'5px', textAlign:'center'}}>● ABRIR PANEL</div>}
+                        {hasGoat && <div style={{fontSize:'10px', color:'#10b981', marginTop:'5px', textAlign:'center'}}>● ABRIR PANEL GOAT</div>}
                     </div>
                 );
             };
 
-            // MODAL CATEGORIAS (HEREDADO DE INDEX)
-            const ModalCategoriasPlayoff = ({ cruce, savePlayoffData }) => {
-                const categoriasTemp = cruce.categoriasHabilitadas || {};
-                const jugadoresHabilitadosTemp = cruce.jugadoresHabilitados || [];
-
-                const toggleHabilitacion = (nombre, dest) => {
-                    let nuevos = [...jugadoresHabilitadosTemp];
-                    const existe = nuevos.find(j => j.jugador === nombre && j.categoriaDestino === dest);
-                    if (existe) nuevos = nuevos.filter(j => !(j.jugador === nombre && j.categoriaDestino === dest));
-                    else nuevos.push({ jugador: nombre, categoriaDestino: dest });
-                    savePlayoffData({ ...cruce, jugadoresHabilitados: nuevos });
-                };
-
-                const setCat = (cat, val) => savePlayoffData({ ...cruce, categoriasHabilitadas: { ...categoriasTemp, [cat]: val }});
-
-                return (
-                    <div style={{background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #444'}}>
-                        <h4 className="gold-text" style={{marginBottom: '10px'}}>Ascensos de Jugadores (Solo para esta serie)</h4>
-                        
-                        <label style={{display: 'block', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_5ta_en_4ta || false} onChange={(e) => setCat('caballeros_5ta_en_4ta', e.target.checked)} /> 5ta → 4ta</label>
-                        {categoriasTemp.caballeros_5ta_en_4ta && <div style={{marginLeft: '20px', marginBottom:'10px'}}>{JUGADORES_GOAT.caballeros_5ta.map(j => <label key={j.nombre} style={{display:'block', fontSize:'11px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_4ta')} onChange={() => toggleHabilitacion(j.nombre, 'caballeros_4ta')} /> {j.nombre}</label>)}</div>}
-
-                        <label style={{display: 'block', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_4ta_en_3ra || false} onChange={(e) => setCat('caballeros_4ta_en_3ra', e.target.checked)} /> 4ta → 3ra</label>
-                        {categoriasTemp.caballeros_4ta_en_3ra && <div style={{marginLeft: '20px', marginBottom:'10px'}}>{JUGADORES_GOAT.caballeros_4ta.map(j => <label key={j.nombre} style={{display:'block', fontSize:'11px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_3ra')} onChange={() => toggleHabilitacion(j.nombre, 'caballeros_3ra')} /> {j.nombre}</label>)}</div>}
-
-                        <label style={{display: 'block', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.caballeros_3ra_en_2da || false} onChange={(e) => setCat('caballeros_3ra_en_2da', e.target.checked)} /> 3ra → 2da</label>
-                        {categoriasTemp.caballeros_3ra_en_2da && <div style={{marginLeft: '20px', marginBottom:'10px'}}>{JUGADORES_GOAT.caballeros_3ra.map(j => <label key={j.nombre} style={{display:'block', fontSize:'11px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'caballeros_2da')} onChange={() => toggleHabilitacion(j.nombre, 'caballeros_2da')} /> {j.nombre}</label>)}</div>}
-
-                        <label style={{display: 'block', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.damas_c_en_b || false} onChange={(e) => setCat('damas_c_en_b', e.target.checked)} /> Damas C → B</label>
-                        {categoriasTemp.damas_c_en_b && <div style={{marginLeft: '20px', marginBottom:'10px'}}>{JUGADORES_GOAT.damas_c.map(j => <label key={j.nombre} style={{display:'block', fontSize:'11px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'damas_b')} onChange={() => toggleHabilitacion(j.nombre, 'damas_b')} /> {j.nombre}</label>)}</div>}
-
-                        <label style={{display: 'block', marginBottom: '10px'}}><input type="checkbox" checked={categoriasTemp.damas_b_en_a || false} onChange={(e) => setCat('damas_b_en_a', e.target.checked)} /> Damas B → A</label>
-                        {categoriasTemp.damas_b_en_a && <div style={{marginLeft: '20px', marginBottom:'10px'}}>{JUGADORES_GOAT.damas_b.map(j => <label key={j.nombre} style={{display:'block', fontSize:'11px'}}><input type="checkbox" checked={jugadoresHabilitadosTemp.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === 'damas_a')} onChange={() => toggleHabilitacion(j.nombre, 'damas_a')} /> {j.nombre}</label>)}</div>}
-                    </div>
-                );
-            };
-
-            // COMPONENTE DE ARMADO INTELIGENTE (HEREDADO DE INDEX)
-            const PartidoCardPlayoff = ({ cruce, partido, cruceId }) => {
-                const pData = cruce.partidos?.[partido.id] || { jugadores: [], horario: '', dia: 'sabado' };
-                const jugadoresSeleccionados = pData.jugadores || [];
-                const jugadoresHabilitados = cruce.jugadoresHabilitados || [];
-                
-                // Inteligencia de Slots
-                let slotsRequeridos = [];
-                if (partido.categorias.length === partido.numJugadores) slotsRequeridos = [...partido.categorias];
-                else if (partido.categorias.length === 1) slotsRequeridos = Array(partido.numJugadores).fill(partido.categorias[0]);
-
-                const slotsRestantes = [...slotsRequeridos];
-                jugadoresSeleccionados.forEach(playerName => {
-                    const jObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === playerName);
-                    if (jObj) {
-                        let sIdx = slotsRestantes.indexOf(jObj.categoria);
-                        if (sIdx !== -1) slotsRestantes.splice(sIdx, 1);
-                        else {
-                            const habs = jugadoresHabilitados.filter(jh => jh.jugador === playerName);
-                            let found = false;
-                            for (let hab of habs) {
-                                const hIdx = slotsRestantes.indexOf(hab.categoriaDestino);
-                                if (hIdx !== -1) { slotsRestantes.splice(hIdx, 1); found = true; break; }
-                            }
-                            if (!found && slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
-                        }
-                    } else if (slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
-                });
-
-                // Contar partidos jugados en ESTE cruce (Límite 3)
-                const contarEnCruce = (nombre) => {
-                    let c = 0;
-                    Object.values(cruce.partidos || {}).forEach(part => {
-                        if (part.jugadores && part.jugadores.includes(nombre)) c++;
-                    });
-                    return c;
-                };
-
-                const getOpciones = (reqCat) => {
-                    const base = JUGADORES_GOAT[reqCat] || [];
-                    const extra = jugadoresHabilitados.filter(jh => jh.categoriaDestino === reqCat).map(jh => {
-                        const jOrig = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
-                        return { ...jOrig, esHabilitado: true };
-                    });
-                    return [...base, ...extra].filter(d => !jugadoresSeleccionados.includes(d.nombre));
-                };
-
-                const addPlayer = (nombre, reqCat) => {
-                    if (jugadoresSeleccionados.length >= partido.numJugadores) return;
-                    const op = getOpciones(reqCat).find(j => j.nombre === nombre);
-                    if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { alert(`${nombre} ya tiene 3 partidos en esta serie.`); return; }
-                    
-                    const nuevos = [...jugadoresSeleccionados, nombre];
-                    const nuevosPartidos = { ...cruce.partidos, [partido.id]: { ...pData, jugadores: nuevos } };
-                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
-                };
-
-                const removePlayer = (idx) => {
-                    const nuevos = jugadoresSeleccionados.filter((_, i) => i !== idx);
-                    const nuevosPartidos = { ...cruce.partidos, [partido.id]: { ...pData, jugadores: nuevos } };
-                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
-                };
-
-                const updateTime = (field, val) => {
-                    const nuevosPartidos = { ...cruce.partidos, [partido.id]: { ...pData, [field]: val } };
-                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
-                };
-
-                return (
-                    <div style={{background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: cruce.partidoBonus === partido.id ? '2px solid #f59e0b' : '1px solid #444'}}>
-                        <div style={{color: '#d4af37', fontSize: '14px', fontWeight: 'bold', marginBottom: '8px'}}>{partido.tipo} {cruce.partidoBonus === partido.id && '⭐'}</div>
-                        
-                        {/* Horarios */}
-                        <div style={{display: 'flex', gap: '10px', marginBottom: '15px'}}>
-                            <select style={{flex: 1}} value={pData.dia} onChange={(e)=>updateTime('dia', e.target.value)}>
-                                <option value="sabado">Sábado</option><option value="domingo">Domingo</option>
-                            </select>
-                            <input style={{flex: 1}} type="time" value={pData.horario} onChange={(e)=>updateTime('horario', e.target.value)} />
-                        </div>
-
-                        {/* Jugadores Cargados */}
-                        <div style={{marginBottom: '10px'}}>
-                            {jugadoresSeleccionados.map((j, idx) => (
-                                <div key={idx} style={{ display: 'inline-block', background: '#667eea', color: 'white', padding: '4px 10px', borderRadius: '4px', marginRight: '6px', fontSize: '12px', marginBottom:'6px' }}>
-                                    {j} <button onClick={() => removePlayer(idx)} style={{ background:'none', border:'none', color:'white', marginLeft:'5px', cursor:'pointer' }}>✕</button>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Selectores Inteligentes */}
-                        {slotsRestantes.map((reqCat, idx) => (
-                            <select key={idx} style={{marginBottom:'5px'}} onChange={(e) => { if(e.target.value) addPlayer(e.target.value, reqCat); }} value="">
-                                <option value="">+ Elegir {reqCat.replace('_', ' ').toUpperCase()}</option>
-                                {getOpciones(reqCat).map(j => <option key={j.nombre} value={j.nombre}>{j.nombre} {j.esHabilitado ? '(Ascenso)' : `(${contarEnCruce(j.nombre)}/3)`}</option>)}
-                            </select>
-                        ))}
-                    </div>
-                );
-            };
-
+            // COMPONENTE PRINCIPAL DE GESTIÓN (Con Cronograma idéntico al Index)
             const GestionCruceModal = ({ cruceId, eq1, eq2, rival }) => {
                 const cruce = playoffData[cruceId] || { partidos: {}, partidoBonus: null, jugadoresHabilitados: [], categoriasHabilitadas: {} };
                 const { ptsGoat, ptsRival } = calcularPuntosCruce(cruceId);
                 const serieDefinida = ptsGoat >= 140 || ptsRival >= 140;
+
+                const [activeTab, setActiveTab] = useState('vivo');
+                const [showHorarioModal, setShowHorarioModal] = useState(false);
+                const [horarioActual, setHorarioActual] = useState({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                const [editandoHorario, setEditandoHorario] = useState(null);
+                const [showCategoriasModal, setShowCategoriasModal] = useState(false);
 
                 useEffect(() => {
                     if (serieDefinida && !cruce.ganador) {
@@ -393,26 +265,144 @@
                     savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
                 };
 
+                // --- LÓGICA DE CRONOGRAMA (CLON DE INDEX) ---
+                const getPartidosDisponibles = (excluirPartido = null) => {
+                    return PARTIDOS.filter(p => {
+                        if (editandoHorario) {
+                            const fp = cruce.partidos?.[p.id];
+                            if (fp && fp.horario === editandoHorario.horario && fp.dia === editandoHorario.dia) return true;
+                        }
+                        if (excluirPartido && p.id === parseInt(excluirPartido)) return false;
+                        return !cruce.partidos?.[p.id]?.horario;
+                    });
+                };
+
+                const agregarHorario = () => {
+                    if (!horarioActual.partido1 || !horarioActual.partido2) { alert('Debes seleccionar los 2 partidos para este horario'); return; }
+                    let nuevosPartidos = { ...cruce.partidos };
+                    
+                    // Limpiar viejos si está editando
+                    if (editandoHorario) {
+                        Object.keys(nuevosPartidos).forEach(id => {
+                            if (nuevosPartidos[id].dia === editandoHorario.dia && nuevosPartidos[id].horario === editandoHorario.horario) {
+                                nuevosPartidos[id].dia = undefined; nuevosPartidos[id].horario = undefined; nuevosPartidos[id].posicion = undefined;
+                            }
+                        });
+                    }
+
+                    // Asignar nuevos
+                    const p1Id = parseInt(horarioActual.partido1);
+                    if (!nuevosPartidos[p1Id]) nuevosPartidos[p1Id] = { jugadores: [] };
+                    nuevosPartidos[p1Id] = { ...nuevosPartidos[p1Id], horario: horarioActual.hora, dia: horarioActual.dia, posicion: 1 };
+
+                    const p2Id = parseInt(horarioActual.partido2);
+                    if (!nuevosPartidos[p2Id]) nuevosPartidos[p2Id] = { jugadores: [] };
+                    nuevosPartidos[p2Id] = { ...nuevosPartidos[p2Id], horario: horarioActual.hora, dia: horarioActual.dia, posicion: 2 };
+
+                    // MAGIA DE GUARDAR Y CONTINUAR
+                    const partidosSinAsignarAhora = PARTIDOS.filter(p => !nuevosPartidos[p.id]?.horario);
+                    if (!editandoHorario && partidosSinAsignarAhora.length >= 2) {
+                        const horariosUsados = {}; 
+                        Object.values(nuevosPartidos).forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
+                        const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
+                        const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+                        
+                        if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' });
+                        else { setShowHorarioModal(false); setEditandoHorario(null); }
+                    } else {
+                        setShowHorarioModal(false); setEditandoHorario(null);
+                    }
+                    
+                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                };
+
+                const eliminarHorario = (dia, hora) => {
+                    if (confirm(`¿Eliminar los partidos del ${dia} a las ${hora}?`)) {
+                        let nuevosPartidos = { ...cruce.partidos };
+                        Object.keys(nuevosPartidos).forEach(id => {
+                            if (nuevosPartidos[id].dia === dia && nuevosPartidos[id].horario === hora) {
+                                nuevosPartidos[id].dia = undefined; nuevosPartidos[id].horario = undefined; nuevosPartidos[id].posicion = undefined;
+                            }
+                        });
+                        savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                    }
+                };
+
+                const editarHorario = (dia, hora) => {
+                    const partidos = PARTIDOS.filter(p => cruce.partidos?.[p.id]?.dia === dia && cruce.partidos?.[p.id]?.horario === hora).map(p => ({...p, ...cruce.partidos[p.id]}));
+                    if (partidos.length === 2) {
+                        const p1 = partidos.find(p => p.posicion === 1); const p2 = partidos.find(p => p.posicion === 2);
+                        setHorarioActual({ dia: dia, hora: hora, partido1: p1 ? p1.id.toString() : '', partido2: p2 ? p2.id.toString() : '' });
+                        setEditandoHorario({ dia, horario: hora }); setShowHorarioModal(true);
+                    }
+                };
+
+                // AGRUPACIONES PARA VISTAS
+                const partidosPorHorario = {};
+                PARTIDOS.forEach(p => {
+                    const pData = cruce.partidos?.[p.id];
+                    if (pData && pData.horario) {
+                        const key = `${pData.dia}-${pData.horario}`;
+                        if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: pData.dia, hora: pData.horario, partidos: [] };
+                        partidosPorHorario[key].partidos.push({...p, ...pData});
+                    }
+                });
+
+                const partidosSinAsignar = PARTIDOS.filter(p => !cruce.partidos?.[p.id]?.horario);
+                const partidosDisponiblesP1 = getPartidosDisponibles();
+                const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
+
+                // --- LÓGICA DE CONVOCATORIA (ASIGNAR JUGADORES) ---
+                const contarEnCruce = (nombre) => {
+                    let c = 0; Object.values(cruce.partidos || {}).forEach(part => { if (part.jugadores && part.jugadores.includes(nombre)) c++; }); return c;
+                };
+
+                const getOpciones = (reqCat, jugSelec) => {
+                    const base = JUGADORES_GOAT[reqCat] || [];
+                    const extra = (cruce.jugadoresHabilitados || []).filter(jh => jh.categoriaDestino === reqCat).map(jh => {
+                        const jOrig = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
+                        return { ...jOrig, esHabilitado: true };
+                    });
+                    return [...base, ...extra].filter(d => !jugSelec.includes(d.nombre));
+                };
+
+                const addPlayer = (matchId, nombre, reqCat, partidoNumJugadores) => {
+                    const pData = cruce.partidos[matchId] || {};
+                    const jugSelec = pData.jugadores || [];
+                    if (jugSelec.length >= partidoNumJugadores) return;
+                    
+                    const op = getOpciones(reqCat, jugSelec).find(j => j.nombre === nombre);
+                    if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { alert(`${nombre} ya tiene 3 partidos en esta serie.`); return; }
+                    
+                    const nuevos = [...jugSelec, nombre];
+                    savePlayoff(cruceId, { ...cruce, partidos: { ...cruce.partidos, [matchId]: { ...pData, jugadores: nuevos } } });
+                };
+
+                const removePlayer = (matchId, idx) => {
+                    const pData = cruce.partidos[matchId] || {};
+                    const nuevos = (pData.jugadores || []).filter((_, i) => i !== idx);
+                    savePlayoff(cruceId, { ...cruce, partidos: { ...cruce.partidos, [matchId]: { ...pData, jugadores: nuevos } } });
+                };
+
+                // --- GENERAR PDF ---
                 const generarPDF = () => {
                     const { jsPDF } = window.jspdf; const doc = new jsPDF();
-                    doc.setFontSize(20); doc.text(`GOAT - PLAYOFF`, 105, 20, { align: 'center' });
-                    doc.setFontSize(14); doc.text(`vs ${rival}`, 105, 30, { align: 'center' });
+                    doc.setFontSize(20); doc.text(`GOAT - PLAYOFF`, 105, 20, { align: 'center' }); doc.setFontSize(14); doc.text(`vs ${rival}`, 105, 30, { align: 'center' });
                     let y = 45;
                     const sorted = PARTIDOS.filter(p => cruce.partidos?.[p.id]?.horario).sort((a,b) => {
                         const m1=cruce.partidos[a.id]; const m2=cruce.partidos[b.id];
-                        if(m1.dia !== m2.dia) return m1.dia === 'sabado' ? -1 : 1;
-                        return m1.horario.localeCompare(m2.horario);
+                        if(m1.dia !== m2.dia) return m1.dia === 'sabado' ? -1 : 1; return m1.horario.localeCompare(m2.horario);
                     });
-                    
                     let currDia = '';
                     sorted.forEach(p => {
                         const m = cruce.partidos[p.id];
                         if (m.dia !== currDia) { currDia = m.dia; y += 10; doc.setFont(undefined, 'bold'); doc.text(currDia.toUpperCase(), 20, y); y += 8; doc.setFont(undefined, 'normal'); }
                         const isBonus = cruce.partidoBonus === p.id;
                         const jText = (m.jugadores && m.jugadores.length > 0) ? m.jugadores.join(' / ') : 'Sin asignar';
-                        doc.text(`${m.horario} - ${p.tipo}${isBonus ? ' (BONUS)' : ''}: ${jText}`, 20, y);
-                        y += 6;
-                        if (y > 270) { doc.addPage(); y = 20; }
+                        if (isBonus) doc.setFont(undefined, 'bold');
+                        doc.text(`${m.horario} - P${m.posicion} - ${p.tipo}${isBonus ? ' (BONUS)' : ''}: ${jText}`, 20, y);
+                        if (isBonus) doc.setFont(undefined, 'normal');
+                        y += 6; if (y > 270) { doc.addPage(); y = 20; }
                     });
                     doc.save(`GOAT-Playoff-vs-${rival}.pdf`);
                 };
@@ -427,31 +417,33 @@
 
                             <div className="tabs">
                                 <button className={`tab-btn ${activeTab==='vivo'?'active':''}`} onClick={()=>setActiveTab('vivo')}>🔴 EN VIVO</button>
-                                {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='armado'?'active':''}`} onClick={()=>setActiveTab('armado')}>⚙️ Armado Inteligente</button>}
+                                {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='cronograma'?'active':''}`} onClick={()=>setActiveTab('cronograma')}>⌚ Cronograma</button>}
+                                {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='convocatoria'?'active':''}`} onClick={()=>setActiveTab('convocatoria')}>👥 Convocatoria</button>}
                             </div>
 
+                            {/* PESTAÑA 1: VIVO */}
                             {activeTab === 'vivo' && (
                                 <div>
                                     <div className="live-banner">
-                                        <div className="gold-text" style={{fontSize:'12px'}}>Marcador Eliminatorio (Corte a 140 pts)</div>
+                                        <div className="gold-text" style={{fontSize:'12px'}}>Marcador Eliminatorio (Meta: 140 pts)</div>
                                         <div className="points-display">
                                             <div style={{color: ptsGoat >= 140 ? '#10b981' : '#fff'}}>{eq1}<br/>{eq1 === 'GOAT' ? ptsGoat : ptsRival}</div>
                                             <div style={{fontSize:'24px', color:'#d4af37'}}>VS</div>
                                             <div style={{color: ptsRival >= 140 ? '#ef4444' : '#fff'}}>{eq2}<br/>{eq2 === 'GOAT' ? ptsGoat : ptsRival}</div>
                                         </div>
-                                        {serieDefinida && <div className="finish-alert">¡SERIE DEFINIDA! {cruce.ganador} AVANZA 🏆</div>}
+                                        {serieDefinida && <div className="finish-alert">¡SERIE DEFINIDA! {cruce.ganador} AVANZA 🏆<div style={{fontSize:'12px', fontWeight:'normal'}}>Partidos restantes cancelados.</div></div>}
                                     </div>
 
                                     {PARTIDOS.map(p => {
                                         const m = cruce.partidos?.[p.id] || {};
+                                        if (!m.horario && !serieDefinida) return null; // Ocultar si no está asignado
                                         const esBonus = cruce.partidoBonus === p.id;
-                                        const jText = m.jugadores && m.jugadores.length > 0 ? m.jugadores.join(' / ') : '---';
                                         
                                         return (
                                             <div key={p.id} style={{background: '#222', padding:'12px', borderRadius:'8px', marginBottom:'8px', display:'flex', justifyContent:'space-between', alignItems:'center', border: esBonus ? '2px solid #f59e0b' : '1px solid #444', opacity: (serieDefinida && m.estado !== 'finalizado') ? 0.5 : 1}}>
                                                 <div>
                                                     <div style={{fontSize:'13px', fontWeight:'bold', color: '#fff'}}>{p.tipo} {esBonus && <span style={{color: '#f59e0b'}}>⭐</span>}</div>
-                                                    <div style={{fontSize:'12px', color:'#aaa'}}>{m.dia || 'Sáb'} {m.horario || '--:--'} | Juegan: {jText}</div>
+                                                    <div style={{fontSize:'12px', color:'#aaa'}}>{m.dia || 'Sáb'} {m.horario || '--:--'} | Juegan: {m.jugadores?.length > 0 ? m.jugadores.join(' / ') : '---'}</div>
                                                 </div>
                                                 <div style={{display:'flex', gap:'5px'}}>
                                                     {m.estado === 'finalizado' ? (
@@ -471,24 +463,174 @@
                                 </div>
                             )}
 
-                            {activeTab === 'armado' && userRole !== 'jugador' && (
+                            {/* PESTAÑA 2: CRONOGRAMA */}
+                            {activeTab === 'cronograma' && userRole !== 'jugador' && (
                                 <div>
-                                    <button className="btn btn-primary" onClick={generarPDF} style={{width: '100%', marginBottom: '20px'}}>📄 Generar PDF Convocatoria</button>
-                                    
                                     <div style={{background: '#333', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37'}}>
                                         <label style={{color: '#d4af37', fontWeight: 'bold', fontSize: '14px'}}>⭐ Seleccionar Partido Bonus (20 pts)</label>
-                                        <select value={cruce.partidoBonus || ''} onChange={(e) => savePlayoff(cruceId, { ...cruce, partidoBonus: parseInt(e.target.value) })}>
+                                        <select value={cruce.partidoBonus || ''} onChange={(e) => savePlayoff(cruceId, { ...cruce, partidoBonus: e.target.value ? parseInt(e.target.value) : null })}>
                                             <option value="">Seleccionar partido bonus...</option>
                                             {PARTIDOS.map(p => <option key={p.id} value={p.id}>{p.tipo}</option>)}
                                         </select>
                                     </div>
 
-                                    <ModalCategoriasPlayoff cruce={cruce} savePlayoffData={(data) => savePlayoff(cruceId, data)} />
+                                    <button className="btn btn-primary" onClick={() => {
+                                        setEditandoHorario(null);
+                                        const horariosUsados = {}; Object.values(cruce.partidos||{}).forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
+                                        const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
+                                        const sig = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+                                        if (sig) setHorarioActual({ dia: sig.dia, hora: sig.hora, partido1: '', partido2: '' });
+                                        else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                                        setShowHorarioModal(true);
+                                    }} style={{width: '100%', marginBottom: '20px'}}>➕ Agregar Horario ({partidosSinAsignar.length} restantes)</button>
 
-                                    {PARTIDOS.map(p => <PartidoCardPlayoff key={p.id} cruce={cruce} partido={p} cruceId={cruceId} />)}
+                                    {Object.values(partidosPorHorario).sort((a,b)=> { if(a.dia!==b.dia) return a.dia==='sabado'?-1:1; return a.hora.localeCompare(b.hora); }).map((h, idx) => (
+                                        <div key={idx} style={{ background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #444' }}>
+                                            <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+                                                <strong style={{color: '#d4af37'}}>{h.dia === 'sabado' ? 'Sábado' : 'Domingo'} - {h.hora} hs</strong>
+                                                <div style={{display: 'flex', gap:'5px'}}>
+                                                    <button className="btn" style={{padding: '5px 10px', fontSize: '12px', background:'#444', color:'white'}} onClick={() => editarHorario(h.dia, h.hora)}>✏️</button>
+                                                    <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px'}} onClick={() => eliminarHorario(h.dia, h.hora)}>🗑️</button>
+                                                </div>
+                                            </div>
+                                            {h.partidos.sort((a,b)=> (a.posicion||0)-(b.posicion||0)).map(p => (
+                                                <div key={p.id} style={{ background: '#111', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: cruce.partidoBonus === p.id ? '1px solid #f59e0b' : 'none' }}>
+                                                    Partido {p.posicion}: <strong>{p.tipo}</strong> {cruce.partidoBonus === p.id && <span style={{color: '#f59e0b'}}>⭐</span>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* PESTAÑA 3: CONVOCATORIA INTELIGENTE */}
+                            {activeTab === 'convocatoria' && userRole !== 'jugador' && (
+                                <div>
+                                    <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+                                        <button className="btn btn-primary" onClick={generarPDF} style={{flex: 1}}>📄 Generar PDF</button>
+                                        <button className="btn" onClick={() => setShowCategoriasModal(true)} style={{flex: 1, background: '#444', color: 'white'}}>⚙️ Habilitar Ascensos</button>
+                                    </div>
+
+                                    {PARTIDOS.filter(p => cruce.partidos?.[p.id]?.horario).sort((a,b)=> {
+                                        const m1=cruce.partidos[a.id]; const m2=cruce.partidos[b.id];
+                                        if(m1.dia !== m2.dia) return m1.dia === 'sabado' ? -1 : 1;
+                                        if(m1.horario !== m2.horario) return m1.horario.localeCompare(m2.horario);
+                                        return m1.posicion - m2.posicion;
+                                    }).map(partido => {
+                                        const pData = cruce.partidos[partido.id];
+                                        const jugSelec = pData.jugadores || [];
+                                        
+                                        // Inteligencia de Slots
+                                        let slotsRequeridos = [];
+                                        if (partido.categorias.length === partido.numJugadores) slotsRequeridos = [...partido.categorias];
+                                        else if (partido.categorias.length === 1) slotsRequeridos = Array(partido.numJugadores).fill(partido.categorias[0]);
+
+                                        const slotsRestantes = [...slotsRequeridos];
+                                        jugSelec.forEach(playerName => {
+                                            const jObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === playerName);
+                                            if (jObj) {
+                                                let sIdx = slotsRestantes.indexOf(jObj.categoria);
+                                                if (sIdx !== -1) slotsRestantes.splice(sIdx, 1);
+                                                else {
+                                                    const habs = (cruce.jugadoresHabilitados||[]).filter(jh => jh.jugador === playerName);
+                                                    let found = false;
+                                                    for (let hab of habs) {
+                                                        const hIdx = slotsRestantes.indexOf(hab.categoriaDestino);
+                                                        if (hIdx !== -1) { slotsRestantes.splice(hIdx, 1); found = true; break; }
+                                                    }
+                                                    if (!found && slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
+                                                }
+                                            } else if (slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
+                                        });
+
+                                        return (
+                                            <div key={partido.id} style={{background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: cruce.partidoBonus === partido.id ? '2px solid #f59e0b' : '1px solid #444'}}>
+                                                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                                                    <div style={{color: '#d4af37', fontSize: '14px', fontWeight: 'bold'}}>{partido.tipo} {cruce.partidoBonus === partido.id && '⭐'}</div>
+                                                    <div style={{background: '#1e3c72', padding: '2px 8px', borderRadius: '4px', fontSize:'12px'}}>{pData.dia === 'sabado' ? 'Sáb' : 'Dom'} {pData.horario} - P{pData.posicion}</div>
+                                                </div>
+
+                                                <div style={{marginBottom: '10px'}}>
+                                                    {jugSelec.map((j, idx) => {
+                                                        const jObj = Object.values(JUGADORES_GOAT).flat().find(jug => jug.nombre === j);
+                                                        const esHab = (cruce.jugadoresHabilitados||[]).some(jh => jh.jugador === j && partido.categorias.includes(jh.categoriaDestino));
+                                                        return (
+                                                            <div key={idx} style={{ display: 'inline-block', background: esHab ? '#10b981' : '#667eea', color: 'white', padding: '4px 10px', borderRadius: '4px', marginRight: '6px', fontSize: '12px', marginBottom:'6px' }}>
+                                                                {j} {jObj?.capitan && <span className="captain-badge">C</span>} {esHab && '↑'}
+                                                                <button onClick={() => removePlayer(partido.id, idx)} style={{ background:'none', border:'none', color:'white', marginLeft:'5px', cursor:'pointer' }}>✕</button>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                {slotsRestantes.map((reqCat, idx) => (
+                                                    <select key={idx} style={{marginBottom:'5px'}} onChange={(e) => { if(e.target.value) addPlayer(partido.id, e.target.value, reqCat, partido.numJugadores); }} value="">
+                                                        <option value="">+ Elegir {reqCat.replace('_', ' ').toUpperCase()}</option>
+                                                        {getOpciones(reqCat, jugSelec).map(j => <option key={j.nombre} value={j.nombre}>{j.nombre} {j.esHabilitado ? '(Ascenso)' : `(${contarEnCruce(j.nombre)}/3)`}</option>)}
+                                                    </select>
+                                                ))}
+                                                {jugSelec.some(j => !(cruce.jugadoresHabilitados||[]).some(jh=>jh.jugador===j) && contarEnCruce(j) > 3) && <div className="player-count-warning">⚠️ Algún jugador supera los 3 partidos</div>}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
+
+                        {/* MODALES SECUNDARIOS */}
+                        {showHorarioModal && (
+                            <div className="modal" onClick={() => {}}>
+                                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                    <h3 className="gold-text" style={{marginBottom:'15px'}}>{editandoHorario ? 'Editar Horario' : 'Agregar Horario'}</h3>
+                                    <div className="form-group"><label>Día</label><select value={horarioActual.dia} onChange={(e) => setHorarioActual({...horarioActual, dia: e.target.value})}><option value="sabado">Sábado</option><option value="domingo">Domingo</option></select></div>
+                                    <div className="form-group">
+                                        <label>Hora</label>
+                                        <select value={horarioActual.hora} onChange={(e) => setHorarioActual({...horarioActual, hora: e.target.value})}>
+                                            <option value="09:00">09:00</option><option value="10:30">10:30</option><option value="12:00">12:00</option><option value="13:30">13:30</option><option value="15:00">15:00</option><option value="16:30">16:30</option>{horarioActual.dia === 'sabado' && <option value="17:45">17:45</option>}
+                                        </select>
+                                    </div>
+                                    <div className="form-group"><label>Partido 1</label><select value={horarioActual.partido1} onChange={(e) => setHorarioActual({...horarioActual, partido1: e.target.value})}><option value="">Seleccionar...</option>{partidosDisponiblesP1.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
+                                    <div className="form-group"><label>Partido 2</label><select value={horarioActual.partido2} onChange={(e) => setHorarioActual({...horarioActual, partido2: e.target.value})} disabled={!horarioActual.partido1}><option value="">Seleccionar...</option>{partidosDisponiblesP2.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
+                                    
+                                    <div className="flex-mobile-col" style={{marginTop:'20px'}}>
+                                        <button className="btn btn-primary" onClick={agregarHorario}>{editandoHorario ? 'Actualizar' : partidosSinAsignar.length > 2 ? 'Guardar y Continuar' : 'Guardar'}</button>
+                                        <button className="btn btn-danger" onClick={() => { setShowHorarioModal(false); setEditandoHorario(null); }}>Cancelar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {showCategoriasModal && (
+                            <div className="modal" onClick={() => {}}>
+                                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px'}}>
+                                    <h3 className="gold-text" style={{marginBottom:'15px'}}>Ascensos de Jugadores</h3>
+                                    <p style={{color:'#aaa', fontSize:'13px', marginBottom:'20px'}}>Solo aplica para esta serie de Play-Off. No cuentan para el límite de 3 partidos.</p>
+                                    
+                                    {['caballeros_5ta_en_4ta', 'caballeros_4ta_en_3ra', 'caballeros_3ra_en_2da', 'damas_c_en_b', 'damas_b_en_a'].map(catKey => {
+                                        const catsH = cruce.categoriasHabilitadas || {}; const jugsH = cruce.jugadoresHabilitados || [];
+                                        const isChecked = catsH[catKey] || false;
+                                        const srcCat = catKey.split('_en_')[0] + (catKey.includes('caballeros') ? '' : '_' + catKey.split('_')[1]);
+                                        const destCat = catKey.includes('caballeros') ? 'caballeros_' + catKey.split('_en_')[1] : 'damas_' + catKey.split('_en_')[1];
+                                        
+                                        const toggleCat = () => savePlayoff(cruceId, {...cruce, categoriasHabilitadas: {...catsH, [catKey]: !isChecked}});
+                                        const toggleJug = (nombre) => {
+                                            let nuevos = [...jugsH]; const existe = nuevos.find(j => j.jugador === nombre && j.categoriaDestino === destCat);
+                                            if (existe) nuevos = nuevos.filter(j => !(j.jugador === nombre && j.categoriaDestino === destCat));
+                                            else nuevos.push({ jugador: nombre, categoriaDestino: destCat });
+                                            savePlayoff(cruceId, {...cruce, jugadoresHabilitados: nuevos});
+                                        };
+
+                                        return (
+                                            <div key={catKey} style={{background:'#222', padding:'10px', borderRadius:'8px', marginBottom:'10px'}}>
+                                                <label style={{display:'flex', alignItems:'center', gap:'10px', fontWeight:'bold', color:'#fff'}}><input type="checkbox" checked={isChecked} onChange={toggleCat} /> {catKey.replace(/_/g, ' ').toUpperCase()}</label>
+                                                {isChecked && <div style={{marginLeft:'25px', marginTop:'10px'}}>{JUGADORES_GOAT[srcCat].map(j => <label key={j.nombre} style={{display:'block', marginBottom:'5px'}}><input type="checkbox" checked={jugsH.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === destCat)} onChange={() => toggleJug(j.nombre)} /> {j.nombre}</label>)}</div>}
+                                            </div>
+                                        );
+                                    })}
+                                    <div style={{marginTop:'20px', textAlign:'right'}}><button className="btn btn-primary" onClick={() => setShowCategoriasModal(false)}>Listo</button></div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
             };
@@ -503,7 +645,7 @@
                                 <span style={{color: '#aaa', fontSize: '12px'}}>Instancias Finales UNCAS 2026</span>
                             </div>
                         </div>
-                        <a href="index.html" className="tab-btn" style={{background: '#1e3c72', color: 'white'}}>⬅ Volver a Zonas</a>
+                        <a href="index.html" className="btn" style={{background: '#1e3c72', color: 'white', textDecoration: 'none'}}>⬅ Volver a Zonas</a>
                     </div>
 
                     <div className="bracket-container">
