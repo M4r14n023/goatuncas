@@ -2374,7 +2374,13 @@ function App() {
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '800px', maxHeight: '90vh'}}>
                         <div className="modal-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
                             <span>🏆 Llave de Play-Offs</span>
-                            {!disableAdvance && <button onClick={() => setPlayoffAvances({})} className="btn" style={{padding: '5px 10px', fontSize: '12px', background: '#e0e0e0', margin: 0}}>Resetear Ticks</button>}
+                            <div style={{display: 'flex', gap: '10px'}}>
+                                {!disableAdvance && <button onClick={() => setPlayoffAvances({})} className="btn" style={{padding: '5px 10px', fontSize: '12px', background: '#e0e0e0', margin: 0}}>Resetear Ticks</button>}
+                                {/* EL NUEVO BOTÓN QUE LLEVA AL MODO COPA */}
+                                <button onClick={() => window.location.href = 'playoff.html'} className="btn btn-warning" style={{padding: '5px 15px', fontSize: '13px', margin: 0, fontWeight: 'bold', background: '#d4af37', color: '#1a1a1a', border: 'none', boxShadow: '0 0 10px rgba(212, 175, 55, 0.5)'}}>
+                                    ⚔️ MODO PLAY-OFF ⚔️
+                                </button>
+                            </div>
                         </div>
                         <p style={{marginBottom: '20px', color: '#666', fontSize: '13px'}}>Las posiciones iniciales se calculan basándose en la tabla de zonas actual. {disableAdvance ? 'Aquí podés ver los cruces proyectados.' : 'Utilizá los ✅ para proyectar ganadores hacia la final.'}</p>
                         

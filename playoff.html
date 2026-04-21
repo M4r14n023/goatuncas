@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOAT - Modo Play-Off</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* Estética Modo Copa: Oscura, dorada, épica */
+        body { 
+            background: radial-gradient(circle at center, #2d2416 0%, #111 100%); 
+            color: #fff; 
+            min-height: 100vh; 
+            padding: 20px; 
+            overflow-x: hidden;
+        }
+
+        .header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+            padding: 20px; 
+            border-bottom: 2px solid rgba(212, 175, 55, 0.3); 
+            background: rgba(0,0,0,0.5);
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .header h1 { color: #d4af37; text-transform: uppercase; letter-spacing: 2px; text-shadow: 0 0 20px rgba(212, 175, 55, 0.5); }
+        .btn-volver { background: #1e3c72; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; border: 1px solid #667eea; }
+
+        /* Contenedor principal de la llave */
+        .bracket-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: auto;
+            padding-bottom: 50px;
+        }
+
+        /* Columnas de la llave */
+        .bracket-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            min-height: 600px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .col-octavos { width: 200px; }
+        .col-cuartos { width: 220px; }
+        .col-semis { width: 240px; }
+        .col-final { width: 300px; justify-content: center; }
+
+        /* Tarjeta de cada Partido/Cruce */
+        .matchup {
+            background: linear-gradient(180deg, #1e1e1e 0%, #111 100%);
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .matchup:hover { transform: scale(1.05); border-color: #d4af37; z-index: 10; }
+        
+        /* Destacar partidos de GOAT */
+        .matchup.has-goat { border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+        
+        .matchup-header { font-size: 11px; color: #d4af37; text-align: center; margin-bottom: 8px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;}
+        
+        .team { display: flex; justify-content: space-between; align-items: center; padding: 6px; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px; font-size: 14px;}
+        .team.winner { color: #d4af37; font-weight: bold; background: rgba(212, 175, 55, 0.1); }
+        .score { font-family: monospace; font-weight: bold; background: #000; padding: 2px 6px; border-radius: 4px; color: #fff;}
+
+        /* Líneas conectoras invisibles en CSS puro, hechas con SVG en React por simplicidad */
+        
+        .final-cup { font-size: 50px; text-align: center; margin-bottom: 20px; text-shadow: 0 0 30px rgba(212, 175, 55, 0.8); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        @media (max-width: 1024px) {
+            .bracket-container { flex-direction: column; align-items: center; }
+            .bracket-col { min-height: auto; width: 100% !important; margin-bottom: 30px; align-items: center; }
+            .matchup { width: 90%; max-width: 350px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        function PlayoffApp() {
+            const [torneoData, setTorneoData] = useState(null);
+
+            useEffect(() => {
+                // Cargar datos del index.html
+                const data = localStorage.getItem('goat_torneo_data');
+                if (data) {
+                    setTorneoData(JSON.parse(data));
+                }
+            }, []);
+
+            if (!torneoData) return <div style={{textAlign: 'center', marginTop: '100px'}}><h2>Cargando datos del torneo...</h2><p>Si esto demora, ingresá primero al index.html para generar los datos.</p></div>;
+
+            // --- RECONSTRUCCIÓN LÓGICA DE TABLAS PARA SABER QUIÉN CLASIFICÓ ---
+            // (Simplificada para obtener los puestos)
+            const calcularPosiciones = (filtroEquipos) => {
+                const tabla = {};
+                filtroEquipos.forEach(equipo => { if (equipo) tabla[equipo] = { nombre: equipo, seriesGanadas: 0, puntosTotales: 0 }; });
+
+                torneoData.fechas.forEach((fecha, fechaIdx) => {
+                    if (!fecha || !fecha.partidos) return;
+                    const rival = fecha.rival;
+                    if (tabla['GOAT'] && tabla[rival]) {
+                        let ptsGoat = 0; let ptsRival = 0;
+                        fecha.partidos.forEach(partido => {
+                            if (torneoData.resultados[`${fechaIdx}-${partido.id}`]) ptsGoat += (fecha.partidoBonus === partido.id ? 20 : 10);
+                            else if (torneoData.estadoPartidos[`${fechaIdx}-${partido.id}`]?.estado === 'finalizado') ptsRival += (fecha.partidoBonus === partido.id ? 20 : 10);
+                        });
+                        if (fecha.isClosed) {
+                            if (ptsGoat >= 140) tabla['GOAT'].seriesGanadas++; else if (ptsRival >= 140) tabla[rival].seriesGanadas++;
+                        }
+                        tabla['GOAT'].puntosTotales += ptsGoat; tabla[rival].puntosTotales += ptsRival;
+                    }
+                });
+                return Object.values(tabla).sort((a, b) => b.seriesGanadas !== a.seriesGanadas ? b.seriesGanadas - a.seriesGanadas : b.puntosTotales - a.puntosTotales);
+            };
+
+            const z1 = calcularPosiciones(torneoData.zonasConfig.zona1).map(e => e.nombre);
+            const z2 = calcularPosiciones(torneoData.zonasConfig.zona2).map(e => e.nombre);
+            
+            // Si no hay equipos suficientes, mostramos advertencia
+            if (z1.length < 5 || z2.length < 5) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Faltan equipos en las zonas. Configuralos en el panel principal.</h2></div>;
+
+            // --- ESTRUCTURA DE LA LLAVE ---
+            // Nombres de los equipos clasificados
+            const octA1 = z1[3]; const octA2 = z2[4];
+            const octB1 = z2[3]; const octB2 = z1[4];
+            
+            const cua1_1 = z1[0]; const cua1_2 = 'Ganador 8vos B';
+            const cua2_1 = z1[1]; const cua2_2 = z2[2];
+            const cua3_1 = z1[2]; const cua3_2 = z2[1];
+            const cua4_1 = 'Ganador 8vos A'; const cua4_2 = z2[0];
+
+            // Componente visual para un cruce
+            const MatchupCard = ({ title, eq1, eq2, score1="0", score2="0", align="center" }) => {
+                const hasGoat = eq1 === 'GOAT' || eq2 === 'GOAT';
+                return (
+                    <div className={`matchup ${hasGoat ? 'has-goat' : ''}`} onClick={() => alert(`Próximamente: Acá se abrirá el panel de horarios y seguimiento en vivo para ${eq1} vs ${eq2}`)}>
+                        <div className="matchup-header">{title}</div>
+                        <div className="team">
+                            <span>{eq1}</span>
+                            <span className="score">{score1}</span>
+                        </div>
+                        <div className="team">
+                            <span>{eq2}</span>
+                            <span className="score">{score2}</span>
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <div>
+                    <div className="header">
+                        <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
+                            <img src="GOAT.jpeg" alt="Logo" style={{width: '50px', borderRadius: '50%'}} />
+                            <div style={{textAlign: 'left'}}>
+                                <h1 style={{fontSize: '1.5rem', margin: 0}}>Mata-Mata</h1>
+                                <span style={{color: '#aaa', fontSize: '12px'}}>Instancias Finales UNCAS</span>
+                            </div>
+                        </div>
+                        <a href="index.html" className="btn-volver">⬅ Volver al Torneo</a>
+                    </div>
+
+                    {/* LLAVE ESTILO MUNDIAL (IZQ -> CENTRO <- DER) */}
+                    <div className="bracket-container">
+                        
+                        {/* LADO IZQUIERDO */}
+                        <div className="bracket-col col-octavos">
+                            <MatchupCard title="Octavos B" eq1={octB1} eq2={octB2} />
+                        </div>
+                        
+                        <div className="bracket-col col-cuartos">
+                            <MatchupCard title="Cuartos 1" eq1={cua1_1} eq2={cua1_2} />
+                            <MatchupCard title="Cuartos 2" eq1={cua2_1} eq2={cua2_2} />
+                        </div>
+
+                        <div className="bracket-col col-semis">
+                            <MatchupCard title="Semifinal 1" eq1="Ganador C1" eq2="Ganador C2" />
+                        </div>
+
+                        {/* CENTRO: LA GRAN FINAL */}
+                        <div className="bracket-col col-final">
+                            <div className="final-cup">🏆</div>
+                            <MatchupCard title="GRAN FINAL" eq1="Ganador S1" eq2="Ganador S2" />
+                        </div>
+
+                        {/* LADO DERECHO */}
+                        <div className="bracket-col col-semis">
+                            <MatchupCard title="Semifinal 2" eq1="Ganador C3" eq2="Ganador C4" />
+                        </div>
+
+                        <div className="bracket-col col-cuartos">
+                            <MatchupCard title="Cuartos 3" eq1={cua3_1} eq2={cua3_2} />
+                            <MatchupCard title="Cuartos 4" eq1={cua4_1} eq2={cua4_2} />
+                        </div>
+
+                        <div className="bracket-col col-octavos">
+                            <MatchupCard title="Octavos A" eq1={octA1} eq2={octA2} />
+                        </div>
+
+                    </div>
+                    
+                    <div style={{textAlign: 'center', color: '#666', marginTop: '20px'}}>
+                        <p>Los equipos se posicionan automáticamente según el rendimiento de la Fase de Zonas.</p>
+                        <p>La mecánica de <strong>Corte a los 140 pts</strong> se activará al ingresar a cada cruce.</p>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<PlayoffApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
