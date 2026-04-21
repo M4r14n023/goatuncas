@@ -6,6 +6,9 @@
     <meta name="theme-color" content="#111111">
     <title>GOAT - Modo Play-Off</title>
     
+    <link rel="apple-touch-icon" href="GOAT.jpeg">
+    <link rel="icon" type="image/jpeg" href="GOAT.jpeg">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -34,13 +37,18 @@
         .mgmt-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; justify-content: center; align-items: flex-start; padding-top: 20px; overflow-y: auto; }
         .mgmt-content { background: #1a1a1a; width: 95%; max-width: 800px; border: 2px solid #d4af37; border-radius: 12px; padding: 20px; margin-bottom: 40px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); }
         
+        /* ESTILOS DE MODALES EMERGENTES CORREGIDOS */
+        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
+        .modal-content { background: #1a1a1a; padding: 30px; border-radius: 12px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; border: 2px solid #d4af37; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+        .modal-header { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #d4af37; text-transform: uppercase; border-bottom: 1px solid #444; padding-bottom: 10px;}
+
         .tabs { display: flex; gap: 5px; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px; overflow-x: auto; }
         .tab-btn { background: #333; color: #aaa; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; white-space: nowrap; text-decoration: none; font-weight: 600; transition: 0.2s;}
         .tab-btn.active { background: #d4af37; color: #000; font-weight: bold; }
 
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; color: #aaa; margin-bottom: 5px; }
-        select, input { width: 100%; background: #333; border: 1px solid #555; color: #fff; padding: 8px; border-radius: 6px; }
+        label { display: block; font-size: 13px; color: #ccc; margin-bottom: 5px; font-weight: bold; }
+        select, input { width: 100%; background: #333; border: 1px solid #555; color: #fff; padding: 10px; border-radius: 6px; font-size: 14px;}
 
         .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;}
         .btn:hover { filter: brightness(1.1); }
@@ -132,6 +140,440 @@
 
         const { useState, useEffect } = React;
 
+        // FUNCIONES GLOBALES
+        const calcularPuntosCruce = (cruce) => {
+            let ptsGoat = 0; let ptsRival = 0;
+            if (!cruce) return { ptsGoat, ptsRival };
+            Object.entries(cruce.partidos || {}).forEach(([pId, pData]) => {
+                if (pData.estado === 'finalizado') {
+                    const valor = (parseInt(pId) === cruce.partidoBonus) ? 20 : 10;
+                    if (pData.resultado === 'ganado') ptsGoat += valor; 
+                    else if (pData.resultado === 'perdido') ptsRival += valor;
+                }
+            });
+            return { ptsGoat, ptsRival };
+        };
+
+        // COMPONENTE: Tarjeta de la Llave
+        const MatchupCard = ({ cruceId, title, eq1, eq2, playoffData, savePlayoff, userRole, setSelectedCruce }) => {
+            const hasGoat = eq1 === 'GOAT' || eq2 === 'GOAT';
+            const cruce = playoffData[cruceId];
+            const { ptsGoat, ptsRival } = hasGoat ? calcularPuntosCruce(cruce) : {ptsGoat: 0, ptsRival: 0};
+            const ganadorTerceros = cruce?.ganador;
+
+            const handleClick = () => {
+                if (hasGoat) setSelectedCruce({ id: cruceId, eq1, eq2, rival: eq1 === 'GOAT' ? eq2 : eq1 });
+                else if (userRole !== 'jugador' && eq1 && eq2 && !eq1.includes('Ganador') && !eq2.includes('Ganador')) {
+                    const winner = prompt(`Definir ganador de ${title}:\n1: ${eq1}\n2: ${eq2}\nVacío para cancelar.`);
+                    if (winner === '1') savePlayoff(cruceId, { ...cruce, ganador: eq1 });
+                    if (winner === '2') savePlayoff(cruceId, { ...cruce, ganador: eq2 });
+                }
+            };
+
+            return (
+                <div className={`match-card ${hasGoat ? 'active-goat' : ''}`} onClick={handleClick}>
+                    <div style={{ fontSize: '11px', color: '#d4af37', textAlign: 'center', marginBottom: '8px', fontWeight: 'bold'}}>{title}</div>
+                    <div className="team-row" style={{color: ganadorTerceros === eq1 ? '#10b981' : '#fff'}}>
+                        <span>{eq1}</span><span className="score-box">{hasGoat && eq1 === 'GOAT' ? ptsGoat : (hasGoat && eq2 === 'GOAT' ? ptsRival : (ganadorTerceros === eq1 ? '✓' : '-'))}</span>
+                    </div>
+                    <div className="team-row" style={{color: ganadorTerceros === eq2 ? '#10b981' : '#fff'}}>
+                        <span>{eq2}</span><span className="score-box">{hasGoat && eq2 === 'GOAT' ? ptsGoat : (hasGoat && eq1 === 'GOAT' ? ptsRival : (ganadorTerceros === eq2 ? '✓' : '-'))}</span>
+                    </div>
+                    {hasGoat && <div style={{fontSize:'10px', color:'#10b981', marginTop:'5px', textAlign:'center'}}>● ABRIR PANEL GOAT</div>}
+                </div>
+            );
+        };
+
+        // COMPONENTE: Modal de Gestión de Cruce (Separado para evitar auto-cierre)
+        const GestionCruceModal = ({ cruceId, eq1, eq2, rival, playoffData, savePlayoff, userRole, setSelectedCruce }) => {
+            const cruce = playoffData[cruceId] || { partidos: {}, partidoBonus: null, jugadoresHabilitados: [], categoriasHabilitadas: {} };
+            const { ptsGoat, ptsRival } = calcularPuntosCruce(cruce);
+            const serieDefinida = ptsGoat >= 140 || ptsRival >= 140;
+
+            const [activeTab, setActiveTab] = useState('vivo');
+            const [showHorarioModal, setShowHorarioModal] = useState(false);
+            const [horarioActual, setHorarioActual] = useState({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+            const [editandoHorario, setEditandoHorario] = useState(null);
+            const [showCategoriasModal, setShowCategoriasModal] = useState(false);
+
+            // Auto-guardar ganador si llegan a 140
+            useEffect(() => {
+                if (serieDefinida && cruce.ganador !== (ptsGoat >= 140 ? 'GOAT' : rival)) {
+                    savePlayoff(cruceId, { ...cruce, ganador: ptsGoat >= 140 ? 'GOAT' : rival });
+                }
+            }, [serieDefinida, ptsGoat, ptsRival]); 
+
+            const updateMatchResult = (matchId, resultado) => {
+                if (userRole === 'jugador') return;
+                const pData = cruce.partidos?.[matchId] || {};
+                const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, resultado, estado: 'finalizado' } };
+                savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+            };
+
+            // --- CRONOGRAMA ---
+            const getPartidosDisponibles = (excluirPartido = null) => {
+                return PARTIDOS.filter(p => {
+                    if (editandoHorario) {
+                        const fp = cruce.partidos?.[p.id];
+                        if (fp && fp.horario === editandoHorario.horario && fp.dia === editandoHorario.dia) return true;
+                    }
+                    if (excluirPartido && p.id === parseInt(excluirPartido)) return false;
+                    return !cruce.partidos?.[p.id]?.horario;
+                });
+            };
+
+            const agregarHorario = () => {
+                if (!horarioActual.partido1 || !horarioActual.partido2) { alert('Debes seleccionar los 2 partidos para este horario'); return; }
+                let nuevosPartidos = { ...cruce.partidos };
+                
+                if (editandoHorario) {
+                    Object.keys(nuevosPartidos).forEach(id => {
+                        if (nuevosPartidos[id].dia === editandoHorario.dia && nuevosPartidos[id].horario === editandoHorario.horario) {
+                            nuevosPartidos[id].dia = undefined; nuevosPartidos[id].horario = undefined; nuevosPartidos[id].posicion = undefined;
+                        }
+                    });
+                }
+
+                const p1Id = parseInt(horarioActual.partido1);
+                if (!nuevosPartidos[p1Id]) nuevosPartidos[p1Id] = { jugadores: [] };
+                nuevosPartidos[p1Id] = { ...nuevosPartidos[p1Id], horario: horarioActual.hora, dia: horarioActual.dia, posicion: 1 };
+
+                const p2Id = parseInt(horarioActual.partido2);
+                if (!nuevosPartidos[p2Id]) nuevosPartidos[p2Id] = { jugadores: [] };
+                nuevosPartidos[p2Id] = { ...nuevosPartidos[p2Id], horario: horarioActual.hora, dia: horarioActual.dia, posicion: 2 };
+
+                const partidosSinAsignarAhora = PARTIDOS.filter(p => !nuevosPartidos[p.id]?.horario);
+                if (!editandoHorario && partidosSinAsignarAhora.length >= 2) {
+                    const horariosUsados = {}; Object.values(nuevosPartidos).forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
+                    const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
+                    const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+                    
+                    if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' });
+                    else { setShowHorarioModal(false); setEditandoHorario(null); }
+                } else {
+                    setShowHorarioModal(false); setEditandoHorario(null);
+                }
+                savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+            };
+
+            const eliminarHorario = (dia, hora) => {
+                if (confirm(`¿Eliminar los partidos del ${dia} a las ${hora}?`)) {
+                    let nuevosPartidos = { ...cruce.partidos };
+                    Object.keys(nuevosPartidos).forEach(id => {
+                        if (nuevosPartidos[id].dia === dia && nuevosPartidos[id].horario === hora) {
+                            nuevosPartidos[id].dia = undefined; nuevosPartidos[id].horario = undefined; nuevosPartidos[id].posicion = undefined;
+                        }
+                    });
+                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                }
+            };
+
+            const editarHorario = (dia, hora) => {
+                const partidos = PARTIDOS.filter(p => cruce.partidos?.[p.id]?.dia === dia && cruce.partidos?.[p.id]?.horario === hora).map(p => ({...p, ...cruce.partidos[p.id]}));
+                if (partidos.length === 2) {
+                    const p1 = partidos.find(p => p.posicion === 1); const p2 = partidos.find(p => p.posicion === 2);
+                    setHorarioActual({ dia: dia, hora: hora, partido1: p1 ? p1.id.toString() : '', partido2: p2 ? p2.id.toString() : '' });
+                    setEditandoHorario({ dia, horario: hora }); setShowHorarioModal(true);
+                }
+            };
+
+            const partidosPorHorario = {};
+            PARTIDOS.forEach(p => {
+                const pData = cruce.partidos?.[p.id];
+                if (pData && pData.horario) {
+                    const key = `${pData.dia}-${pData.horario}`;
+                    if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: pData.dia, hora: pData.horario, partidos: [] };
+                    partidosPorHorario[key].partidos.push({...p, ...pData});
+                }
+            });
+
+            const partidosSinAsignar = PARTIDOS.filter(p => !cruce.partidos?.[p.id]?.horario);
+            const partidosDisponiblesP1 = getPartidosDisponibles();
+            const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
+
+            // --- CONVOCATORIA INTELIGENTE ---
+            const contarEnCruce = (nombre) => {
+                let c = 0; Object.values(cruce.partidos || {}).forEach(part => { if (part.jugadores && part.jugadores.includes(nombre)) c++; }); return c;
+            };
+
+            const getOpciones = (reqCat, jugSelec) => {
+                const base = JUGADORES_GOAT[reqCat] || [];
+                const extra = (cruce.jugadoresHabilitados || []).filter(jh => jh.categoriaDestino === reqCat).map(jh => {
+                    const jOrig = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
+                    return { ...jOrig, esHabilitado: true };
+                });
+                return [...base, ...extra].filter(d => !jugSelec.includes(d.nombre));
+            };
+
+            const addPlayer = (matchId, nombre, reqCat, partidoNumJugadores) => {
+                const pData = cruce.partidos[matchId] || {};
+                const jugSelec = pData.jugadores || [];
+                if (jugSelec.length >= partidoNumJugadores) return;
+                
+                const op = getOpciones(reqCat, jugSelec).find(j => j.nombre === nombre);
+                if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { alert(`${nombre} ya tiene 3 partidos en esta serie.`); return; }
+                
+                const nuevos = [...jugSelec, nombre];
+                savePlayoff(cruceId, { ...cruce, partidos: { ...cruce.partidos, [matchId]: { ...pData, jugadores: nuevos } } });
+            };
+
+            const removePlayer = (matchId, idx) => {
+                const pData = cruce.partidos[matchId] || {};
+                const nuevos = (pData.jugadores || []).filter((_, i) => i !== idx);
+                savePlayoff(cruceId, { ...cruce, partidos: { ...cruce.partidos, [matchId]: { ...pData, jugadores: nuevos } } });
+            };
+
+            const generarPDF = () => {
+                const { jsPDF } = window.jspdf; const doc = new jsPDF();
+                doc.setFontSize(20); doc.text(`GOAT - PLAYOFF`, 105, 20, { align: 'center' }); doc.setFontSize(14); doc.text(`vs ${rival}`, 105, 30, { align: 'center' });
+                let y = 45;
+                const sorted = PARTIDOS.filter(p => cruce.partidos?.[p.id]?.horario).sort((a,b) => {
+                    const m1=cruce.partidos[a.id]; const m2=cruce.partidos[b.id];
+                    if(m1.dia !== m2.dia) return m1.dia === 'sabado' ? -1 : 1; return m1.horario.localeCompare(m2.horario);
+                });
+                let currDia = '';
+                sorted.forEach(p => {
+                    const m = cruce.partidos[p.id];
+                    if (m.dia !== currDia) { currDia = m.dia; y += 10; doc.setFont(undefined, 'bold'); doc.text(currDia.toUpperCase(), 20, y); y += 8; doc.setFont(undefined, 'normal'); }
+                    const isBonus = cruce.partidoBonus === p.id;
+                    const jText = (m.jugadores && m.jugadores.length > 0) ? m.jugadores.join(' / ') : 'Sin asignar';
+                    if (isBonus) doc.setFont(undefined, 'bold');
+                    doc.text(`${m.horario} - P${m.posicion} - ${p.tipo}${isBonus ? ' (BONUS)' : ''}: ${jText}`, 20, y);
+                    if (isBonus) doc.setFont(undefined, 'normal');
+                    y += 6; if (y > 270) { doc.addPage(); y = 20; }
+                });
+                doc.save(`GOAT-Playoff-vs-${rival}.pdf`);
+            };
+
+            return (
+                <div className="mgmt-modal">
+                    <div className="mgmt-content">
+                        <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px', alignItems: 'center', flexWrap: 'wrap', gap:'10px'}}>
+                            <h2 className="gold-text">Serie: GOAT vs {rival}</h2>
+                            <button className="btn btn-danger" onClick={() => setSelectedCruce(null)}>Cerrar Panel</button>
+                        </div>
+
+                        <div className="tabs">
+                            <button className={`tab-btn ${activeTab==='vivo'?'active':''}`} onClick={()=>setActiveTab('vivo')}>🔴 EN VIVO</button>
+                            {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='cronograma'?'active':''}`} onClick={()=>setActiveTab('cronograma')}>⌚ Cronograma</button>}
+                            {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='convocatoria'?'active':''}`} onClick={()=>setActiveTab('convocatoria')}>👥 Convocatoria</button>}
+                        </div>
+
+                        {/* PESTAÑA VIVO */}
+                        {activeTab === 'vivo' && (
+                            <div>
+                                <div className="live-banner">
+                                    <div className="gold-text" style={{fontSize:'12px'}}>Marcador Eliminatorio (Corte a 140 pts)</div>
+                                    <div className="points-display">
+                                        <div style={{color: ptsGoat >= 140 ? '#10b981' : '#fff'}}>{eq1}<br/>{eq1 === 'GOAT' ? ptsGoat : ptsRival}</div>
+                                        <div style={{fontSize:'24px', color:'#d4af37'}}>VS</div>
+                                        <div style={{color: ptsRival >= 140 ? '#ef4444' : '#fff'}}>{eq2}<br/>{eq2 === 'GOAT' ? ptsGoat : ptsRival}</div>
+                                    </div>
+                                    {serieDefinida && <div className="finish-alert">¡SERIE DEFINIDA! {cruce.ganador} AVANZA 🏆<div style={{fontSize:'12px', fontWeight:'normal'}}>Partidos restantes cancelados.</div></div>}
+                                </div>
+
+                                {PARTIDOS.map(p => {
+                                    const m = cruce.partidos?.[p.id] || {};
+                                    if (!m.horario && !serieDefinida) return null; 
+                                    const esBonus = cruce.partidoBonus === p.id;
+                                    
+                                    return (
+                                        <div key={p.id} style={{background: '#222', padding:'12px', borderRadius:'8px', marginBottom:'8px', display:'flex', justifyContent:'space-between', alignItems:'center', border: esBonus ? '2px solid #f59e0b' : '1px solid #444', opacity: (serieDefinida && m.estado !== 'finalizado') ? 0.5 : 1}}>
+                                            <div>
+                                                <div style={{fontSize:'13px', fontWeight:'bold', color: '#fff'}}>{p.tipo} {esBonus && <span style={{color: '#f59e0b'}}>⭐</span>}</div>
+                                                <div style={{fontSize:'12px', color:'#aaa'}}>{m.dia || 'Sáb'} {m.horario || '--:--'} | Juegan: {m.jugadores?.length > 0 ? m.jugadores.join(' / ') : '---'}</div>
+                                            </div>
+                                            <div style={{display:'flex', gap:'5px'}}>
+                                                {m.estado === 'finalizado' ? (
+                                                    <span style={{color: m.resultado==='ganado'?'#10b981':'#ef4444', fontWeight:'bold', fontSize:'16px'}}>{m.resultado === 'ganado' ? 'GOAT ✓' : 'RIVAL ✓'}</span>
+                                                ) : (
+                                                    userRole !== 'jugador' && !serieDefinida && (
+                                                        <>
+                                                            <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px'}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
+                                                            <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px'}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
+                                                        </>
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* PESTAÑA CRONOGRAMA */}
+                        {activeTab === 'cronograma' && userRole !== 'jugador' && (
+                            <div>
+                                <div style={{background: '#333', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37'}}>
+                                    <label style={{color: '#d4af37', fontWeight: 'bold', fontSize: '14px'}}>⭐ Seleccionar Partido Bonus (20 pts)</label>
+                                    <select value={cruce.partidoBonus || ''} onChange={(e) => savePlayoff(cruceId, { ...cruce, partidoBonus: e.target.value ? parseInt(e.target.value) : null })}>
+                                        <option value="">Seleccionar partido bonus...</option>
+                                        {PARTIDOS.map(p => <option key={p.id} value={p.id}>{p.tipo}</option>)}
+                                    </select>
+                                </div>
+
+                                <button className="btn btn-primary" onClick={() => {
+                                    setEditandoHorario(null);
+                                    const horariosUsados = {}; Object.values(cruce.partidos||{}).forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
+                                    const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
+                                    const sig = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+                                    if (sig) setHorarioActual({ dia: sig.dia, hora: sig.hora, partido1: '', partido2: '' });
+                                    else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                                    setShowHorarioModal(true);
+                                }} style={{width: '100%', marginBottom: '20px'}}>➕ Agregar Horario ({partidosSinAsignar.length} restantes)</button>
+
+                                {Object.values(partidosPorHorario).sort((a,b)=> { if(a.dia!==b.dia) return a.dia==='sabado'?-1:1; return a.hora.localeCompare(b.hora); }).map((h, idx) => (
+                                    <div key={idx} style={{ background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #444' }}>
+                                        <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+                                            <strong style={{color: '#d4af37'}}>{h.dia === 'sabado' ? 'Sábado' : 'Domingo'} - {h.hora} hs</strong>
+                                            <div style={{display: 'flex', gap:'5px'}}>
+                                                <button className="btn" style={{padding: '5px 10px', fontSize: '12px', background:'#444', color:'white'}} onClick={() => editarHorario(h.dia, h.hora)}>✏️</button>
+                                                <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px'}} onClick={() => eliminarHorario(h.dia, h.hora)}>🗑️</button>
+                                            </div>
+                                        </div>
+                                        {h.partidos.sort((a,b)=> (a.posicion||0)-(b.posicion||0)).map(p => (
+                                            <div key={p.id} style={{ background: '#111', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: cruce.partidoBonus === p.id ? '1px solid #f59e0b' : 'none' }}>
+                                                Partido {p.posicion}: <strong>{p.tipo}</strong> {cruce.partidoBonus === p.id && <span style={{color: '#f59e0b'}}>⭐</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* PESTAÑA CONVOCATORIA */}
+                        {activeTab === 'convocatoria' && userRole !== 'jugador' && (
+                            <div>
+                                <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+                                    <button className="btn btn-primary" onClick={generarPDF} style={{flex: 1}}>📄 Descargar PDF</button>
+                                    <button className="btn" onClick={() => setShowCategoriasModal(true)} style={{flex: 1, background: '#444', color: 'white'}}>⚙️ Habilitar Ascensos</button>
+                                </div>
+
+                                {PARTIDOS.filter(p => cruce.partidos?.[p.id]?.horario).sort((a,b)=> {
+                                    const m1=cruce.partidos[a.id]; const m2=cruce.partidos[b.id];
+                                    if(m1.dia !== m2.dia) return m1.dia === 'sabado' ? -1 : 1;
+                                    if(m1.horario !== m2.horario) return m1.horario.localeCompare(m2.horario);
+                                    return m1.posicion - m2.posicion;
+                                }).map(partido => {
+                                    const pData = cruce.partidos[partido.id];
+                                    const jugSelec = pData.jugadores || [];
+                                    
+                                    let slotsRequeridos = [];
+                                    if (partido.categorias.length === partido.numJugadores) slotsRequeridos = [...partido.categorias];
+                                    else if (partido.categorias.length === 1) slotsRequeridos = Array(partido.numJugadores).fill(partido.categorias[0]);
+
+                                    const slotsRestantes = [...slotsRequeridos];
+                                    jugSelec.forEach(playerName => {
+                                        const jObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === playerName);
+                                        if (jObj) {
+                                            let sIdx = slotsRestantes.indexOf(jObj.categoria);
+                                            if (sIdx !== -1) slotsRestantes.splice(sIdx, 1);
+                                            else {
+                                                const habs = (cruce.jugadoresHabilitados||[]).filter(jh => jh.jugador === playerName);
+                                                let found = false;
+                                                for (let hab of habs) {
+                                                    const hIdx = slotsRestantes.indexOf(hab.categoriaDestino);
+                                                    if (hIdx !== -1) { slotsRestantes.splice(hIdx, 1); found = true; break; }
+                                                }
+                                                if (!found && slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
+                                            }
+                                        } else if (slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
+                                    });
+
+                                    return (
+                                        <div key={partido.id} style={{background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: cruce.partidoBonus === partido.id ? '2px solid #f59e0b' : '1px solid #444'}}>
+                                            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
+                                                <div style={{color: '#d4af37', fontSize: '14px', fontWeight: 'bold'}}>{partido.tipo} {cruce.partidoBonus === partido.id && '⭐'}</div>
+                                                <div style={{background: '#1e3c72', padding: '2px 8px', borderRadius: '4px', fontSize:'12px'}}>{pData.dia === 'sabado' ? 'Sáb' : 'Dom'} {pData.horario} - P{pData.posicion}</div>
+                                            </div>
+
+                                            <div style={{marginBottom: '10px'}}>
+                                                {jugSelec.map((j, idx) => {
+                                                    const jObj = Object.values(JUGADORES_GOAT).flat().find(jug => jug.nombre === j);
+                                                    const esHab = (cruce.jugadoresHabilitados||[]).some(jh => jh.jugador === j && partido.categorias.includes(jh.categoriaDestino));
+                                                    return (
+                                                        <div key={idx} style={{ display: 'inline-block', background: esHab ? '#10b981' : '#667eea', color: 'white', padding: '4px 10px', borderRadius: '4px', marginRight: '6px', fontSize: '12px', marginBottom:'6px' }}>
+                                                            {j} {jObj?.capitan && <span className="captain-badge">C</span>} {esHab && '↑'}
+                                                            <button onClick={() => removePlayer(partido.id, idx)} style={{ background:'none', border:'none', color:'white', marginLeft:'5px', cursor:'pointer' }}>✕</button>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {slotsRestantes.map((reqCat, idx) => (
+                                                <select key={idx} style={{marginBottom:'5px'}} onChange={(e) => { if(e.target.value) addPlayer(partido.id, e.target.value, reqCat, partido.numJugadores); }} value="">
+                                                    <option value="">+ Elegir {reqCat.replace(/_/g, ' ').toUpperCase()}</option>
+                                                    {getOpciones(reqCat, jugSelec).map(j => <option key={j.nombre} value={j.nombre}>{j.nombre} {j.esHabilitado ? '(Ascenso)' : `(${contarEnCruce(j.nombre)}/3)`}</option>)}
+                                                </select>
+                                            ))}
+                                            {jugSelec.some(j => !(cruce.jugadoresHabilitados||[]).some(jh=>jh.jugador===j) && contarEnCruce(j) > 3) && <div className="player-count-warning">⚠️ Algún jugador supera los 3 partidos</div>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {/* MODALES SECUNDARIOS REPARADOS (¡AHORA FLOTAN SOBRE TODO Y NO SE CIERRAN!) */}
+                        {showHorarioModal && (
+                            <div className="modal" onClick={() => { if(confirm('¿Cerrar sin guardar?')) { setShowHorarioModal(false); setEditandoHorario(null); } }}>
+                                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                                    <div className="modal-header">{editandoHorario ? 'Editar Horario' : 'Agregar Horario'}</div>
+                                    <div className="form-group"><label>Día</label><select value={horarioActual.dia} onChange={(e) => setHorarioActual({...horarioActual, dia: e.target.value})}><option value="sabado">Sábado</option><option value="domingo">Domingo</option></select></div>
+                                    <div className="form-group">
+                                        <label>Hora</label>
+                                        <select value={horarioActual.hora} onChange={(e) => setHorarioActual({...horarioActual, hora: e.target.value})}>
+                                            <option value="09:00">09:00</option><option value="10:30">10:30</option><option value="12:00">12:00</option><option value="13:30">13:30</option><option value="15:00">15:00</option><option value="16:30">16:30</option>{horarioActual.dia === 'sabado' && <option value="17:45">17:45</option>}
+                                        </select>
+                                    </div>
+                                    <div className="form-group"><label>Partido 1</label><select value={horarioActual.partido1} onChange={(e) => setHorarioActual({...horarioActual, partido1: e.target.value})}><option value="">Seleccionar...</option>{partidosDisponiblesP1.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
+                                    <div className="form-group"><label>Partido 2</label><select value={horarioActual.partido2} onChange={(e) => setHorarioActual({...horarioActual, partido2: e.target.value})} disabled={!horarioActual.partido1}><option value="">Seleccionar...</option>{partidosDisponiblesP2.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
+                                    
+                                    <div className="flex-mobile-col" style={{marginTop:'30px'}}>
+                                        <button className="btn btn-primary" onClick={agregarHorario}>{editandoHorario ? 'Actualizar' : partidosSinAsignar.length > 2 ? 'Guardar y Continuar' : 'Guardar'}</button>
+                                        <button className="btn btn-danger" onClick={() => { setShowHorarioModal(false); setEditandoHorario(null); }}>Cancelar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {showCategoriasModal && (
+                            <div className="modal" onClick={() => setShowCategoriasModal(false)}>
+                                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '600px'}}>
+                                    <div className="modal-header">Ascensos de Jugadores</div>
+                                    <p style={{color:'#aaa', fontSize:'13px', marginBottom:'20px'}}>Solo aplica para esta serie de Play-Off. No cuentan para el límite de 3 partidos.</p>
+                                    
+                                    {['caballeros_5ta_en_4ta', 'caballeros_4ta_en_3ra', 'caballeros_3ra_en_2da', 'damas_c_en_b', 'damas_b_en_a'].map(catKey => {
+                                        const catsH = cruce.categoriasHabilitadas || {}; const jugsH = cruce.jugadoresHabilitados || [];
+                                        const isChecked = catsH[catKey] || false;
+                                        const srcCat = catKey.split('_en_')[0] + (catKey.includes('caballeros') ? '' : '_' + catKey.split('_')[1]);
+                                        const destCat = catKey.includes('caballeros') ? 'caballeros_' + catKey.split('_en_')[1] : 'damas_' + catKey.split('_en_')[1];
+                                        
+                                        const toggleCat = () => savePlayoff(cruceId, {...cruce, categoriasHabilitadas: {...catsH, [catKey]: !isChecked}});
+                                        const toggleJug = (nombre) => {
+                                            let nuevos = [...jugsH]; const existe = nuevos.find(j => j.jugador === nombre && j.categoriaDestino === destCat);
+                                            if (existe) nuevos = nuevos.filter(j => !(j.jugador === nombre && j.categoriaDestino === destCat));
+                                            else nuevos.push({ jugador: nombre, categoriaDestino: destCat });
+                                            savePlayoff(cruceId, {...cruce, jugadoresHabilitados: nuevos});
+                                        };
+
+                                        return (
+                                            <div key={catKey} style={{background:'#222', padding:'15px', borderRadius:'8px', marginBottom:'15px'}}>
+                                                <label style={{display:'flex', alignItems:'center', gap:'10px', fontSize: '15px', color:'#d4af37'}}>
+                                                    <input type="checkbox" style={{width:'20px', height:'20px'}} checked={isChecked} onChange={toggleCat} /> {catKey.replace(/_/g, ' ').toUpperCase()}
+                                                </label>
+                                                {isChecked && <div style={{marginLeft:'30px', marginTop:'15px', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))', gap:'10px'}}>{JUGADORES_GOAT[srcCat].map(j => <label key={j.nombre} style={{color: '#fff', fontSize:'14px', display:'flex', gap:'5px', alignItems:'center'}}><input type="checkbox" style={{width:'16px', height:'16px'}} checked={jugsH.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === destCat)} onChange={() => toggleJug(j.nombre)} /> {j.nombre}</label>)}</div>}
+                                            </div>
+                                        );
+                                    })}
+                                    <div style={{marginTop:'30px', textAlign:'right'}}><button className="btn btn-primary" style={{padding:'15px 30px', width:'100%'}} onClick={() => setShowCategoriasModal(false)}>Listo</button></div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
         function PlayoffApp() {
             const [userRole] = useState(localStorage.getItem('goat_user_role') || 'jugador');
             const [torneoData, setTorneoData] = useState(null);
@@ -156,7 +598,6 @@
 
             if (!torneoData) return <div style={{padding: '50px', textAlign: 'center'}}><h2>Cargando Base de Datos...</h2><p style={{color:'#aaa'}}>Abrí el <b>index.html</b> para generar el caché de las zonas.</p></div>;
 
-            // 3. CALCULO DE POSICIONES
             const calcularPosiciones = (filtroEquipos) => {
                 const tabla = {};
                 filtroEquipos.forEach(e => { if (e) tabla[e] = { nombre: e, seriesGanadas: 0, puntosTotales: 0 }; });
@@ -199,442 +640,6 @@
             const semi2_1 = getGanador('cuartos_3', 'Ganador C3'); const semi2_2 = getGanador('cuartos_4', 'Ganador C4');
             const final_1 = getGanador('semi_1', 'Ganador S1'); const final_2 = getGanador('semi_2', 'Ganador S2');
 
-            const calcularPuntosCruce = (cruceId) => {
-                const cruce = playoffData[cruceId] || { partidos: {}, partidoBonus: null };
-                let ptsGoat = 0; let ptsRival = 0;
-                Object.entries(cruce.partidos || {}).forEach(([pId, pData]) => {
-                    if (pData.estado === 'finalizado') {
-                        const valor = (parseInt(pId) === cruce.partidoBonus) ? 20 : 10;
-                        if (pData.resultado === 'ganado') ptsGoat += valor; 
-                        else if (pData.resultado === 'perdido') ptsRival += valor;
-                    }
-                });
-                return { ptsGoat, ptsRival };
-            };
-
-            const MatchupCard = ({ cruceId, title, eq1, eq2 }) => {
-                const hasGoat = eq1 === 'GOAT' || eq2 === 'GOAT';
-                const { ptsGoat, ptsRival } = hasGoat ? calcularPuntosCruce(cruceId) : {ptsGoat: 0, ptsRival: 0};
-                const ganadorTerceros = playoffData[cruceId]?.ganador;
-
-                const handleClick = () => {
-                    if (hasGoat) setSelectedCruce({ id: cruceId, eq1, eq2, rival: eq1 === 'GOAT' ? eq2 : eq1 });
-                    else if (userRole !== 'jugador' && eq1 && eq2 && !eq1.includes('Ganador') && !eq2.includes('Ganador')) {
-                        const winner = prompt(`Definir ganador de ${title}:\n1: ${eq1}\n2: ${eq2}\nVacío para cancelar.`);
-                        if (winner === '1') savePlayoff(cruceId, { ...playoffData[cruceId], ganador: eq1 });
-                        if (winner === '2') savePlayoff(cruceId, { ...playoffData[cruceId], ganador: eq2 });
-                    }
-                };
-
-                return (
-                    <div className={`match-card ${hasGoat ? 'active-goat' : ''}`} onClick={handleClick}>
-                        <div className="matchup-header" style={{ fontSize: '11px', color: '#d4af37', textAlign: 'center', marginBottom: '8px', fontWeight: 'bold'}}>{title}</div>
-                        <div className="team-row" style={{color: ganadorTerceros === eq1 ? '#10b981' : '#fff'}}>
-                            <span>{eq1}</span><span className="score-box">{hasGoat && eq1 === 'GOAT' ? ptsGoat : (hasGoat && eq2 === 'GOAT' ? ptsRival : (ganadorTerceros === eq1 ? '✓' : '-'))}</span>
-                        </div>
-                        <div className="team-row" style={{color: ganadorTerceros === eq2 ? '#10b981' : '#fff'}}>
-                            <span>{eq2}</span><span className="score-box">{hasGoat && eq2 === 'GOAT' ? ptsGoat : (hasGoat && eq1 === 'GOAT' ? ptsRival : (ganadorTerceros === eq2 ? '✓' : '-'))}</span>
-                        </div>
-                        {hasGoat && <div style={{fontSize:'10px', color:'#10b981', marginTop:'5px', textAlign:'center'}}>● ABRIR PANEL GOAT</div>}
-                    </div>
-                );
-            };
-
-            // COMPONENTE PRINCIPAL DE GESTIÓN (Con Cronograma idéntico al Index)
-            const GestionCruceModal = ({ cruceId, eq1, eq2, rival }) => {
-                const cruce = playoffData[cruceId] || { partidos: {}, partidoBonus: null, jugadoresHabilitados: [], categoriasHabilitadas: {} };
-                const { ptsGoat, ptsRival } = calcularPuntosCruce(cruceId);
-                const serieDefinida = ptsGoat >= 140 || ptsRival >= 140;
-
-                const [activeTab, setActiveTab] = useState('vivo');
-                const [showHorarioModal, setShowHorarioModal] = useState(false);
-                const [horarioActual, setHorarioActual] = useState({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
-                const [editandoHorario, setEditandoHorario] = useState(null);
-                const [showCategoriasModal, setShowCategoriasModal] = useState(false);
-
-                useEffect(() => {
-                    if (serieDefinida && !cruce.ganador) {
-                        savePlayoff(cruceId, { ...cruce, ganador: ptsGoat >= 140 ? 'GOAT' : rival });
-                    }
-                }, [serieDefinida, ptsGoat, ptsRival]);
-
-                const updateMatchResult = (matchId, resultado) => {
-                    if (userRole === 'jugador') return;
-                    const pData = cruce.partidos?.[matchId] || {};
-                    const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, resultado, estado: 'finalizado' } };
-                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
-                };
-
-                // --- LÓGICA DE CRONOGRAMA (CLON DE INDEX) ---
-                const getPartidosDisponibles = (excluirPartido = null) => {
-                    return PARTIDOS.filter(p => {
-                        if (editandoHorario) {
-                            const fp = cruce.partidos?.[p.id];
-                            if (fp && fp.horario === editandoHorario.horario && fp.dia === editandoHorario.dia) return true;
-                        }
-                        if (excluirPartido && p.id === parseInt(excluirPartido)) return false;
-                        return !cruce.partidos?.[p.id]?.horario;
-                    });
-                };
-
-                const agregarHorario = () => {
-                    if (!horarioActual.partido1 || !horarioActual.partido2) { alert('Debes seleccionar los 2 partidos para este horario'); return; }
-                    let nuevosPartidos = { ...cruce.partidos };
-                    
-                    // Limpiar viejos si está editando
-                    if (editandoHorario) {
-                        Object.keys(nuevosPartidos).forEach(id => {
-                            if (nuevosPartidos[id].dia === editandoHorario.dia && nuevosPartidos[id].horario === editandoHorario.horario) {
-                                nuevosPartidos[id].dia = undefined; nuevosPartidos[id].horario = undefined; nuevosPartidos[id].posicion = undefined;
-                            }
-                        });
-                    }
-
-                    // Asignar nuevos
-                    const p1Id = parseInt(horarioActual.partido1);
-                    if (!nuevosPartidos[p1Id]) nuevosPartidos[p1Id] = { jugadores: [] };
-                    nuevosPartidos[p1Id] = { ...nuevosPartidos[p1Id], horario: horarioActual.hora, dia: horarioActual.dia, posicion: 1 };
-
-                    const p2Id = parseInt(horarioActual.partido2);
-                    if (!nuevosPartidos[p2Id]) nuevosPartidos[p2Id] = { jugadores: [] };
-                    nuevosPartidos[p2Id] = { ...nuevosPartidos[p2Id], horario: horarioActual.hora, dia: horarioActual.dia, posicion: 2 };
-
-                    // MAGIA DE GUARDAR Y CONTINUAR
-                    const partidosSinAsignarAhora = PARTIDOS.filter(p => !nuevosPartidos[p.id]?.horario);
-                    if (!editandoHorario && partidosSinAsignarAhora.length >= 2) {
-                        const horariosUsados = {}; 
-                        Object.values(nuevosPartidos).forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
-                        const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
-                        const siguienteHorario = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
-                        
-                        if (siguienteHorario) setHorarioActual({ dia: siguienteHorario.dia, hora: siguienteHorario.hora, partido1: '', partido2: '' });
-                        else { setShowHorarioModal(false); setEditandoHorario(null); }
-                    } else {
-                        setShowHorarioModal(false); setEditandoHorario(null);
-                    }
-                    
-                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
-                };
-
-                const eliminarHorario = (dia, hora) => {
-                    if (confirm(`¿Eliminar los partidos del ${dia} a las ${hora}?`)) {
-                        let nuevosPartidos = { ...cruce.partidos };
-                        Object.keys(nuevosPartidos).forEach(id => {
-                            if (nuevosPartidos[id].dia === dia && nuevosPartidos[id].horario === hora) {
-                                nuevosPartidos[id].dia = undefined; nuevosPartidos[id].horario = undefined; nuevosPartidos[id].posicion = undefined;
-                            }
-                        });
-                        savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
-                    }
-                };
-
-                const editarHorario = (dia, hora) => {
-                    const partidos = PARTIDOS.filter(p => cruce.partidos?.[p.id]?.dia === dia && cruce.partidos?.[p.id]?.horario === hora).map(p => ({...p, ...cruce.partidos[p.id]}));
-                    if (partidos.length === 2) {
-                        const p1 = partidos.find(p => p.posicion === 1); const p2 = partidos.find(p => p.posicion === 2);
-                        setHorarioActual({ dia: dia, hora: hora, partido1: p1 ? p1.id.toString() : '', partido2: p2 ? p2.id.toString() : '' });
-                        setEditandoHorario({ dia, horario: hora }); setShowHorarioModal(true);
-                    }
-                };
-
-                // AGRUPACIONES PARA VISTAS
-                const partidosPorHorario = {};
-                PARTIDOS.forEach(p => {
-                    const pData = cruce.partidos?.[p.id];
-                    if (pData && pData.horario) {
-                        const key = `${pData.dia}-${pData.horario}`;
-                        if (!partidosPorHorario[key]) partidosPorHorario[key] = { dia: pData.dia, hora: pData.horario, partidos: [] };
-                        partidosPorHorario[key].partidos.push({...p, ...pData});
-                    }
-                });
-
-                const partidosSinAsignar = PARTIDOS.filter(p => !cruce.partidos?.[p.id]?.horario);
-                const partidosDisponiblesP1 = getPartidosDisponibles();
-                const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
-
-                // --- LÓGICA DE CONVOCATORIA (ASIGNAR JUGADORES) ---
-                const contarEnCruce = (nombre) => {
-                    let c = 0; Object.values(cruce.partidos || {}).forEach(part => { if (part.jugadores && part.jugadores.includes(nombre)) c++; }); return c;
-                };
-
-                const getOpciones = (reqCat, jugSelec) => {
-                    const base = JUGADORES_GOAT[reqCat] || [];
-                    const extra = (cruce.jugadoresHabilitados || []).filter(jh => jh.categoriaDestino === reqCat).map(jh => {
-                        const jOrig = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === jh.jugador);
-                        return { ...jOrig, esHabilitado: true };
-                    });
-                    return [...base, ...extra].filter(d => !jugSelec.includes(d.nombre));
-                };
-
-                const addPlayer = (matchId, nombre, reqCat, partidoNumJugadores) => {
-                    const pData = cruce.partidos[matchId] || {};
-                    const jugSelec = pData.jugadores || [];
-                    if (jugSelec.length >= partidoNumJugadores) return;
-                    
-                    const op = getOpciones(reqCat, jugSelec).find(j => j.nombre === nombre);
-                    if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { alert(`${nombre} ya tiene 3 partidos en esta serie.`); return; }
-                    
-                    const nuevos = [...jugSelec, nombre];
-                    savePlayoff(cruceId, { ...cruce, partidos: { ...cruce.partidos, [matchId]: { ...pData, jugadores: nuevos } } });
-                };
-
-                const removePlayer = (matchId, idx) => {
-                    const pData = cruce.partidos[matchId] || {};
-                    const nuevos = (pData.jugadores || []).filter((_, i) => i !== idx);
-                    savePlayoff(cruceId, { ...cruce, partidos: { ...cruce.partidos, [matchId]: { ...pData, jugadores: nuevos } } });
-                };
-
-                // --- GENERAR PDF ---
-                const generarPDF = () => {
-                    const { jsPDF } = window.jspdf; const doc = new jsPDF();
-                    doc.setFontSize(20); doc.text(`GOAT - PLAYOFF`, 105, 20, { align: 'center' }); doc.setFontSize(14); doc.text(`vs ${rival}`, 105, 30, { align: 'center' });
-                    let y = 45;
-                    const sorted = PARTIDOS.filter(p => cruce.partidos?.[p.id]?.horario).sort((a,b) => {
-                        const m1=cruce.partidos[a.id]; const m2=cruce.partidos[b.id];
-                        if(m1.dia !== m2.dia) return m1.dia === 'sabado' ? -1 : 1; return m1.horario.localeCompare(m2.horario);
-                    });
-                    let currDia = '';
-                    sorted.forEach(p => {
-                        const m = cruce.partidos[p.id];
-                        if (m.dia !== currDia) { currDia = m.dia; y += 10; doc.setFont(undefined, 'bold'); doc.text(currDia.toUpperCase(), 20, y); y += 8; doc.setFont(undefined, 'normal'); }
-                        const isBonus = cruce.partidoBonus === p.id;
-                        const jText = (m.jugadores && m.jugadores.length > 0) ? m.jugadores.join(' / ') : 'Sin asignar';
-                        if (isBonus) doc.setFont(undefined, 'bold');
-                        doc.text(`${m.horario} - P${m.posicion} - ${p.tipo}${isBonus ? ' (BONUS)' : ''}: ${jText}`, 20, y);
-                        if (isBonus) doc.setFont(undefined, 'normal');
-                        y += 6; if (y > 270) { doc.addPage(); y = 20; }
-                    });
-                    doc.save(`GOAT-Playoff-vs-${rival}.pdf`);
-                };
-
-                return (
-                    <div className="mgmt-modal">
-                        <div className="mgmt-content">
-                            <div style={{display:'flex', justifyContent:'space-between', marginBottom:'15px', alignItems: 'center', flexWrap: 'wrap', gap:'10px'}}>
-                                <h2 className="gold-text">Serie: GOAT vs {rival}</h2>
-                                <button className="btn btn-danger" onClick={() => setSelectedCruce(null)}>X Cerrar</button>
-                            </div>
-
-                            <div className="tabs">
-                                <button className={`tab-btn ${activeTab==='vivo'?'active':''}`} onClick={()=>setActiveTab('vivo')}>🔴 EN VIVO</button>
-                                {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='cronograma'?'active':''}`} onClick={()=>setActiveTab('cronograma')}>⌚ Cronograma</button>}
-                                {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='convocatoria'?'active':''}`} onClick={()=>setActiveTab('convocatoria')}>👥 Convocatoria</button>}
-                            </div>
-
-                            {/* PESTAÑA 1: VIVO */}
-                            {activeTab === 'vivo' && (
-                                <div>
-                                    <div className="live-banner">
-                                        <div className="gold-text" style={{fontSize:'12px'}}>Marcador Eliminatorio (Meta: 140 pts)</div>
-                                        <div className="points-display">
-                                            <div style={{color: ptsGoat >= 140 ? '#10b981' : '#fff'}}>{eq1}<br/>{eq1 === 'GOAT' ? ptsGoat : ptsRival}</div>
-                                            <div style={{fontSize:'24px', color:'#d4af37'}}>VS</div>
-                                            <div style={{color: ptsRival >= 140 ? '#ef4444' : '#fff'}}>{eq2}<br/>{eq2 === 'GOAT' ? ptsGoat : ptsRival}</div>
-                                        </div>
-                                        {serieDefinida && <div className="finish-alert">¡SERIE DEFINIDA! {cruce.ganador} AVANZA 🏆<div style={{fontSize:'12px', fontWeight:'normal'}}>Partidos restantes cancelados.</div></div>}
-                                    </div>
-
-                                    {PARTIDOS.map(p => {
-                                        const m = cruce.partidos?.[p.id] || {};
-                                        if (!m.horario && !serieDefinida) return null; // Ocultar si no está asignado
-                                        const esBonus = cruce.partidoBonus === p.id;
-                                        
-                                        return (
-                                            <div key={p.id} style={{background: '#222', padding:'12px', borderRadius:'8px', marginBottom:'8px', display:'flex', justifyContent:'space-between', alignItems:'center', border: esBonus ? '2px solid #f59e0b' : '1px solid #444', opacity: (serieDefinida && m.estado !== 'finalizado') ? 0.5 : 1}}>
-                                                <div>
-                                                    <div style={{fontSize:'13px', fontWeight:'bold', color: '#fff'}}>{p.tipo} {esBonus && <span style={{color: '#f59e0b'}}>⭐</span>}</div>
-                                                    <div style={{fontSize:'12px', color:'#aaa'}}>{m.dia || 'Sáb'} {m.horario || '--:--'} | Juegan: {m.jugadores?.length > 0 ? m.jugadores.join(' / ') : '---'}</div>
-                                                </div>
-                                                <div style={{display:'flex', gap:'5px'}}>
-                                                    {m.estado === 'finalizado' ? (
-                                                        <span style={{color: m.resultado==='ganado'?'#10b981':'#ef4444', fontWeight:'bold', fontSize:'16px'}}>{m.resultado === 'ganado' ? 'GOAT ✓' : 'RIVAL ✓'}</span>
-                                                    ) : (
-                                                        userRole !== 'jugador' && !serieDefinida && (
-                                                            <>
-                                                                <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px'}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
-                                                                <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px'}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
-                                                            </>
-                                                        )
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-
-                            {/* PESTAÑA 2: CRONOGRAMA */}
-                            {activeTab === 'cronograma' && userRole !== 'jugador' && (
-                                <div>
-                                    <div style={{background: '#333', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37'}}>
-                                        <label style={{color: '#d4af37', fontWeight: 'bold', fontSize: '14px'}}>⭐ Seleccionar Partido Bonus (20 pts)</label>
-                                        <select value={cruce.partidoBonus || ''} onChange={(e) => savePlayoff(cruceId, { ...cruce, partidoBonus: e.target.value ? parseInt(e.target.value) : null })}>
-                                            <option value="">Seleccionar partido bonus...</option>
-                                            {PARTIDOS.map(p => <option key={p.id} value={p.id}>{p.tipo}</option>)}
-                                        </select>
-                                    </div>
-
-                                    <button className="btn btn-primary" onClick={() => {
-                                        setEditandoHorario(null);
-                                        const horariosUsados = {}; Object.values(cruce.partidos||{}).forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
-                                        const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
-                                        const sig = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
-                                        if (sig) setHorarioActual({ dia: sig.dia, hora: sig.hora, partido1: '', partido2: '' });
-                                        else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
-                                        setShowHorarioModal(true);
-                                    }} style={{width: '100%', marginBottom: '20px'}}>➕ Agregar Horario ({partidosSinAsignar.length} restantes)</button>
-
-                                    {Object.values(partidosPorHorario).sort((a,b)=> { if(a.dia!==b.dia) return a.dia==='sabado'?-1:1; return a.hora.localeCompare(b.hora); }).map((h, idx) => (
-                                        <div key={idx} style={{ background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #444' }}>
-                                            <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
-                                                <strong style={{color: '#d4af37'}}>{h.dia === 'sabado' ? 'Sábado' : 'Domingo'} - {h.hora} hs</strong>
-                                                <div style={{display: 'flex', gap:'5px'}}>
-                                                    <button className="btn" style={{padding: '5px 10px', fontSize: '12px', background:'#444', color:'white'}} onClick={() => editarHorario(h.dia, h.hora)}>✏️</button>
-                                                    <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px'}} onClick={() => eliminarHorario(h.dia, h.hora)}>🗑️</button>
-                                                </div>
-                                            </div>
-                                            {h.partidos.sort((a,b)=> (a.posicion||0)-(b.posicion||0)).map(p => (
-                                                <div key={p.id} style={{ background: '#111', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: cruce.partidoBonus === p.id ? '1px solid #f59e0b' : 'none' }}>
-                                                    Partido {p.posicion}: <strong>{p.tipo}</strong> {cruce.partidoBonus === p.id && <span style={{color: '#f59e0b'}}>⭐</span>}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* PESTAÑA 3: CONVOCATORIA INTELIGENTE */}
-                            {activeTab === 'convocatoria' && userRole !== 'jugador' && (
-                                <div>
-                                    <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
-                                        <button className="btn btn-primary" onClick={generarPDF} style={{flex: 1}}>📄 Generar PDF</button>
-                                        <button className="btn" onClick={() => setShowCategoriasModal(true)} style={{flex: 1, background: '#444', color: 'white'}}>⚙️ Habilitar Ascensos</button>
-                                    </div>
-
-                                    {PARTIDOS.filter(p => cruce.partidos?.[p.id]?.horario).sort((a,b)=> {
-                                        const m1=cruce.partidos[a.id]; const m2=cruce.partidos[b.id];
-                                        if(m1.dia !== m2.dia) return m1.dia === 'sabado' ? -1 : 1;
-                                        if(m1.horario !== m2.horario) return m1.horario.localeCompare(m2.horario);
-                                        return m1.posicion - m2.posicion;
-                                    }).map(partido => {
-                                        const pData = cruce.partidos[partido.id];
-                                        const jugSelec = pData.jugadores || [];
-                                        
-                                        // Inteligencia de Slots
-                                        let slotsRequeridos = [];
-                                        if (partido.categorias.length === partido.numJugadores) slotsRequeridos = [...partido.categorias];
-                                        else if (partido.categorias.length === 1) slotsRequeridos = Array(partido.numJugadores).fill(partido.categorias[0]);
-
-                                        const slotsRestantes = [...slotsRequeridos];
-                                        jugSelec.forEach(playerName => {
-                                            const jObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === playerName);
-                                            if (jObj) {
-                                                let sIdx = slotsRestantes.indexOf(jObj.categoria);
-                                                if (sIdx !== -1) slotsRestantes.splice(sIdx, 1);
-                                                else {
-                                                    const habs = (cruce.jugadoresHabilitados||[]).filter(jh => jh.jugador === playerName);
-                                                    let found = false;
-                                                    for (let hab of habs) {
-                                                        const hIdx = slotsRestantes.indexOf(hab.categoriaDestino);
-                                                        if (hIdx !== -1) { slotsRestantes.splice(hIdx, 1); found = true; break; }
-                                                    }
-                                                    if (!found && slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
-                                                }
-                                            } else if (slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
-                                        });
-
-                                        return (
-                                            <div key={partido.id} style={{background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: cruce.partidoBonus === partido.id ? '2px solid #f59e0b' : '1px solid #444'}}>
-                                                <div style={{display:'flex', justifyContent:'space-between', marginBottom:'10px'}}>
-                                                    <div style={{color: '#d4af37', fontSize: '14px', fontWeight: 'bold'}}>{partido.tipo} {cruce.partidoBonus === partido.id && '⭐'}</div>
-                                                    <div style={{background: '#1e3c72', padding: '2px 8px', borderRadius: '4px', fontSize:'12px'}}>{pData.dia === 'sabado' ? 'Sáb' : 'Dom'} {pData.horario} - P{pData.posicion}</div>
-                                                </div>
-
-                                                <div style={{marginBottom: '10px'}}>
-                                                    {jugSelec.map((j, idx) => {
-                                                        const jObj = Object.values(JUGADORES_GOAT).flat().find(jug => jug.nombre === j);
-                                                        const esHab = (cruce.jugadoresHabilitados||[]).some(jh => jh.jugador === j && partido.categorias.includes(jh.categoriaDestino));
-                                                        return (
-                                                            <div key={idx} style={{ display: 'inline-block', background: esHab ? '#10b981' : '#667eea', color: 'white', padding: '4px 10px', borderRadius: '4px', marginRight: '6px', fontSize: '12px', marginBottom:'6px' }}>
-                                                                {j} {jObj?.capitan && <span className="captain-badge">C</span>} {esHab && '↑'}
-                                                                <button onClick={() => removePlayer(partido.id, idx)} style={{ background:'none', border:'none', color:'white', marginLeft:'5px', cursor:'pointer' }}>✕</button>
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-
-                                                {slotsRestantes.map((reqCat, idx) => (
-                                                    <select key={idx} style={{marginBottom:'5px'}} onChange={(e) => { if(e.target.value) addPlayer(partido.id, e.target.value, reqCat, partido.numJugadores); }} value="">
-                                                        <option value="">+ Elegir {reqCat.replace('_', ' ').toUpperCase()}</option>
-                                                        {getOpciones(reqCat, jugSelec).map(j => <option key={j.nombre} value={j.nombre}>{j.nombre} {j.esHabilitado ? '(Ascenso)' : `(${contarEnCruce(j.nombre)}/3)`}</option>)}
-                                                    </select>
-                                                ))}
-                                                {jugSelec.some(j => !(cruce.jugadoresHabilitados||[]).some(jh=>jh.jugador===j) && contarEnCruce(j) > 3) && <div className="player-count-warning">⚠️ Algún jugador supera los 3 partidos</div>}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* MODALES SECUNDARIOS */}
-                        {showHorarioModal && (
-                            <div className="modal" onClick={() => {}}>
-                                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                    <h3 className="gold-text" style={{marginBottom:'15px'}}>{editandoHorario ? 'Editar Horario' : 'Agregar Horario'}</h3>
-                                    <div className="form-group"><label>Día</label><select value={horarioActual.dia} onChange={(e) => setHorarioActual({...horarioActual, dia: e.target.value})}><option value="sabado">Sábado</option><option value="domingo">Domingo</option></select></div>
-                                    <div className="form-group">
-                                        <label>Hora</label>
-                                        <select value={horarioActual.hora} onChange={(e) => setHorarioActual({...horarioActual, hora: e.target.value})}>
-                                            <option value="09:00">09:00</option><option value="10:30">10:30</option><option value="12:00">12:00</option><option value="13:30">13:30</option><option value="15:00">15:00</option><option value="16:30">16:30</option>{horarioActual.dia === 'sabado' && <option value="17:45">17:45</option>}
-                                        </select>
-                                    </div>
-                                    <div className="form-group"><label>Partido 1</label><select value={horarioActual.partido1} onChange={(e) => setHorarioActual({...horarioActual, partido1: e.target.value})}><option value="">Seleccionar...</option>{partidosDisponiblesP1.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
-                                    <div className="form-group"><label>Partido 2</label><select value={horarioActual.partido2} onChange={(e) => setHorarioActual({...horarioActual, partido2: e.target.value})} disabled={!horarioActual.partido1}><option value="">Seleccionar...</option>{partidosDisponiblesP2.map(p => (<option key={p.id} value={p.id}>{p.tipo}</option>))}</select></div>
-                                    
-                                    <div className="flex-mobile-col" style={{marginTop:'20px'}}>
-                                        <button className="btn btn-primary" onClick={agregarHorario}>{editandoHorario ? 'Actualizar' : partidosSinAsignar.length > 2 ? 'Guardar y Continuar' : 'Guardar'}</button>
-                                        <button className="btn btn-danger" onClick={() => { setShowHorarioModal(false); setEditandoHorario(null); }}>Cancelar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {showCategoriasModal && (
-                            <div className="modal" onClick={() => {}}>
-                                <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '700px'}}>
-                                    <h3 className="gold-text" style={{marginBottom:'15px'}}>Ascensos de Jugadores</h3>
-                                    <p style={{color:'#aaa', fontSize:'13px', marginBottom:'20px'}}>Solo aplica para esta serie de Play-Off. No cuentan para el límite de 3 partidos.</p>
-                                    
-                                    {['caballeros_5ta_en_4ta', 'caballeros_4ta_en_3ra', 'caballeros_3ra_en_2da', 'damas_c_en_b', 'damas_b_en_a'].map(catKey => {
-                                        const catsH = cruce.categoriasHabilitadas || {}; const jugsH = cruce.jugadoresHabilitados || [];
-                                        const isChecked = catsH[catKey] || false;
-                                        const srcCat = catKey.split('_en_')[0] + (catKey.includes('caballeros') ? '' : '_' + catKey.split('_')[1]);
-                                        const destCat = catKey.includes('caballeros') ? 'caballeros_' + catKey.split('_en_')[1] : 'damas_' + catKey.split('_en_')[1];
-                                        
-                                        const toggleCat = () => savePlayoff(cruceId, {...cruce, categoriasHabilitadas: {...catsH, [catKey]: !isChecked}});
-                                        const toggleJug = (nombre) => {
-                                            let nuevos = [...jugsH]; const existe = nuevos.find(j => j.jugador === nombre && j.categoriaDestino === destCat);
-                                            if (existe) nuevos = nuevos.filter(j => !(j.jugador === nombre && j.categoriaDestino === destCat));
-                                            else nuevos.push({ jugador: nombre, categoriaDestino: destCat });
-                                            savePlayoff(cruceId, {...cruce, jugadoresHabilitados: nuevos});
-                                        };
-
-                                        return (
-                                            <div key={catKey} style={{background:'#222', padding:'10px', borderRadius:'8px', marginBottom:'10px'}}>
-                                                <label style={{display:'flex', alignItems:'center', gap:'10px', fontWeight:'bold', color:'#fff'}}><input type="checkbox" checked={isChecked} onChange={toggleCat} /> {catKey.replace(/_/g, ' ').toUpperCase()}</label>
-                                                {isChecked && <div style={{marginLeft:'25px', marginTop:'10px'}}>{JUGADORES_GOAT[srcCat].map(j => <label key={j.nombre} style={{display:'block', marginBottom:'5px'}}><input type="checkbox" checked={jugsH.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === destCat)} onChange={() => toggleJug(j.nombre)} /> {j.nombre}</label>)}</div>}
-                                            </div>
-                                        );
-                                    })}
-                                    <div style={{marginTop:'20px', textAlign:'right'}}><button className="btn btn-primary" onClick={() => setShowCategoriasModal(false)}>Listo</button></div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-            };
-
             return (
                 <div>
                     <div className="header">
@@ -649,16 +654,16 @@
                     </div>
 
                     <div className="bracket-container">
-                        <div className="bracket-col col-octavos"><MatchupCard cruceId="octavos_b" title="Octavos B" eq1={octB1} eq2={octB2} /></div>
-                        <div className="bracket-col col-cuartos"><MatchupCard cruceId="cuartos_1" title="Cuartos 1" eq1={cua1_1} eq2={cua1_2} /><MatchupCard cruceId="cuartos_2" title="Cuartos 2" eq1={cua2_1} eq2={cua2_2} /></div>
-                        <div className="bracket-col col-semis"><MatchupCard cruceId="semi_1" title="Semifinal 1" eq1={semi1_1} eq2={semi1_2} /></div>
-                        <div className="bracket-col col-final"><div className="final-cup">🏆</div><MatchupCard cruceId="final" title="GRAN FINAL" eq1={final_1} eq2={final_2} /></div>
-                        <div className="bracket-col col-semis"><MatchupCard cruceId="semi_2" title="Semifinal 2" eq1={semi2_1} eq2={semi2_2} /></div>
-                        <div className="bracket-col col-cuartos"><MatchupCard cruceId="cuartos_3" title="Cuartos 3" eq1={cua3_1} eq2={cua3_2} /><MatchupCard cruceId="cuartos_4" title="Cuartos 4" eq1={cua4_1} eq2={cua4_2} /></div>
-                        <div className="bracket-col col-octavos"><MatchupCard cruceId="octavos_a" title="Octavos A" eq1={octA1} eq2={octA2} /></div>
+                        <div className="bracket-col col-octavos"><MatchupCard cruceId="octavos_b" title="Octavos B" eq1={octB1} eq2={octB2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-cuartos"><MatchupCard cruceId="cuartos_1" title="Cuartos 1" eq1={cua1_1} eq2={cua1_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /><MatchupCard cruceId="cuartos_2" title="Cuartos 2" eq1={cua2_1} eq2={cua2_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-semis"><MatchupCard cruceId="semi_1" title="Semifinal 1" eq1={semi1_1} eq2={semi1_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-final"><div className="final-cup">🏆</div><MatchupCard cruceId="final" title="GRAN FINAL" eq1={final_1} eq2={final_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-semis"><MatchupCard cruceId="semi_2" title="Semifinal 2" eq1={semi2_1} eq2={semi2_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-cuartos"><MatchupCard cruceId="cuartos_3" title="Cuartos 3" eq1={cua3_1} eq2={cua3_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /><MatchupCard cruceId="cuartos_4" title="Cuartos 4" eq1={cua4_1} eq2={cua4_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-octavos"><MatchupCard cruceId="octavos_a" title="Octavos A" eq1={octA1} eq2={octA2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
                     </div>
 
-                    {selectedCruce && <GestionCruceModal cruceId={selectedCruce.id} eq1={selectedCruce.eq1} eq2={selectedCruce.eq2} rival={selectedCruce.rival} />}
+                    {selectedCruce && <GestionCruceModal cruceId={selectedCruce.id} eq1={selectedCruce.eq1} eq2={selectedCruce.eq2} rival={selectedCruce.rival} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} />}
                 </div>
             );
         }
