@@ -24,18 +24,17 @@
         .header { background: rgba(0,0,0,0.7); border-bottom: 2px solid #d4af37; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
         .gold-text { color: #d4af37; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
         
-/* --- LLAVE DEL TORNEO (CORREGIDA) --- */
+        /* --- LLAVE DEL TORNEO --- */
         .bracket-container { 
             display: flex; 
-            gap: 12px; /* Reducimos el hueco entre columnas para que entre en la Mac */
+            gap: 12px; 
             overflow-x: auto; 
             padding: 20px; 
-            justify-content: center; /* Centrado por defecto */
+            justify-content: center; 
             align-items: center; 
             min-height: 70vh; 
         }
 
-        /* Si la pantalla es menor a 1350px, lo tira a la izquierda para habilitar el scroll sin cortar los Octavos */
         @media (max-width: 1350px) {
             .bracket-container { justify-content: flex-start; }
         }
@@ -45,7 +44,7 @@
             flex-direction: column; 
             justify-content: space-around; 
             min-height: 550px; 
-            flex-shrink: 0; /* ¡MAGIA! Esto prohíbe que el navegador aplaste las cajas */
+            flex-shrink: 0; 
         }
         
         .match-card { 
@@ -53,7 +52,7 @@
             border: 1px solid #444; 
             border-radius: 8px; 
             padding: 10px; 
-            width: 165px; /* Un poquito más esbeltas para que entren las 7 columnas */
+            width: 165px; 
             cursor: pointer; 
             transition: 0.3s; 
             margin: 10px 0; 
@@ -67,9 +66,11 @@
         .team-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px; }
         .score-box { font-weight: bold; color: #d4af37; font-family: monospace; background: #000; padding: 3px 6px; border-radius: 4px; font-size: 13px; }
         /* ------------------------------------ */
+
         .mgmt-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; justify-content: center; align-items: flex-start; padding-top: 20px; overflow-y: auto; }
         .mgmt-content { background: #1a1a1a; width: 95%; max-width: 800px; border: 2px solid #d4af37; border-radius: 12px; padding: 20px; margin-bottom: 40px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); }
         
+        /* ESTILOS DE MODALES EMERGENTES */
         .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 15px; }
         .modal-content { background: #1a1a1a; padding: 30px; border-radius: 12px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; border: 2px solid #d4af37; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
         .modal-header { font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #d4af37; text-transform: uppercase; border-bottom: 1px solid #444; padding-bottom: 10px;}
@@ -102,13 +103,13 @@
         .player-count-warning { color: #ef4444; font-size: 12px; margin-top: 5px; font-weight: bold; }
         .captain-badge { background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px; }
 
-        .flex-mobile-col { display: flex; }
+        .flex-mobile-col { display: flex; gap: 10px; }
         @media (max-width: 1024px) {
             .bracket-container { flex-direction: column; align-items: center; }
             .bracket-col { min-height: auto; width: 100% !important; margin-bottom: 30px; align-items: center; }
             .match-card { width: 90%; max-width: 350px; }
             .points-display { font-size: 32px; }
-            .flex-mobile-col { flex-direction: column; gap: 10px; align-items: stretch; }
+            .flex-mobile-col { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -544,7 +545,7 @@
                             </div>
                         )}
 
-                        {/* MODALES SECUNDARIOS */}
+                        {/* MODALES SECUNDARIOS REPARADOS (¡AHORA FLOTAN SOBRE TODO Y NO SE CIERRAN!) */}
                         {showHorarioModal && (
                             <div className="modal" onClick={() => { if(confirm('¿Cerrar sin guardar?')) { setShowHorarioModal(false); setEditandoHorario(null); } }}>
                                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -676,21 +677,35 @@
 
             if (z1.length < 5 || z2.length < 5) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Zonas Incompletas</h2></div>;
 
-            // 4. ARMADO DE LA LLAVE (CORREGIDO)
-            const octA1 = z1[3]; const octA2 = z2[4]; 
-            const octB1 = z2[3]; const octB2 = z1[4];
+            // 4. ARMADO DE LA LLAVE (AJUSTADO AL REGLAMENTO)
+            const octA1 = z1[3]; // 4°A
+            const octA2 = z2[4]; // 5°B
+            const octB1 = z2[3]; // 4°B
+            const octB2 = z1[4]; // 5°A
             
-            const getGanador = (cruceId, fallback) => playoffData[cruceId]?.ganador || fallback;
+            const getG = (id, fallback) => playoffData[id]?.ganador || fallback;
             
-            const cua1_1 = z1[0]; const cua1_2 = getGanador('octavos_b', 'Ganador 8vos B');
-            const cua2_1 = z1[1]; const cua2_2 = z2[2];
-            const cua3_1 = z1[2]; const cua3_2 = z2[1];
-            const cua4_1 = getGanador('octavos_a', 'Ganador 8vos A'); const cua4_2 = z2[0];
+            const cua1_1 = z1[0]; // 1°A
+            const cua1_2 = getG('octavos_b', 'Ganador 8vos B'); // Cruce 1
+
+            const cua2_1 = z1[1]; // 2°A
+            const cua2_2 = z2[2]; // 3°B (Cruce 2)
+
+            const cua3_1 = z1[2]; // 3°A
+            const cua3_2 = z2[1]; // 2°B (Cruce 3)
+
+            const cua4_1 = getG('octavos_a', 'Ganador 8vos A'); 
+            const cua4_2 = z2[0]; // 1°B (Cruce 4)
             
-            const semi1_1 = getGanador('cuartos_1', 'Ganador C1'); const semi1_2 = getGanador('cuartos_2', 'Ganador C2');
-            const semi2_1 = getGanador('cuartos_3', 'Ganador C3'); const semi2_2 = getGanador('cuartos_4', 'Ganador C4');
+            // Semifinales (C1 vs C3 y C2 vs C4):
+            const semi1_1 = getG('cuartos_1', 'Ganador Cruce 1'); 
+            const semi1_2 = getG('cuartos_3', 'Ganador Cruce 3');
             
-            const final_1 = getGanador('semi_1', 'Ganador S1'); const final_2 = getGanador('semi_2', 'Ganador S2');
+            const semi2_1 = getG('cuartos_2', 'Ganador Cruce 2'); 
+            const semi2_2 = getG('cuartos_4', 'Ganador Cruce 4');
+            
+            const final_1 = getG('semi_1', 'Ganador Semi 1'); 
+            const final_2 = getG('semi_2', 'Ganador Semi 2');
 
             return (
                 <div>
@@ -706,13 +721,19 @@
                     </div>
 
                     <div className="bracket-container">
-                        <div className="bracket-col col-octavos"><MatchupCard cruceId="octavos_b" title="Octavos B" eq1={octB1} eq2={octB2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
-                        <div className="bracket-col col-cuartos"><MatchupCard cruceId="cuartos_1" title="Cuartos 1" eq1={cua1_1} eq2={cua1_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /><MatchupCard cruceId="cuartos_2" title="Cuartos 2" eq1={cua2_1} eq2={cua2_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
-                        <div className="bracket-col col-semis"><MatchupCard cruceId="semi_1" title="Semifinal 1" eq1={semi1_1} eq2={semi1_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-octavos"><MatchupCard cruceId="octavos_b" title="8vos B" eq1={octB1} eq2={octB2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-cuartos">
+                            <MatchupCard cruceId="cuartos_1" title="Cruce 1" eq1={cua1_1} eq2={cua1_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} />
+                            <MatchupCard cruceId="cuartos_2" title="Cruce 2" eq1={cua2_1} eq2={cua2_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} />
+                        </div>
+                        <div className="bracket-col col-semis"><MatchupCard cruceId="semi_1" title="Semi 1" eq1={semi1_1} eq2={semi1_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
                         <div className="bracket-col col-final"><div className="final-cup">🏆</div><MatchupCard cruceId="final" title="GRAN FINAL" eq1={final_1} eq2={final_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
-                        <div className="bracket-col col-semis"><MatchupCard cruceId="semi_2" title="Semifinal 2" eq1={semi2_1} eq2={semi2_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
-                        <div className="bracket-col col-cuartos"><MatchupCard cruceId="cuartos_3" title="Cuartos 3" eq1={cua3_1} eq2={cua3_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /><MatchupCard cruceId="cuartos_4" title="Cuartos 4" eq1={cua4_1} eq2={cua4_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
-                        <div className="bracket-col col-octavos"><MatchupCard cruceId="octavos_a" title="Octavos A" eq1={octA1} eq2={octA2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-semis"><MatchupCard cruceId="semi_2" title="Semi 2" eq1={semi2_1} eq2={semi2_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
+                        <div className="bracket-col col-cuartos">
+                            <MatchupCard cruceId="cuartos_3" title="Cruce 3" eq1={cua3_1} eq2={cua3_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} />
+                            <MatchupCard cruceId="cuartos_4" title="Cruce 4" eq1={cua4_1} eq2={cua4_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} />
+                        </div>
+                        <div className="bracket-col col-octavos"><MatchupCard cruceId="octavos_a" title="8vos A" eq1={octA1} eq2={octA2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} /></div>
                     </div>
 
                     {selectedCruce && <GestionCruceModal cruceId={selectedCruce.id} eq1={selectedCruce.eq1} eq2={selectedCruce.eq2} rival={selectedCruce.rival} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} />}
