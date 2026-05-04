@@ -631,62 +631,87 @@
             if (!torneoData) return <div style={{padding: '50px', textAlign: 'center'}}><h2>Cargando Base de Datos...</h2><p style={{color:'#aaa'}}>Abrí el <b>index.html</b> para generar el caché de las zonas.</p></div>;
 
             // 3. CALCULO DE POSICIONES (CORREGIDO SEGÚN REGLAMENTO: SG > PTS > DIF)
-            const calcularPosiciones = (filtroEquipos) => {
+            const calcularTablaZona = (zonaIndex) => {
+                const equiposZona = zonaIndex === 1 ? (torneoData.zonasConfig?.zona1 || []) : (torneoData.zonasConfig?.zona2 || []);
                 const tabla = {};
-                filtroEquipos.forEach(equipo => { 
-                    if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, seriesGanadas: 0, puntosTotales: 0 }; 
+                
+                equiposZona.forEach((equipo, index) => { 
+                    if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, originalIndex: index }; 
                 });
-
+                
                 (torneoData.fechas || []).forEach((fecha, fechaIdx) => {
-                    if (!fecha || !fecha.partidos || (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date())) return;
-                    
+                    if (!fecha || !fecha.partidos) return;
                     const rival = fecha.rival;
                     if (tabla['GOAT'] && tabla[rival]) {
                         let puntosGOAT = 0; let puntosRival = 0;
-                        
                         fecha.partidos.forEach(partido => {
                             if (partido.jugadores && partido.jugadores.length > 0) {
                                 const key = `${fechaIdx}-${partido.id}`; 
-                                if (fecha.isClosed || torneoData.resultados?.hasOwnProperty(key)) {
-                                    const ganado = torneoData.resultados?.[key] || false; 
-                                    const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
-                                    if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
-                                }
+                                const ganado = torneoData.resultados?.[key] || false; 
+                                const esBonus = fecha.partidoBonus === partido.id; 
+                                const puntos = esBonus ? 20 : 10;
+                                if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                             }
                         });
                         
-                        if (puntosGOAT > 0 || puntosRival > 0 || fecha.isClosed) {
-                            tabla['GOAT'].partidos++; tabla['GOAT'].puntosTotales += puntosGOAT;
-                            tabla[rival].partidos++; tabla[rival].puntosTotales += puntosRival;
-                            
-                            if (puntosGOAT >= 140) tabla['GOAT'].seriesGanadas++;
-                            else if (puntosRival >= 140) tabla[rival].seriesGanadas++;
+                        // Solo procesamos si la fecha está cerrada o se jugaron puntos
+                        if (fecha.isClosed || puntosGOAT > 0 || puntosRival > 0) {
+                            if (tabla['GOAT']) {
+                                tabla['GOAT'].partidos++;
+                                tabla['GOAT'].puntosFavor += puntosGOAT;
+                                tabla['GOAT'].puntosContra += puntosRival;
+                                tabla['GOAT'].puntosTotales += puntosGOAT;
+                                if (puntosGOAT >= 140) tabla['GOAT'].ganados++; // Gana la serie
+                                tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
+                            }
+                            if (tabla[rival]) {
+                                tabla[rival].partidos++;
+                                tabla[rival].puntosFavor += puntosRival;
+                                tabla[rival].puntosContra += puntosGOAT;
+                                tabla[rival].puntosTotales += puntosRival;
+                                if (puntosRival >= 140) tabla[rival].ganados++; // Gana la serie
+                                tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+                            }
                         }
                     }
                 });
 
+                // ESTO FALTABA: Sumar también los cruces adicionales para el cálculo correcto de SG
                 (torneoData.crucesFinales || []).forEach(cruce => {
                     if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
                         const pts1 = parseInt(cruce.resultado1) || 0; 
                         const pts2 = parseInt(cruce.resultado2) || 0;
                         if (pts1 > 0 || pts2 > 0) {
-                            tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosTotales += pts1;
-                            tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosTotales += pts2;
+                            tabla[cruce.equipo1].partidos++; 
+                            tabla[cruce.equipo1].puntosFavor += pts1; 
+                            tabla[cruce.equipo1].puntosContra += pts2; 
+                            tabla[cruce.equipo1].puntosTotales += pts1;
                             
-                            if (pts1 >= 140) tabla[cruce.equipo1].seriesGanadas++; 
-                            else if (pts2 >= 140) tabla[cruce.equipo2].seriesGanadas++;
+                            tabla[cruce.equipo2].partidos++; 
+                            tabla[cruce.equipo2].puntosFavor += pts2; 
+                            tabla[cruce.equipo2].puntosContra += pts1; 
+                            tabla[cruce.equipo2].puntosTotales += pts2;
+                            
+                            if (pts1 >= 140) tabla[cruce.equipo1].ganados++; 
+                            else if (pts2 >= 140) tabla[cruce.equipo2].ganados++; 
+                            
+                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; 
+                            tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
                         }
                     }
                 });
 
-                return Object.values(tabla).sort((a, b) => { 
-                    if (b.seriesGanadas !== a.seriesGanadas) return b.seriesGanadas - a.seriesGanadas; 
-                    return b.puntosTotales - a.puntosTotales; 
+                // Ordenamiento Oficial: SG primero, luego Puntos Totales, luego Diferencia
+                return Object.values(tabla).sort((a, b) => {
+                    if (b.ganados !== a.ganados) return b.ganados - a.ganados; // 1° Series Ganadas
+                    if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales; // 2° Puntos Totales
+                    if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia; // 3° Diferencia
+                    return a.originalIndex - b.originalIndex;
                 }).map(t => t.nombre);
             };
 
-            const z1 = calcularPosiciones(torneoData.zonasConfig?.zona1 || []);
-            const z2 = calcularPosiciones(torneoData.zonasConfig?.zona2 || []);
+            const z1 = calcularTablaZona(1);
+            const z2 = calcularTablaZona(2);
 
             if (z1.length < 5 || z2.length < 5) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Zonas Incompletas</h2></div>;
 
