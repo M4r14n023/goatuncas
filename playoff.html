@@ -65,8 +65,7 @@
         
         .team-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px; }
         .score-box { font-weight: bold; color: #d4af37; font-family: monospace; background: #000; padding: 3px 6px; border-radius: 4px; font-size: 13px; }
-        /* ------------------------------------ */
-
+        
         .mgmt-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; justify-content: center; align-items: flex-start; padding-top: 20px; overflow-y: auto; }
         .mgmt-content { background: #1a1a1a; width: 95%; max-width: 800px; border: 2px solid #d4af37; border-radius: 12px; padding: 20px; margin-bottom: 40px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); }
         
@@ -103,13 +102,13 @@
         .player-count-warning { color: #ef4444; font-size: 12px; margin-top: 5px; font-weight: bold; }
         .captain-badge { background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px; }
 
-        .flex-mobile-col { display: flex; gap: 10px; }
+        .flex-mobile-col { display: flex; gap: 10px;}
         @media (max-width: 1024px) {
             .bracket-container { flex-direction: column; align-items: center; }
             .bracket-col { min-height: auto; width: 100% !important; margin-bottom: 30px; align-items: center; }
             .match-card { width: 90%; max-width: 350px; }
             .points-display { font-size: 32px; }
-            .flex-mobile-col { flex-direction: column; align-items: stretch; }
+            .flex-mobile-col { flex-direction: column; gap: 10px; align-items: stretch; }
         }
     </style>
 </head>
@@ -545,7 +544,7 @@
                             </div>
                         )}
 
-                        {/* MODALES SECUNDARIOS REPARADOS (¡AHORA FLOTAN SOBRE TODO Y NO SE CIERRAN!) */}
+                        {/* MODALES SECUNDARIOS */}
                         {showHorarioModal && (
                             <div className="modal" onClick={() => { if(confirm('¿Cerrar sin guardar?')) { setShowHorarioModal(false); setEditandoHorario(null); } }}>
                                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -630,17 +629,17 @@
 
             if (!torneoData) return <div style={{padding: '50px', textAlign: 'center'}}><h2>Cargando Base de Datos...</h2><p style={{color:'#aaa'}}>Abrí el <b>index.html</b> para generar el caché de las zonas.</p></div>;
 
-            // 3. CALCULO DE POSICIONES (CLON EXACTO DEL MODAL DEL INDEX)
+            // 3. CALCULO DE POSICIONES (CORREGIDO SEGÚN REGLAMENTO: SG > PTS > DIF)
             const calcularTablaZona = (zonaIndex) => {
                 const equiposZona = zonaIndex === 1 ? (torneoData.zonasConfig?.zona1 || []) : (torneoData.zonasConfig?.zona2 || []);
                 const tabla = {};
+                
                 equiposZona.forEach((equipo, index) => { 
                     if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, ganados: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, originalIndex: index }; 
                 });
                 
                 (torneoData.fechas || []).forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
-                    if (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date()) return;
                     const rival = fecha.rival;
                     if (tabla['GOAT'] && tabla[rival]) {
                         let puntosGOAT = 0; let puntosRival = 0;
@@ -653,23 +652,36 @@
                                 if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                             }
                         });
-                        if (tabla['GOAT']) { tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT; if (puntosGOAT > puntosRival) tabla['GOAT'].ganados++; else if (puntosGOAT < puntosRival) tabla['GOAT'].perdidos++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra; }
-                        if (tabla[rival]) { tabla[rival].partidos++; tabla[rival].puntosFavor += puntosRival; tabla[rival].puntosContra += puntosGOAT; tabla[rival].puntosTotales += puntosRival; if (puntosRival > puntosGOAT) tabla[rival].ganados++; else if (puntosRival < puntosGOAT) tabla[rival].perdidos++; tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra; }
-                    }
-                });
-
-                (torneoData.crucesFinales || []).forEach(cruce => {
-                    if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
-                        const pts1 = parseInt(cruce.resultado1) || 0; const pts2 = parseInt(cruce.resultado2) || 0;
-                        if (pts1 > 0 || pts2 > 0) {
-                            tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosFavor += pts1; tabla[cruce.equipo1].puntosContra += pts2; tabla[cruce.equipo1].puntosTotales += pts1;
-                            tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosFavor += pts2; tabla[cruce.equipo2].puntosContra += pts1; tabla[cruce.equipo2].puntosTotales += pts2;
-                            if (pts1 > pts2) { tabla[cruce.equipo1].ganados++; tabla[cruce.equipo2].perdidos++; } else if (pts2 > pts1) { tabla[cruce.equipo2].ganados++; tabla[cruce.equipo1].perdidos++; }
-                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+                        
+                        // Solo procesamos si la fecha está cerrada o se jugaron puntos
+                        if (fecha.isClosed || puntosGOAT > 0 || puntosRival > 0) {
+                            if (tabla['GOAT']) {
+                                tabla['GOAT'].partidos++;
+                                tabla['GOAT'].puntosFavor += puntosGOAT;
+                                tabla['GOAT'].puntosContra += puntosRival;
+                                tabla['GOAT'].puntosTotales += puntosGOAT;
+                                if (puntosGOAT >= 140) tabla['GOAT'].ganados++; // Gana la serie
+                                tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
+                            }
+                            if (tabla[rival]) {
+                                tabla[rival].partidos++;
+                                tabla[rival].puntosFavor += puntosRival;
+                                tabla[rival].puntosContra += puntosGOAT;
+                                tabla[rival].puntosTotales += puntosRival;
+                                if (puntosRival >= 140) tabla[rival].ganados++; // Gana la serie
+                                tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+                            }
                         }
                     }
                 });
-                return Object.values(tabla).sort((a, b) => { if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales; if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia; return a.originalIndex - b.originalIndex; }).map(t => t.nombre);
+
+                // Ordenamiento Oficial: SG primero, luego Puntos Totales, luego Diferencia
+                return Object.values(tabla).sort((a, b) => {
+                    if (b.ganados !== a.ganados) return b.ganados - a.ganados; // 1° Series Ganadas
+                    if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales; // 2° Puntos Totales
+                    if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia; // 3° Diferencia
+                    return a.originalIndex - b.originalIndex;
+                }).map(t => t.nombre);
             };
 
             const z1 = calcularTablaZona(1);
