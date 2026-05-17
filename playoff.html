@@ -65,8 +65,7 @@
         
         .team-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; padding: 6px; background: rgba(255,255,255,0.05); margin-bottom: 4px; border-radius: 4px; }
         .score-box { font-weight: bold; color: #d4af37; font-family: monospace; background: #000; padding: 3px 6px; border-radius: 4px; font-size: 13px; }
-        /* ------------------------------------ */
-
+        
         .mgmt-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; justify-content: center; align-items: flex-start; padding-top: 20px; overflow-y: auto; }
         .mgmt-content { background: #1a1a1a; width: 95%; max-width: 800px; border: 2px solid #d4af37; border-radius: 12px; padding: 20px; margin-bottom: 40px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); }
         
@@ -234,6 +233,14 @@
                     savePlayoff(cruceId, { ...cruce, ganador: ptsGoat >= 140 ? 'GOAT' : rival });
                 }
             }, [serieDefinida, ptsGoat, ptsRival]); 
+
+            // --- NUEVO: FUNCIÓN PARA SETEAR PARCIALES (1°↑, 1°↓, STB) ---
+            const setParcialSet = (matchId, valor) => {
+                if (userRole === 'jugador') return;
+                const pData = cruce.partidos?.[matchId] || {};
+                const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, parciales: valor, estado: 'en_juego' } };
+                savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+            };
 
             const updateMatchResult = (matchId, resultado) => {
                 if (userRole === 'jugador') return;
@@ -411,19 +418,35 @@
                                     
                                     return (
                                         <div key={p.id} style={{background: '#222', padding:'12px', borderRadius:'8px', marginBottom:'8px', display:'flex', justifyContent:'space-between', alignItems:'center', border: esBonus ? '2px solid #f59e0b' : '1px solid #444', opacity: (serieDefinida && m.estado !== 'finalizado') ? 0.5 : 1}}>
-                                            <div>
+                                            <div style={{flex: 1}}>
                                                 <div style={{fontSize:'13px', fontWeight:'bold', color: '#fff'}}>{p.tipo} {esBonus && <span style={{color: '#f59e0b'}}>⭐</span>}</div>
                                                 <div style={{fontSize:'12px', color:'#aaa'}}>{m.dia || 'Sáb'} {m.horario || '--:--'} | Juegan: {m.jugadores?.length > 0 ? m.jugadores.join(' / ') : '---'}</div>
+                                                
+                                                {/* NUEVO: ETIQUETAS DE PARCIALES */}
+                                                {m.parciales && m.estado !== 'finalizado' && (
+                                                    <div style={{marginTop: '8px', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', background: m.parciales === '1-up' ? '#d1fae5' : m.parciales === '1-down' ? '#fee2e2' : '#fef3c7', color: m.parciales === '1-up' ? '#065f46' : m.parciales === '1-down' ? '#991b1b' : '#92400e'}}>
+                                                        {m.parciales === '1-up' ? '✅ 1er Set Ganado' : m.parciales === '1-down' ? '❌ 1er Set Perdido' : '⚡ En Súper Tie-Break'}
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div style={{display:'flex', gap:'5px'}}>
+                                            
+                                            <div style={{display:'flex', gap:'5px', flexDirection:'column', alignItems:'flex-end'}}>
                                                 {m.estado === 'finalizado' ? (
                                                     <span style={{color: m.resultado==='ganado'?'#10b981':'#ef4444', fontWeight:'bold', fontSize:'16px'}}>{m.resultado === 'ganado' ? 'GOAT ✓' : 'RIVAL ✓'}</span>
                                                 ) : (
                                                     userRole !== 'jugador' && !serieDefinida && (
-                                                        <>
-                                                            <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px'}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
-                                                            <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px'}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
-                                                        </>
+                                                        <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
+                                                            {/* NUEVO: BOTONES DE PARCIALES */}
+                                                            <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
+                                                                <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-up'?'#10b981':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-up')}>1°↑</button>
+                                                                <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-down'?'#ef4444':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-down')}>1°↓</button>
+                                                                <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='super'?'#f59e0b':'#f1f5f9'}} onClick={() => setParcialSet(p.id, 'super')}>STB</button>
+                                                            </div>
+                                                            <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
+                                                                <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
+                                                                <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
+                                                            </div>
+                                                        </div>
                                                     )
                                                 )}
                                             </div>
@@ -545,7 +568,7 @@
                             </div>
                         )}
 
-                        {/* MODALES SECUNDARIOS REPARADOS (¡AHORA FLOTAN SOBRE TODO Y NO SE CIERRAN!) */}
+                        {/* MODALES SECUNDARIOS */}
                         {showHorarioModal && (
                             <div className="modal" onClick={() => { if(confirm('¿Cerrar sin guardar?')) { setShowHorarioModal(false); setEditandoHorario(null); } }}>
                                 <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -612,25 +635,36 @@
             const [playoffData, setPlayoffData] = useState({});
             const [selectedCruce, setSelectedCruce] = useState(null);
 
+            // MEMORIA DE ACERO: Carga inicial combinada (Local + Nube)
             useEffect(() => {
                 const localData = localStorage.getItem('goat_torneo_data');
                 if (localData) setTorneoData(JSON.parse(localData));
 
+                const localPlayoff = localStorage.getItem('goat_playoff_data');
+                if (localPlayoff) setPlayoffData(JSON.parse(localPlayoff));
+
                 const ref = database.ref('goat_playoff');
                 ref.on('value', (snapshot) => {
-                    if (snapshot.val()) setPlayoffData(snapshot.val());
+                    const data = snapshot.val();
+                    if (data) {
+                        setPlayoffData(data);
+                        localStorage.setItem('goat_playoff_data', JSON.stringify(data));
+                    }
                 });
                 return () => ref.off();
             }, []);
 
             const savePlayoff = (cruceId, data) => {
-                setPlayoffData(prev => ({...prev, [cruceId]: data}));
+                setPlayoffData(prev => {
+                    const newState = {...prev, [cruceId]: data};
+                    localStorage.setItem('goat_playoff_data', JSON.stringify(newState));
+                    return newState;
+                });
                 database.ref(`goat_playoff/${cruceId}`).set(data);
             };
 
             if (!torneoData) return <div style={{padding: '50px', textAlign: 'center'}}><h2>Cargando Base de Datos...</h2><p style={{color:'#aaa'}}>Abrí el <b>index.html</b> para generar el caché de las zonas.</p></div>;
 
-            // 3. CALCULO DE POSICIONES (CORREGIDO SEGÚN REGLAMENTO: SG > PTS > DIF)
             const calcularTablaZona = (zonaIndex) => {
                 const equiposZona = zonaIndex === 1 ? (torneoData.zonasConfig?.zona1 || []) : (torneoData.zonasConfig?.zona2 || []);
                 const tabla = {};
@@ -654,58 +688,37 @@
                             }
                         });
                         
-                        // Solo procesamos si la fecha está cerrada o se jugaron puntos
                         if (fecha.isClosed || puntosGOAT > 0 || puntosRival > 0) {
                             if (tabla['GOAT']) {
-                                tabla['GOAT'].partidos++;
-                                tabla['GOAT'].puntosFavor += puntosGOAT;
-                                tabla['GOAT'].puntosContra += puntosRival;
-                                tabla['GOAT'].puntosTotales += puntosGOAT;
-                                if (puntosGOAT >= 140) tabla['GOAT'].ganados++; // Gana la serie
-                                tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
+                                tabla['GOAT'].partidos++; tabla['GOAT'].puntosFavor += puntosGOAT; tabla['GOAT'].puntosContra += puntosRival; tabla['GOAT'].puntosTotales += puntosGOAT;
+                                if (puntosGOAT >= 140) tabla['GOAT'].ganados++; tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
                             }
                             if (tabla[rival]) {
-                                tabla[rival].partidos++;
-                                tabla[rival].puntosFavor += puntosRival;
-                                tabla[rival].puntosContra += puntosGOAT;
-                                tabla[rival].puntosTotales += puntosRival;
-                                if (puntosRival >= 140) tabla[rival].ganados++; // Gana la serie
-                                tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+                                tabla[rival].partidos++; tabla[rival].puntosFavor += puntosRival; tabla[rival].puntosContra += puntosGOAT; tabla[rival].puntosTotales += puntosRival;
+                                if (puntosRival >= 140) tabla[rival].ganados++; tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
                             }
                         }
                     }
                 });
 
-                // ESTO FALTABA: Sumar también los cruces adicionales para el cálculo correcto de SG
+                // INTEGRACIÓN DE CRUCES ADICIONALES PARA EL CÁLCULO
                 (torneoData.crucesFinales || []).forEach(cruce => {
                     if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
                         const pts1 = parseInt(cruce.resultado1) || 0; 
                         const pts2 = parseInt(cruce.resultado2) || 0;
                         if (pts1 > 0 || pts2 > 0) {
-                            tabla[cruce.equipo1].partidos++; 
-                            tabla[cruce.equipo1].puntosFavor += pts1; 
-                            tabla[cruce.equipo1].puntosContra += pts2; 
-                            tabla[cruce.equipo1].puntosTotales += pts1;
-                            
-                            tabla[cruce.equipo2].partidos++; 
-                            tabla[cruce.equipo2].puntosFavor += pts2; 
-                            tabla[cruce.equipo2].puntosContra += pts1; 
-                            tabla[cruce.equipo2].puntosTotales += pts2;
-                            
-                            if (pts1 >= 140) tabla[cruce.equipo1].ganados++; 
-                            else if (pts2 >= 140) tabla[cruce.equipo2].ganados++; 
-                            
-                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; 
-                            tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+                            tabla[cruce.equipo1].partidos++; tabla[cruce.equipo1].puntosFavor += pts1; tabla[cruce.equipo1].puntosContra += pts2; tabla[cruce.equipo1].puntosTotales += pts1;
+                            tabla[cruce.equipo2].partidos++; tabla[cruce.equipo2].puntosFavor += pts2; tabla[cruce.equipo2].puntosContra += pts1; tabla[cruce.equipo2].puntosTotales += pts2;
+                            if (pts1 >= 140) tabla[cruce.equipo1].ganados++; else if (pts2 >= 140) tabla[cruce.equipo2].ganados++; 
+                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
                         }
                     }
                 });
 
-                // Ordenamiento Oficial: SG primero, luego Puntos Totales, luego Diferencia
                 return Object.values(tabla).sort((a, b) => {
-                    if (b.ganados !== a.ganados) return b.ganados - a.ganados; // 1° Series Ganadas
-                    if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales; // 2° Puntos Totales
-                    if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia; // 3° Diferencia
+                    if (b.ganados !== a.ganados) return b.ganados - a.ganados; 
+                    if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales; 
+                    if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia; 
                     return a.originalIndex - b.originalIndex;
                 }).map(t => t.nombre);
             };
@@ -715,35 +728,19 @@
 
             if (z1.length < 5 || z2.length < 5) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Zonas Incompletas</h2></div>;
 
-            // 4. ARMADO DE LA LLAVE (AJUSTADO AL REGLAMENTO)
-            const octA1 = z1[3]; // 4°A
-            const octA2 = z2[4]; // 5°B
-            const octB1 = z2[3]; // 4°B
-            const octB2 = z1[4]; // 5°A
+            const octA1 = z1[3]; const octA2 = z2[4]; 
+            const octB1 = z2[3]; const octB2 = z1[4];
             
             const getG = (id, fallback) => playoffData[id]?.ganador || fallback;
             
-            const cua1_1 = z1[0]; // 1°A
-            const cua1_2 = getG('octavos_b', 'Ganador 8vos B'); // Cruce 1
-
-            const cua2_1 = z1[1]; // 2°A
-            const cua2_2 = z2[2]; // 3°B (Cruce 2)
-
-            const cua3_1 = z1[2]; // 3°A
-            const cua3_2 = z2[1]; // 2°B (Cruce 3)
-
-            const cua4_1 = getG('octavos_a', 'Ganador 8vos A'); 
-            const cua4_2 = z2[0]; // 1°B (Cruce 4)
+            const cua1_1 = z1[0]; const cua1_2 = getG('octavos_b', 'Ganador 8vos B'); 
+            const cua2_1 = z1[1]; const cua2_2 = z2[2]; 
+            const cua3_1 = z1[2]; const cua3_2 = z2[1]; 
+            const cua4_1 = getG('octavos_a', 'Ganador 8vos A'); const cua4_2 = z2[0]; 
             
-            // Semifinales (C1 vs C3 y C2 vs C4):
-            const semi1_1 = getG('cuartos_1', 'Ganador Cruce 1'); 
-            const semi1_2 = getG('cuartos_3', 'Ganador Cruce 3');
-            
-            const semi2_1 = getG('cuartos_2', 'Ganador Cruce 2'); 
-            const semi2_2 = getG('cuartos_4', 'Ganador Cruce 4');
-            
-            const final_1 = getG('semi_1', 'Ganador Semi 1'); 
-            const final_2 = getG('semi_2', 'Ganador Semi 2');
+            const semi1_1 = getG('cuartos_1', 'Ganador Cruce 1'); const semi1_2 = getG('cuartos_3', 'Ganador Cruce 3');
+            const semi2_1 = getG('cuartos_2', 'Ganador Cruce 2'); const semi2_2 = getG('cuartos_4', 'Ganador Cruce 4');
+            const final_1 = getG('semi_1', 'Ganador Semi 1'); const final_2 = getG('semi_2', 'Ganador Semi 2');
 
             return (
                 <div>
