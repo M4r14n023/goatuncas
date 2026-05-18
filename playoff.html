@@ -172,6 +172,69 @@
 
         const { useState, useEffect } = React;
 
+        const GRILLAS_AUTOMATICAS = {
+            1: [
+                { id: 3, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 14, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 7, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 16, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 17, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 5, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 19, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 20, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 21, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 12, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 25, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 22, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 2, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 4, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 6, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 15, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 8, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 9, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 10, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 11, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 23, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            2: [
+                { id: 3, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 4, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 26, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 2, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 12, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 14, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 7, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 16, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 6, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 5, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 9, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 1, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 11, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 25, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 19, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 15, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 23, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 8, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 10, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            3: [
+                { id: 5, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 6, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 9, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 8, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 7, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 10, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 11, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 12, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 1, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 25, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 3, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 4, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 2, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 21, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 23, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 24, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 15, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 14, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 20, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 18, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 17, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 16, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            4: [
+                { id: 1, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 19, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 25, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 3, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 12, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 21, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 5, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 11, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 7, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 2, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 26, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 4, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 17, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 10, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 8, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 15, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 13, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 6, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 14, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 20, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 23, dia: 'domingo', hora: '16:30', pos: 2 }
+            ]
+        };
+
         // FUNCIONES GLOBALES
         const calcularPuntosCruce = (cruce) => {
             let ptsGoat = 0; let ptsRival = 0;
@@ -216,7 +279,7 @@
             );
         };
 
-        // COMPONENTE: Modal de Gestión de Cruce
+// COMPONENTE: Modal de Gestión de Cruce
         const GestionCruceModal = ({ cruceId, eq1, eq2, rival, playoffData, savePlayoff, userRole, setSelectedCruce }) => {
             const cruce = playoffData[cruceId] || { partidos: {}, partidoBonus: null, jugadoresHabilitados: [], categoriasHabilitadas: {} };
             const { ptsGoat, ptsRival } = calcularPuntosCruce(cruce);
@@ -227,6 +290,9 @@
             const [horarioActual, setHorarioActual] = useState({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
             const [editandoHorario, setEditandoHorario] = useState(null);
             const [showCategoriasModal, setShowCategoriasModal] = useState(false);
+            
+            // --- ESTADO PARA LA GRILLA ---
+            const [grillaSeleccionada, setGrillaSeleccionada] = useState('');
 
             useEffect(() => {
                 if (serieDefinida && cruce.ganador !== (ptsGoat >= 140 ? 'GOAT' : rival)) {
@@ -234,7 +300,7 @@
                 }
             }, [serieDefinida, ptsGoat, ptsRival]); 
 
-            // --- NUEVO: FUNCIÓN PARA SETEAR PARCIALES (1°↑, 1°↓, STB) ---
+            // --- FUNCIÓN PARA SETEAR PARCIALES (1°↑, 1°↓, STB) ---
             const setParcialSet = (matchId, valor) => {
                 if (userRole === 'jugador') return;
                 const pData = cruce.partidos?.[matchId] || {};
@@ -249,7 +315,31 @@
                 savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
             };
 
-            // --- CRONOGRAMA ---
+            // --- PASO 2: EL MOTOR QUE LEE TU DICCIONARIO ---
+            const aplicarGrillaAutomatica = () => {
+                if (!GRILLAS_AUTOMATICAS[grillaSeleccionada]) return;
+                if (!confirm(`¿Aplicar Grilla ${grillaSeleccionada}? Esto borrará los horarios actuales y asignará los 26 partidos a sus canchas.`)) return;
+
+                const grilla = GRILLAS_AUTOMATICAS[grillaSeleccionada];
+                let nuevosPartidos = { ...cruce.partidos };
+
+                // Limpiamos posiciones actuales sin borrar jugadores ni bonus
+                Object.keys(nuevosPartidos).forEach(key => { 
+                    nuevosPartidos[key] = { ...nuevosPartidos[key], dia: undefined, horario: undefined, posicion: undefined }; 
+                });
+                
+                // Asignamos los 26 partidos
+                grilla.forEach(g => {
+                    if (!nuevosPartidos[g.id]) nuevosPartidos[g.id] = { jugadores: [] };
+                    nuevosPartidos[g.id] = { ...nuevosPartidos[g.id], dia: g.dia, horario: g.hora, posicion: g.pos };
+                });
+
+                savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                alert(`✅ Grilla ${grillaSeleccionada} aplicada con éxito.`);
+                setGrillaSeleccionada(''); 
+            };
+
+            // --- CRONOGRAMA MANUAL ---
             const getPartidosDisponibles = (excluirPartido = null) => {
                 return PARTIDOS.filter(p => {
                     if (editandoHorario) {
@@ -422,21 +512,19 @@
                                                 <div style={{fontSize:'13px', fontWeight:'bold', color: '#fff'}}>{p.tipo} {esBonus && <span style={{color: '#f59e0b'}}>⭐</span>}</div>
                                                 <div style={{fontSize:'12px', color:'#aaa'}}>{m.dia || 'Sáb'} {m.horario || '--:--'} | Juegan: {m.jugadores?.length > 0 ? m.jugadores.join(' / ') : '---'}</div>
                                                 
-                                                {/* NUEVO: ETIQUETAS DE PARCIALES */}
+                                                {/* ETIQUETAS DE PARCIALES */}
                                                 {m.parciales && m.estado !== 'finalizado' && (
                                                     <div style={{marginTop: '8px', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', background: m.parciales === '1-up' ? '#d1fae5' : m.parciales === '1-down' ? '#fee2e2' : '#fef3c7', color: m.parciales === '1-up' ? '#065f46' : m.parciales === '1-down' ? '#991b1b' : '#92400e'}}>
                                                         {m.parciales === '1-up' ? '✅ 1er Set Ganado' : m.parciales === '1-down' ? '❌ 1er Set Perdido' : '⚡ En Súper Tie-Break'}
                                                     </div>
                                                 )}
                                             </div>
-                                            
                                             <div style={{display:'flex', gap:'5px', flexDirection:'column', alignItems:'flex-end'}}>
                                                 {m.estado === 'finalizado' ? (
                                                     <span style={{color: m.resultado==='ganado'?'#10b981':'#ef4444', fontWeight:'bold', fontSize:'16px'}}>{m.resultado === 'ganado' ? 'GOAT ✓' : 'RIVAL ✓'}</span>
                                                 ) : (
                                                     userRole !== 'jugador' && !serieDefinida && (
                                                         <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
-                                                            {/* NUEVO: BOTONES DE PARCIALES */}
                                                             <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
                                                                 <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-up'?'#10b981':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-up')}>1°↑</button>
                                                                 <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-down'?'#ef4444':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-down')}>1°↓</button>
@@ -459,6 +547,23 @@
                         {/* PESTAÑA CRONOGRAMA */}
                         {activeTab === 'cronograma' && userRole !== 'jugador' && (
                             <div>
+                                {/* --- PASO 3: PANEL DE CARGA AUTOMÁTICA DE GRILLAS --- */}
+                                <div style={{background: '#1e3c72', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37', display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap'}}>
+                                    <div className="form-group" style={{marginBottom: 0, flex: 1, minWidth: '200px'}}>
+                                        <label style={{color: '#d4af37'}}>🎲 Asignación Automática (Grillas Oficiales)</label>
+                                        <select value={grillaSeleccionada} onChange={(e) => setGrillaSeleccionada(e.target.value)} style={{background: '#111'}}>
+                                            <option value="">-- Seleccionar Grilla --</option>
+                                            <option value="1">Grilla 1</option>
+                                            <option value="2">Grilla 2</option>
+                                            <option value="3">Grilla 3</option>
+                                            <option value="4">Grilla 4</option>
+                                        </select>
+                                    </div>
+                                    <button className="btn btn-warning" onClick={aplicarGrillaAutomatica} disabled={!grillaSeleccionada} style={{margin: 0, background: '#d4af37', color: '#000', fontWeight: 'bold'}}>
+                                        ⚡ Aplicar Grilla
+                                    </button>
+                                </div>
+
                                 <div style={{background: '#333', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37'}}>
                                     <label style={{color: '#d4af37', fontWeight: 'bold', fontSize: '14px'}}>⭐ Seleccionar Partido Bonus (20 pts)</label>
                                     <select value={cruce.partidoBonus || ''} onChange={(e) => savePlayoff(cruceId, { ...cruce, partidoBonus: e.target.value ? parseInt(e.target.value) : null })}>
@@ -475,7 +580,7 @@
                                     if (sig) setHorarioActual({ dia: sig.dia, hora: sig.hora, partido1: '', partido2: '' });
                                     else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
                                     setShowHorarioModal(true);
-                                }} style={{width: '100%', marginBottom: '20px'}}>➕ Agregar Horario ({partidosSinAsignar.length} restantes)</button>
+                                }} style={{width: '100%', marginBottom: '20px'}}>➕ Agregar Horario Manual ({partidosSinAsignar.length} restantes)</button>
 
                                 {Object.values(partidosPorHorario).sort((a,b)=> { if(a.dia!==b.dia) return a.dia==='sabado'?-1:1; return a.hora.localeCompare(b.hora); }).map((h, idx) => (
                                     <div key={idx} style={{ background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #444' }}>
