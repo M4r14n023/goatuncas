@@ -768,21 +768,37 @@
 
             // MEMORIA DE ACERO: Carga inicial combinada (Local + Nube)
             useEffect(() => {
+                // 1. CARGA CACHÉ LOCAL RÁPIDO (Para que cargue al instante)
                 const localData = localStorage.getItem('goat_torneo_data');
                 if (localData) setTorneoData(JSON.parse(localData));
 
                 const localPlayoff = localStorage.getItem('goat_playoff_data');
                 if (localPlayoff) setPlayoffData(JSON.parse(localPlayoff));
 
-                const ref = database.ref('goat_playoff');
-                ref.on('value', (snapshot) => {
+                // 2. CONEXIÓN A FIREBASE PARA PLAYOFFS (Mantiene los cruces sincronizados)
+                const refPlayoff = database.ref('goat_playoff');
+                refPlayoff.on('value', (snapshot) => {
                     const data = snapshot.val();
                     if (data) {
                         setPlayoffData(data);
                         localStorage.setItem('goat_playoff_data', JSON.stringify(data));
                     }
                 });
-                return () => ref.off();
+
+                // 3. CONEXIÓN A FIREBASE PARA ZONAS (Para tener siempre los puntos al día en todos los celulares)
+                const refTorneo = database.ref('goat_torneo');
+                refTorneo.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        setTorneoData(data);
+                        localStorage.setItem('goat_torneo_data', JSON.stringify(data));
+                    }
+                });
+
+                return () => {
+                    refPlayoff.off();
+                    refTorneo.off();
+                };
             }, []);
 
             const savePlayoff = (cruceId, data) => {
@@ -794,7 +810,7 @@
                 database.ref(`goat_playoff/${cruceId}`).set(data);
             };
 
-            if (!torneoData) return <div style={{padding: '50px', textAlign: 'center'}}><h2>Cargando Base de Datos...</h2><p style={{color:'#aaa'}}>Abrí el <b>index.html</b> para generar el caché de las zonas.</p></div>;
+            if (!torneoData) return <div style={{padding: '50px', textAlign: 'center'}}><h2>Cargando Base de Datos...</h2><p style={{color:'#aaa'}}>Sincronizando con el servidor principal.</p></div>;
 
             const calcularTablaZona = (zonaIndex) => {
                 const equiposZona = zonaIndex === 1 ? (torneoData.zonasConfig?.zona1 || []) : (torneoData.zonasConfig?.zona2 || []);
@@ -857,7 +873,7 @@
             const z1 = calcularTablaZona(1);
             const z2 = calcularTablaZona(2);
 
-            if (z1.length < 5 || z2.length < 5) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Zonas Incompletas</h2></div>;
+            if (z1.length < 5 || z2.length < 5) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Zonas Incompletas</h2><p style={{color:'#aaa'}}>Asegurate de que las zonas estén configuradas en el torneo principal.</p></div>;
 
             const octA1 = z1[3]; const octA2 = z2[4]; 
             const octB1 = z2[3]; const octB2 = z1[4];
