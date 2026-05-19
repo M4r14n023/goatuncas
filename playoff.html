@@ -235,12 +235,14 @@
             ]
         };
 
-        // FUNCIONES GLOBALES
+// FUNCIONES GLOBALES
         const calcularPuntosCruce = (cruce) => {
             let ptsGoat = 0; let ptsRival = 0;
             if (!cruce) return { ptsGoat, ptsRival };
+            
             Object.entries(cruce.partidos || {}).forEach(([pId, pData]) => {
-                if (pData.estado === 'finalizado') {
+                // EL BLINDAJE ESTÁ ACÁ: "pData &&" evita que lea los nulos de Firebase
+                if (pData && pData.estado === 'finalizado') {
                     const valor = (parseInt(pId) === cruce.partidoBonus) ? 20 : 10;
                     if (pData.resultado === 'ganado') ptsGoat += valor; 
                     else if (pData.resultado === 'perdido') ptsRival += valor;
