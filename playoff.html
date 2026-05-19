@@ -760,22 +760,21 @@
             );
         };
 
-        function PlayoffApp() {
+function PlayoffApp() {
             const [userRole] = useState(localStorage.getItem('goat_user_role') || 'jugador');
             const [torneoData, setTorneoData] = useState(null);
             const [playoffData, setPlayoffData] = useState({});
             const [selectedCruce, setSelectedCruce] = useState(null);
 
-            // MEMORIA DE ACERO: Carga inicial combinada (Local + Nube)
+            // MEMORIA DE ACERO: Carga inicial combinada (Local + Nube bidireccional)
             useEffect(() => {
-                // 1. CARGA CACHÉ LOCAL RÁPIDO (Para que cargue al instante)
                 const localData = localStorage.getItem('goat_torneo_data');
                 if (localData) setTorneoData(JSON.parse(localData));
 
                 const localPlayoff = localStorage.getItem('goat_playoff_data');
                 if (localPlayoff) setPlayoffData(JSON.parse(localPlayoff));
 
-                // 2. CONEXIÓN A FIREBASE PARA PLAYOFFS (Mantiene los cruces sincronizados)
+                // 1. Conexión en vivo para los datos de la llave
                 const refPlayoff = database.ref('goat_playoff');
                 refPlayoff.on('value', (snapshot) => {
                     const data = snapshot.val();
@@ -785,7 +784,7 @@
                     }
                 });
 
-                // 3. CONEXIÓN A FIREBASE PARA ZONAS (Para tener siempre los puntos al día en todos los celulares)
+                // 2. Conexión en vivo al torneo (¡ESTO FALTABA! Mantiene el celular siempre actualizado)
                 const refTorneo = database.ref('goat_torneo');
                 refTorneo.on('value', (snapshot) => {
                     const data = snapshot.val();
@@ -873,7 +872,7 @@
             const z1 = calcularTablaZona(1);
             const z2 = calcularTablaZona(2);
 
-            if (z1.length < 5 || z2.length < 5) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Zonas Incompletas</h2><p style={{color:'#aaa'}}>Asegurate de que las zonas estén configuradas en el torneo principal.</p></div>;
+            if (z1.length < 5 || z2.length < 5) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Zonas Incompletas</h2></div>;
 
             const octA1 = z1[3]; const octA2 = z2[4]; 
             const octB1 = z2[3]; const octB2 = z1[4];
