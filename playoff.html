@@ -766,7 +766,7 @@ function PlayoffApp() {
             const [playoffData, setPlayoffData] = useState({});
             const [selectedCruce, setSelectedCruce] = useState(null);
 
-            // MEMORIA DE ACERO: Carga inicial combinada (Local + Nube bidireccional)
+            // MEMORIA DE ACERO: Carga inicial combinada (Local + Nube)
             useEffect(() => {
                 const localData = localStorage.getItem('goat_torneo_data');
                 if (localData) setTorneoData(JSON.parse(localData));
@@ -774,7 +774,7 @@ function PlayoffApp() {
                 const localPlayoff = localStorage.getItem('goat_playoff_data');
                 if (localPlayoff) setPlayoffData(JSON.parse(localPlayoff));
 
-                // 1. Conexión en vivo para los datos de la llave
+                // 1. Escuchar los datos de los Playoffs
                 const refPlayoff = database.ref('goat_playoff');
                 refPlayoff.on('value', (snapshot) => {
                     const data = snapshot.val();
@@ -784,7 +784,7 @@ function PlayoffApp() {
                     }
                 });
 
-                // 2. Conexión en vivo al torneo (¡ESTO FALTABA! Mantiene el celular siempre actualizado)
+                // 2. Escuchar el Torneo Principal (Donde se guardan los tildes de avance de index.html)
                 const refTorneo = database.ref('goat_torneo');
                 refTorneo.on('value', (snapshot) => {
                     const data = snapshot.val();
@@ -830,7 +830,9 @@ function PlayoffApp() {
                                 const ganado = torneoData.resultados?.[key] || false; 
                                 const esBonus = fecha.partidoBonus === partido.id; 
                                 const puntos = esBonus ? 20 : 10;
-                                if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                                if (fecha.isClosed || torneoData.resultados?.hasOwnProperty(key)) {
+                                    if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                                }
                             }
                         });
                         
@@ -847,7 +849,6 @@ function PlayoffApp() {
                     }
                 });
 
-                // INTEGRACIÓN DE CRUCES ADICIONALES PARA EL CÁLCULO
                 (torneoData.crucesFinales || []).forEach(cruce => {
                     if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
                         const pts1 = parseInt(cruce.resultado1) || 0; 
@@ -877,7 +878,22 @@ function PlayoffApp() {
             const octA1 = z1[3]; const octA2 = z2[4]; 
             const octB1 = z2[3]; const octB2 = z1[4];
             
-            const getG = (id, fallback) => playoffData[id]?.ganador || fallback;
+            // --- CONEXIÓN DE LOS TILDES MANUALES (INDEX) A LA LLAVE GRÁFICA (PLAYOFF) ---
+            const getG = (id, fallback) => {
+                const mapAvances = {
+                    'octavos_a': 'octA', 'octavos_b': 'octB',
+                    'cuartos_1': 'cua1', 'cuartos_2': 'cua2', 'cuartos_3': 'cua3', 'cuartos_4': 'cua4',
+                    'semi_1': 'semi1', 'semi_2': 'semi2', 'final': 'final'
+                };
+                const idxKey = mapAvances[id];
+                
+                // Prioridad 1: Tildes manuales puestos en el index.html
+                if (idxKey && torneoData?.playoffAvances?.[idxKey]) {
+                    return torneoData.playoffAvances[idxKey];
+                }
+                // Prioridad 2: Ganadores automáticos de la serie en playoff.html
+                return playoffData[id]?.ganador || fallback;
+            };
             
             const cua1_1 = z1[0]; const cua1_2 = getG('octavos_b', 'Ganador 8vos B'); 
             const cua2_1 = z1[1]; const cua2_2 = z2[2]; 
