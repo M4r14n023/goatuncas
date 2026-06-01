@@ -88,9 +88,9 @@
         function App() {
             const [fechas, setFechas] = useState([]);
             const [resultados, setResultados] = useState({});
+            const [playoffData, setPlayoffData] = useState({}); // NUEVO ESTADO PARA PLAYOFFS
             const [subTab, setSubTab] = useState('individual'); 
             
-            // NUEVO: LEER EL ROL DEL USUARIO DESDE LA MEMORIA LOCAL
             const userRole = localStorage.getItem('goat_user_role') || null;
 
             // Filtros
@@ -107,7 +107,15 @@
                         const datos = JSON.parse(datosGuardados);
                         setFechas(datos.fechas || []);
                         setResultados(datos.resultados || {});
-                    } catch (e) { console.error('Error al cargar datos:', e); }
+                    } catch (e) { console.error('Error al cargar datos torneo:', e); }
+                }
+
+                // NUEVO: CARGAR DATOS DE PLAYOFFS
+                const datosPlayoff = localStorage.getItem('goat_playoff_data');
+                if (datosPlayoff) {
+                    try {
+                        setPlayoffData(JSON.parse(datosPlayoff));
+                    } catch (e) { console.error('Error al cargar datos playoff:', e); }
                 }
             }, []);
 
@@ -125,44 +133,89 @@
                     };
                 });
                 
+                // 1. RECOLECTAR PARTIDOS DE LAS ZONAS
                 fechas.forEach((fecha, fechaIdx) => {
                     if (!fecha || !fecha.partidos) return;
-
-                    // NUEVO FILTRO DE SEGURIDAD: Ocultar borradores para los jugadores
                     if (userRole === 'jugador' && !fecha.convocada) return;
-
-                    // 🗓️ NUEVO FILTRO CALENDARIO: No sumar a los gráficos si la fecha es en el futuro
                     if (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date()) return;
 
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
                             const key = `${fechaIdx}-${partido.id}`; 
-                            const ganado = resultados[key] || false; 
-                            const esSingle = partido.numJugadores === 1;
-                            
-                            partido.jugadores.forEach(jugador => {
-                                if (stats.jugadores[jugador]) {
-                                    const companeros = partido.jugadores.filter(j => j !== jugador);
-                                    const compTexto = companeros.length > 0 ? companeros.join(' / ') : 'Jugó Single';
+                            // Si el partido está cerrado pero no tiene resultado explícito, se asume perdido para las stats de los jugadores, 
+                            // O mejor aún, solo sumamos los que tengan explícitamente el resultado en el historial
+                            if (resultados.hasOwnProperty(key) || fecha.isClosed) {
+                                const ganado = resultados[key] || false; 
+                                const esSingle = partido.numJugadores === 1;
+                                
+                                partido.jugadores.forEach(jugador => {
+                                    if (stats.jugadores[jugador]) {
+                                        const companeros = partido.jugadores.filter(j => j !== jugador);
+                                        const compTexto = companeros.length > 0 ? companeros.join(' / ') : 'Jugó Single';
 
-                                    if (esSingle) stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
-                                    else stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
-                                    
-                                    stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
-                                    stats.jugadores[jugador].total.historial.push({ fechaNum: fecha.numero, rival: fecha.rival, tipo: partido.tipo, companero: compTexto, resultado: ganado });
+                                        if (esSingle) stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
+                                        else stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
+                                        
+                                        stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
+                                        stats.jugadores[jugador].total.historial.push({ fechaNum: fecha.numero, rival: fecha.rival, tipo: partido.tipo, companero: compTexto, resultado: ganado });
+                                    }
+                                });
+
+                                if (!esSingle && partido.jugadores.length === 2) {
+                                    const parejaKey = [...partido.jugadores].sort().join(' - ');
+                                    if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [], tiposJugados: [] };
+                                    stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
+                                    stats.parejas[parejaKey].fechas.push({ fecha: fecha.numero, rival: fecha.rival, tipo: partido.tipo, resultado: ganado });
+                                    if (!stats.parejas[parejaKey].tiposJugados.includes(partido.tipo)) stats.parejas[parejaKey].tiposJugados.push(partido.tipo);
                                 }
-                            });
-
-                            if (!esSingle && partido.jugadores.length === 2) {
-                                const parejaKey = [...partido.jugadores].sort().join(' - ');
-                                if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [], tiposJugados: [] };
-                                stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
-                                stats.parejas[parejaKey].fechas.push({ fecha: fecha.numero, rival: fecha.rival, tipo: partido.tipo, resultado: ganado });
-                                if (!stats.parejas[parejaKey].tiposJugados.includes(partido.tipo)) stats.parejas[parejaKey].tiposJugados.push(partido.tipo);
                             }
                         }
                     });
                 });
+
+                // 2. NUEVO: RECOLECTAR PARTIDOS DE LOS PLAYOFFS
+                if (playoffData) {
+                    Object.entries(playoffData).forEach(([cruceId, cruceData]) => {
+                        // Respetar la privacidad del armado de Playoffs para los jugadores
+                        if (userRole === 'jugador' && !cruceData.convocada) return;
+
+                        Object.entries(cruceData.partidos || {}).forEach(([pIdStr, partido]) => {
+                            if (partido && partido.estado === 'finalizado' && partido.resultado) {
+                                const pId = parseInt(pIdStr);
+                                const defPartido = PARTIDOS.find(p => p.id === pId);
+                                if (!defPartido || !partido.jugadores) return;
+
+                                const ganado = partido.resultado === 'ganado';
+                                const esSingle = defPartido.numJugadores === 1;
+                                
+                                // Formatear nombre del cruce (ej: "octavos_a" -> "OCTAVOS A")
+                                const nombreFase = cruceId.replace('_', ' ').toUpperCase();
+
+                                partido.jugadores.forEach(jugador => {
+                                    if (stats.jugadores[jugador]) {
+                                        const companeros = partido.jugadores.filter(j => j !== jugador);
+                                        const compTexto = companeros.length > 0 ? companeros.join(' / ') : 'Jugó Single';
+
+                                        if (esSingle) stats.jugadores[jugador].singles[ganado ? 'ganados' : 'perdidos']++;
+                                        else stats.jugadores[jugador].dobles[ganado ? 'ganados' : 'perdidos']++;
+                                        
+                                        stats.jugadores[jugador].total[ganado ? 'ganados' : 'perdidos']++;
+                                        stats.jugadores[jugador].total.historial.push({ fechaNum: 'PO', rival: nombreFase, tipo: defPartido.tipo, companero: compTexto, resultado: ganado });
+                                    }
+                                });
+
+                                if (!esSingle && partido.jugadores.length === 2) {
+                                    const parejaKey = [...partido.jugadores].sort().join(' - ');
+                                    if (!stats.parejas[parejaKey]) stats.parejas[parejaKey] = { ganados: 0, perdidos: 0, fechas: [], tiposJugados: [] };
+                                    stats.parejas[parejaKey][ganado ? 'ganados' : 'perdidos']++;
+                                    stats.parejas[parejaKey].fechas.push({ fecha: 'PO', rival: nombreFase, tipo: defPartido.tipo, resultado: ganado });
+                                    if (!stats.parejas[parejaKey].tiposJugados.includes(defPartido.tipo)) stats.parejas[parejaKey].tiposJugados.push(defPartido.tipo);
+                                }
+                            }
+                        });
+                    });
+                }
+
                 return stats;
             };
 
@@ -186,7 +239,7 @@
                 Object.entries(stats.parejas).forEach(([pareja, data]) => {
                     const total = data.ganados + data.perdidos; 
                     const porcentaje = total > 0 ? ((data.ganados / total) * 100).toFixed(1).replace('.', ',') : "0,0";
-                    const detalle = data.fechas.map(f => `F${f.fecha} vs ${f.rival} (${f.resultado ? 'Ganado' : 'Perdido'})`).join(' | ');
+                    const detalle = data.fechas.map(f => `${f.fecha === 'PO' ? 'Playoff' : 'F'+f.fecha} vs ${f.rival} (${f.resultado ? 'Ganado' : 'Perdido'})`).join(' | ');
                     csvContent += `${pareja};${data.ganados};${data.perdidos};${porcentaje}%;${detalle}\n`;
                 });
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -243,9 +296,12 @@
                                         <div style={{maxHeight: '250px', overflowY: 'auto'}}>
                                             {stats.jugadores[indivPlayer].total.historial.length === 0 ? <p style={{color: '#94a3b8'}}>Sin partidos jugados aún.</p> : 
                                              stats.jugadores[indivPlayer].total.historial.map((h, i) => (
-                                                <div key={i} style={{padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                <div key={i} style={{padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: h.fechaNum === 'PO' ? '#fdf8ec' : 'transparent'}}>
                                                     <div>
-                                                        <strong style={{color: '#334155'}}>{h.tipo}</strong> <span style={{fontSize: '12px', color: '#64748b'}}>(F{h.fechaNum} vs {h.rival})</span>
+                                                        <strong style={{color: '#334155'}}>{h.tipo}</strong> 
+                                                        <span style={{fontSize: '12px', color: h.fechaNum === 'PO' ? '#d4af37' : '#64748b', fontWeight: h.fechaNum === 'PO' ? 'bold' : 'normal', marginLeft: '5px'}}>
+                                                            ({h.fechaNum === 'PO' ? `Fase PO: ${h.rival}` : `F${h.fechaNum} vs ${h.rival}`})
+                                                        </span>
                                                         <div style={{fontSize: '13px', color: '#475569', marginTop: '4px'}}>Compañero: {h.companero}</div>
                                                     </div>
                                                     <span style={{background: h.resultado ? '#d1fae5' : '#fee2e2', color: h.resultado ? '#065f46' : '#991b1b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold'}}>
@@ -300,10 +356,12 @@
                                         <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Desempeño Juntos</h3>
                                         <div style={{maxHeight: '250px', overflowY: 'auto'}}>
                                             {stats.parejas[parElegida].fechas.map((h, i) => (
-                                                <div key={i} style={{padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                <div key={i} style={{padding: '10px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: h.fecha === 'PO' ? '#fdf8ec' : 'transparent'}}>
                                                     <div>
                                                         <strong style={{color: '#334155'}}>{h.tipo}</strong> 
-                                                        <div style={{fontSize: '13px', color: '#64748b', marginTop: '4px'}}>F{h.fecha} vs {h.rival}</div>
+                                                        <div style={{fontSize: '13px', color: h.fecha === 'PO' ? '#d4af37' : '#64748b', marginTop: '4px'}}>
+                                                            {h.fecha === 'PO' ? `Fase PO: ${h.rival}` : `F${h.fecha} vs ${h.rival}`}
+                                                        </div>
                                                     </div>
                                                     <span style={{background: h.resultado ? '#d1fae5' : '#fee2e2', color: h.resultado ? '#065f46' : '#991b1b', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold'}}>
                                                         {h.resultado ? 'Ganó' : 'Perdió'}
