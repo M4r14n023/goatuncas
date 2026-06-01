@@ -292,17 +292,26 @@
             const [horarioActual, setHorarioActual] = useState({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
             const [editandoHorario, setEditandoHorario] = useState(null);
             const [showCategoriasModal, setShowCategoriasModal] = useState(false);
-            
-            // --- ESTADO PARA LA GRILLA ---
             const [grillaSeleccionada, setGrillaSeleccionada] = useState('');
+            const [jugadorSeleccionado, setJugadorSeleccionado] = useState('');
 
+            // --- AUTO-DEFINICIÓN Y AUTO-REVERSIÓN DE LA SERIE ---
             useEffect(() => {
                 if (serieDefinida && cruce.ganador !== (ptsGoat >= 140 ? 'GOAT' : rival)) {
                     savePlayoff(cruceId, { ...cruce, ganador: ptsGoat >= 140 ? 'GOAT' : rival });
+                } else if (!serieDefinida && cruce.ganador) {
+                    // Si se deshace un error y bajan de 140, borra el ganador
+                    savePlayoff(cruceId, { ...cruce, ganador: null });
                 }
-            }, [serieDefinida, ptsGoat, ptsRival]); 
+            }, [serieDefinida, ptsGoat, ptsRival, cruce.ganador]); 
 
-            // --- FUNCIÓN PARA SETEAR PARCIALES (1°↑, 1°↓, STB) ---
+            const iniciarPartido = (matchId) => {
+                if (userRole === 'jugador') return;
+                const pData = cruce.partidos?.[matchId] || {};
+                const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, estado: 'en_cancha' } };
+                savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+            };
+
             const setParcialSet = (matchId, valor) => {
                 if (userRole === 'jugador') return;
                 const pData = cruce.partidos?.[matchId] || {};
@@ -317,7 +326,16 @@
                 savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
             };
 
-            // --- MOTOR NUEVO: CARGA AUTOMÁTICA DE GRILLAS ---
+            // --- BOTÓN SALVAVIDAS: DESHACER RESULTADO ---
+            const deshacerResultado = (matchId) => {
+                if (userRole === 'jugador') return;
+                if (confirm('¿Estás seguro de deshacer este resultado? El partido volverá a figurar EN CANCHA y se restarán los puntos.')) {
+                    const pData = cruce.partidos?.[matchId] || {};
+                    const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, resultado: null, estado: 'en_cancha' } };
+                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                }
+            };
+
             const aplicarGrillaAutomatica = () => {
                 if (!GRILLAS_AUTOMATICAS[grillaSeleccionada]) return;
                 if (!confirm(`¿Aplicar Grilla ${grillaSeleccionada}? Esto borrará los horarios actuales y asignará los 26 partidos a sus canchas.`)) return;
@@ -325,12 +343,10 @@
                 const grilla = GRILLAS_AUTOMATICAS[grillaSeleccionada];
                 let nuevosPartidos = { ...cruce.partidos };
 
-                // Limpiamos posiciones actuales sin borrar jugadores ni bonus
                 Object.keys(nuevosPartidos).forEach(key => { 
                     nuevosPartidos[key] = { ...nuevosPartidos[key], dia: undefined, horario: undefined, posicion: undefined }; 
                 });
                 
-                // Asignamos los 26 partidos
                 grilla.forEach(g => {
                     if (!nuevosPartidos[g.id]) nuevosPartidos[g.id] = { jugadores: [] };
                     nuevosPartidos[g.id] = { ...nuevosPartidos[g.id], dia: g.dia, horario: g.hora, posicion: g.pos };
@@ -341,7 +357,6 @@
                 setGrillaSeleccionada(''); 
             };
 
-            // --- CRONOGRAMA MANUAL ---
             const getPartidosDisponibles = (excluirPartido = null) => {
                 return PARTIDOS.filter(p => {
                     if (editandoHorario) {
@@ -422,7 +437,6 @@
             const partidosDisponiblesP1 = getPartidosDisponibles();
             const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
 
-            // --- CONVOCATORIA INTELIGENTE ---
             const contarEnCruce = (nombre) => {
                 let c = 0; Object.values(cruce.partidos || {}).forEach(part => { if (part.jugadores && part.jugadores.includes(nombre)) c++; }); return c;
             };
@@ -486,6 +500,8 @@
 
                         <div className="tabs">
                             <button className={`tab-btn ${activeTab==='vivo'?'active':''}`} onClick={()=>setActiveTab('vivo')}>🔴 EN VIVO</button>
+                            <button className={`tab-btn ${activeTab==='misPartidos'?'active':''}`} onClick={()=>setActiveTab('misPartidos')}>🎾 Mis Partidos</button>
+                            
                             {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='cronograma'?'active':''}`} onClick={()=>setActiveTab('cronograma')}>⌚ Cronograma</button>}
                             {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='convocatoria'?'active':''}`} onClick={()=>setActiveTab('convocatoria')}>👥 Convocatoria</button>}
                         </div>
@@ -520,18 +536,23 @@
                                     if (!m.horario && !serieDefinida) return null; 
                                     const esBonus = cruce.partidoBonus === p.id;
                                     
-                                    // REGLA DE PRIVACIDAD PARA JUGADORES
                                     const isOcultaParaJugador = userRole === 'jugador' && !cruce.convocada;
+                                    const estaEnCancha = m.estado === 'en_cancha' || m.estado === 'en_juego';
                                     
                                     return (
-                                        <div key={p.id} style={{background: '#222', padding:'12px', borderRadius:'8px', marginBottom:'8px', display:'flex', justifyContent:'space-between', alignItems:'center', border: esBonus ? '2px solid #f59e0b' : '1px solid #444', opacity: (serieDefinida && m.estado !== 'finalizado') ? 0.5 : 1}}>
+                                        <div key={p.id} style={{background: '#222', padding:'12px', borderRadius:'8px', marginBottom:'8px', display:'flex', justifyContent:'space-between', alignItems:'center', border: estaEnCancha ? '2px solid #3b82f6' : (esBonus ? '2px solid #f59e0b' : '1px solid #444'), opacity: (serieDefinida && m.estado !== 'finalizado') ? 0.5 : 1}}>
                                             <div style={{flex: 1}}>
                                                 <div style={{fontSize:'13px', fontWeight:'bold', color: '#fff'}}>{p.tipo} {esBonus && <span style={{color: '#f59e0b'}}>⭐</span>}</div>
                                                 <div style={{fontSize:'12px', color: isOcultaParaJugador ? '#ef4444' : '#aaa'}}>
-                                                    {m.dia || 'Sáb'} {m.horario || '--:--'} | Juegan: {isOcultaParaJugador ? '🔒 Convocatoria en armado' : (m.jugadores?.length > 0 ? m.jugadores.join(' / ') : '---')}
+                                                    {m.dia || 'Sáb'} {m.horario || '--:--'} (Cancha {m.posicion}) | Juegan: {isOcultaParaJugador ? '🔒 Convocatoria en armado' : (m.jugadores?.length > 0 ? m.jugadores.join(' / ') : '---')}
                                                 </div>
                                                 
-                                                {/* ETIQUETAS DE PARCIALES */}
+                                                {estaEnCancha && m.estado !== 'finalizado' && !m.parciales && (
+                                                    <div style={{marginTop: '8px', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', background: '#dbeafe', color: '#1e40af'}}>
+                                                        🎾 EN CANCHA
+                                                    </div>
+                                                )}
+
                                                 {m.parciales && m.estado !== 'finalizado' && (
                                                     <div style={{marginTop: '8px', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', background: m.parciales === '1-up' ? '#d1fae5' : m.parciales === '1-down' ? '#fee2e2' : '#fef3c7', color: m.parciales === '1-up' ? '#065f46' : m.parciales === '1-down' ? '#991b1b' : '#92400e'}}>
                                                         {m.parciales === '1-up' ? '✅ 1er Set Ganado' : m.parciales === '1-down' ? '❌ 1er Set Perdido' : '⚡ En Súper Tie-Break'}
@@ -540,19 +561,31 @@
                                             </div>
                                             <div style={{display:'flex', gap:'5px', flexDirection:'column', alignItems:'flex-end'}}>
                                                 {m.estado === 'finalizado' ? (
-                                                    <span style={{color: m.resultado==='ganado'?'#10b981':'#ef4444', fontWeight:'bold', fontSize:'16px'}}>{m.resultado === 'ganado' ? 'GOAT ✓' : 'RIVAL ✓'}</span>
+                                                    <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'5px'}}>
+                                                        <span style={{color: m.resultado==='ganado'?'#10b981':'#ef4444', fontWeight:'bold', fontSize:'16px'}}>{m.resultado === 'ganado' ? 'GOAT ✓' : 'RIVAL ✓'}</span>
+                                                        {userRole !== 'jugador' && (
+                                                            <button className="btn" style={{fontSize:'10px', padding:'2px 5px', background:'#444', color:'white', margin:0}} onClick={() => deshacerResultado(p.id)}>↩️ Deshacer</button>
+                                                        )}
+                                                    </div>
                                                 ) : (
                                                     userRole !== 'jugador' && !serieDefinida && (
                                                         <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
                                                             <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
-                                                                <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-up'?'#10b981':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-up')}>1°↑</button>
-                                                                <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-down'?'#ef4444':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-down')}>1°↓</button>
-                                                                <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='super'?'#f59e0b':'#f1f5f9'}} onClick={() => setParcialSet(p.id, 'super')}>STB</button>
+                                                                {!estaEnCancha && <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: '#3b82f6', color:'white'}} onClick={() => iniciarPartido(p.id)}>▶️ Empezar</button>}
+                                                                {estaEnCancha && (
+                                                                    <>
+                                                                        <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-up'?'#10b981':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-up')}>1°↑</button>
+                                                                        <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-down'?'#ef4444':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-down')}>1°↓</button>
+                                                                        <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='super'?'#f59e0b':'#f1f5f9'}} onClick={() => setParcialSet(p.id, 'super')}>STB</button>
+                                                                    </>
+                                                                )}
                                                             </div>
-                                                            <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
-                                                                <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
-                                                                <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
-                                                            </div>
+                                                            {estaEnCancha && (
+                                                                <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
+                                                                    <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
+                                                                    <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )
                                                 )}
@@ -560,6 +593,63 @@
                                         </div>
                                     );
                                 })}
+                            </div>
+                        )}
+
+                        {/* NUEVA PESTAÑA: MIS PARTIDOS */}
+                        {activeTab === 'misPartidos' && (
+                            <div>
+                                <div style={{background: '#333', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37'}}>
+                                    <label style={{color: '#d4af37', fontWeight: 'bold', fontSize: '14px'}}>👤 Seleccionar Jugador</label>
+                                    <select value={jugadorSeleccionado} onChange={(e) => setJugadorSeleccionado(e.target.value)} style={{background: '#111', color: '#fff', width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #555', marginTop: '10px'}}>
+                                        <option value="">-- Buscá tu nombre --</option>
+                                        {Array.from(new Set(Object.values(cruce.partidos || {}).flatMap(p => p.jugadores || []))).sort().map(nombre => (
+                                            <option key={nombre} value={nombre}>{nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {jugadorSeleccionado && (
+                                    <div>
+                                        <h3 className="gold-text" style={{marginBottom: '15px'}}>Agenda de {jugadorSeleccionado}</h3>
+                                        {(!cruce.convocada && userRole === 'jugador') ? (
+                                            <div style={{background: '#ef4444', color: 'white', padding: '15px', borderRadius: '8px', textAlign: 'center'}}>
+                                                🔒 La convocatoria de este cruce aún está oculta.
+                                            </div>
+                                        ) : (
+                                            Object.entries(cruce.partidos || {})
+                                                .filter(([pId, p]) => p.jugadores?.includes(jugadorSeleccionado))
+                                                .map(([pId, p], i) => {
+                                                    const partidoDef = PARTIDOS.find(part => part.id === parseInt(pId));
+                                                    const estaEnCancha = p.estado === 'en_cancha' || p.estado === 'en_juego';
+                                                    return (
+                                                        <div key={i} style={{background: '#222', padding: '15px', marginBottom: '10px', borderRadius: '8px', border: estaEnCancha ? '2px solid #3b82f6' : '1px solid #444'}}>
+                                                            <div style={{fontWeight: 'bold', fontSize: '14px', color: '#fff'}}>{partidoDef?.tipo}</div>
+                                                            <div style={{color: '#d4af37', marginTop: '5px', fontSize: '13px'}}>
+                                                                📅 {p.dia === 'sabado' ? 'Sábado' : 'Domingo'} a las {p.horario} hs
+                                                            </div>
+                                                            <div style={{color: '#aaa', marginTop: '3px', fontSize: '13px'}}>
+                                                                🏟️ Cancha Asignada: {p.posicion}
+                                                            </div>
+                                                            {estaEnCancha && p.estado !== 'finalizado' && (
+                                                                <div style={{marginTop: '10px', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', display: 'inline-block', background: '#dbeafe', color: '#1e40af'}}>
+                                                                    🎾 ESTE PARTIDO ESTÁ EN CANCHA
+                                                                </div>
+                                                            )}
+                                                            {p.estado === 'finalizado' && (
+                                                                <div style={{marginTop: '10px', color: p.resultado === 'ganado' ? '#10b981' : '#ef4444', fontWeight: 'bold'}}>
+                                                                    {p.resultado === 'ganado' ? '✓ PARTIDO GANADO' : '✕ PARTIDO PERDIDO'}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })
+                                        )}
+                                        {cruce.convocada && Object.values(cruce.partidos || {}).filter(p => p.jugadores?.includes(jugadorSeleccionado)).length === 0 && (
+                                            <div style={{color: '#aaa', textAlign: 'center', padding: '20px'}}>No tenés partidos asignados en este cruce todavía.</div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -622,7 +712,6 @@
                         {/* PESTAÑA CONVOCATORIA */}
                         {activeTab === 'convocatoria' && userRole !== 'jugador' && (
                             <div>
-                                {/* PANEL DE PUBLICACIÓN EXCLUSIVO CAPITAN/ADMIN */}
                                 <div style={{ marginBottom: '20px', padding: '15px', background: cruce.convocada ? '#10b981' : '#ef4444', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                                     <div style={{color: 'white', fontWeight: 'bold'}}>
                                         Estado: {cruce.convocada ? '📢 Convocatoria Pública (Visible)' : '🔒 Convocatoria Oculta (Borrador)'}
