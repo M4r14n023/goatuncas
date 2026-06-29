@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOAT - Reporte de Campaña 2026</title>
+    <link rel="icon" type="image/jpeg" href="GOAT.jpeg">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f1f5f9; min-height: 100vh; padding: 20px; }
+        .app-container { max-width: 1000px; margin: 0 auto; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header-title { display: flex; align-items: center; gap: 15px; }
+        .header-title img { width: 60px; height: 60px; border-radius: 50%; }
+        
+        .btn { padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; border: none; text-decoration: none; display: inline-block; transition: 0.2s; }
+        .btn-primary { background: #d4af37; color: black; box-shadow: 0 4px 10px rgba(212,175,55,0.3); }
+        .btn-primary:hover { background: #c5a030; }
+        .btn-secondary { background: #1e3c72; color: white; }
+        
+        /* Contenedor que se va a exportar a PDF */
+        #pdf-content { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid #d4af37; text-align: center; }
+        .kpi-value { font-size: 32px; font-weight: bold; color: #1e3c72; margin-bottom: 5px; }
+        .kpi-label { font-size: 14px; color: #64748b; text-transform: uppercase; font-weight: 600; }
+        
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
+        .chart-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        
+        .top-players { margin-top: 30px; }
+        .player-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #eee; }
+        .player-row:nth-child(even) { background: #f8f9fa; }
+        
+        @media (max-width: 768px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            #pdf-content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // ==========================================
+        // 1. INICIALIZAR FIREBASE (PEGÁ TU CONFIG ACÁ)
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWut5pII90tdvaB_AwkvdQ6Oq3TgM5wKY",
+            authDomain: "hub-universitario.firebaseapp.com",
+            databaseURL: "https://hub-universitario-default-rtdb.firebaseio.com",
+            projectId: "hub-universitario",
+            storageBucket: "hub-universitario.firebasestorage.app",
+            messagingSenderId: "642915679228",
+            appId: "1:642915679228:web:e6e48b25869d74c14cfe87"
+        };
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
+        // CONSTANTES BÁSICAS (Simplificadas para el conteo global)
+        const { useState, useEffect, useRef } = React;
+
+        function ReporteApp() {
+            const [cargando, setCargando] = useState(true);
+            const [estadisticas, setEstadisticas] = useState(null);
+            
+            const chartRendimientoRef = useRef(null);
+            const chartCategoriasRef = useRef(null);
+            let chartRendimientoInst = null;
+            let chartCategoriasInst = null;
+
+            useEffect(() => {
+                // Descargar toda la info de la nube
+                Promise.all([
+                    database.ref('goat_torneo').once('value'),
+                    database.ref('goat_playoff').once('value')
+                ]).then(([snapTorneo, snapPlayoff]) => {
+                    procesarDatos(snapTorneo.val() || {}, snapPlayoff.val() || {});
+                    setCargando(false);
+                });
+            }, []);
+
+            const procesarDatos = (dataTorneo, dataPlayoff) => {
+                let totalGanados = 0;
+                let totalPerdidos = 0;
+                let puntosFavor = 0;
+                let puntosContra = 0;
+                
+                // Mapeo para saber si los puntos vienen de Damas, Singles, etc.
+                const victoriasPorTipo = { 'Damas': 0, 'Caballeros Dobles': 0, 'Singles': 0, 'Mixtos': 0 };
+                const rankingJugadores = {}; // { "Mariano": { g: 0, p: 0 }, ... }
+
+                const registrarPartido = (ganado, pId, jugadores, esBonus) => {
+                    const puntos = esBonus ? 20 : 10;
+                    if (ganado) {
+                        totalGanados++;
+                        puntosFavor += puntos;
+                    } else {
+                        totalPerdidos++;
+                        puntosContra += puntos;
+                    }
+
+                    // Clasificar para el gráfico de barras
+                    let categoria = 'Caballeros Dobles';
+                    // Asumimos rangos de ID según tus constantes previas
+                    if (pId >= 20 && pId <= 24 || pId === 10 || pId === 6) categoria = 'Singles';
+                    if (pId === 9 || pId === 21 || pId === 16 || pId === 26 || pId === 1 || pId === 22) categoria = 'Damas';
+                    if (pId === 4 || pId === 14 || pId === 19 || pId === 11 || pId === 8) categoria = 'Mixtos';
+
+                    if (ganado) victoriasPorTipo[categoria]++;
+
+                    // Sumar al ranking individual
+                    jugadores.forEach(jug => {
+                        if (!rankingJugadores[jug]) rankingJugadores[jug] = { ganados: 0, perdidos: 0 };
+                        if (ganado) rankingJugadores[jug].ganados++;
+                        else rankingJugadores[jug].perdidos++;
+                    });
+                };
+
+                // 1. Recorrer Torneo (Fase Zonas)
+                (dataTorneo.fechas || []).forEach((fecha, fIdx) => {
+                    if (!fecha || !fecha.partidos) return;
+                    fecha.partidos.forEach(p => {
+                        const key = `${fIdx}-${p.id}`;
+                        if (dataTorneo.resultados?.hasOwnProperty(key) || fecha.isClosed) {
+                            const ganado = dataTorneo.resultados?.[key] || false;
+                            if (p.jugadores && p.jugadores.length > 0) {
+                                registrarPartido(ganado, p.id, p.jugadores, fecha.partidoBonus === p.id);
+                            }
+                        }
+                    });
+                });
+
+                // 2. Recorrer Play-Offs
+                Object.values(dataPlayoff || {}).forEach(cruce => {
+                    Object.entries(cruce.partidos || {}).forEach(([pId, pData]) => {
+                        if (pData.estado === 'finalizado' && pData.resultado) {
+                            const ganado = pData.resultado === 'ganado';
+                            if (pData.jugadores && pData.jugadores.length > 0) {
+                                registrarPartido(ganado, parseInt(pId), pData.jugadores, cruce.partidoBonus === parseInt(pId));
+                            }
+                        }
+                    });
+                });
+
+                // Formatear Top 5 Jugadores
+                const top5 = Object.entries(rankingJugadores)
+                    .sort((a, b) => b[1].ganados - a[1].ganados || (a[1].perdidos - b[1].perdidos))
+                    .slice(0, 5);
+
+                setEstadisticas({ totalGanados, totalPerdidos, puntosFavor, puntosContra, victoriasPorTipo, top5 });
+            };
+
+            // Dibujar gráficos cuando las estadísticas estén listas
+            useEffect(() => {
+                if (estadisticas && !cargando) {
+                    // Gráfico 1: Rendimiento (Torta)
+                    const ctx1 = chartRendimientoRef.current.getContext('2d');
+                    if (window.chartRendimientoInst) window.chartRendimientoInst.destroy();
+                    window.chartRendimientoInst = new Chart(ctx1, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Victorias', 'Derrotas'],
+                            datasets: [{
+                                data: [estadisticas.totalGanados, estadisticas.totalPerdidos],
+                                backgroundColor: ['#10b981', '#ef4444'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+
+                    // Gráfico 2: Categorías (Barras)
+                    const ctx2 = chartCategoriasRef.current.getContext('2d');
+                    if (window.chartCategoriasInst) window.chartCategoriasInst.destroy();
+                    window.chartCategoriasInst = new Chart(ctx2, {
+                        type: 'bar',
+                        data: {
+                            labels: Object.keys(estadisticas.victoriasPorTipo),
+                            datasets: [{
+                                label: 'Partidos Ganados',
+                                data: Object.values(estadisticas.victoriasPorTipo),
+                                backgroundColor: '#1e3c72',
+                                borderRadius: 6
+                            }]
+                        },
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false,
+                            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+                        }
+                    });
+                }
+            }, [estadisticas, cargando]);
+
+            const exportarPDF = () => {
+                const doc = new window.jspdf.jsPDF('p', 'mm', 'a4');
+                const elemento = document.getElementById('pdf-content');
+                
+                // Ocultar temporalmente sombras fuertes que ensucian el PDF
+                elemento.style.boxShadow = 'none';
+                
+                html2canvas(elemento, { scale: 2 }).then(canvas => {
+                    elemento.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)'; // Restaurar sombra
+                    
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgWidth = 190; // Márgenes de 10mm de cada lado (210 - 20)
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    
+                    doc.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+                    doc.save('GOAT_Reporte_Campaña_2026.pdf');
+                });
+            };
+
+            if (cargando) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Generando Reporte...</h2><p>Procesando todas las fechas y cruces.</p></div>;
+            if (!estadisticas || (estadisticas.totalGanados === 0 && estadisticas.totalPerdidos === 0)) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Sin Datos</h2><p>Aún no hay partidos finalizados para generar el reporte.</p></div>;
+
+            const efectividadTotal = ((estadisticas.totalGanados / (estadisticas.totalGanados + estadisticas.totalPerdidos)) * 100).toFixed(1);
+
+            return (
+                <div className="app-container">
+                    <div className="header">
+                        <div className="header-title">
+                            <img src="GOAT.jpeg" alt="Logo" />
+                            <div>
+                                <h1 style={{color: '#1e3c72', margin: 0}}>Generador de Reportes</h1>
+                                <p style={{color: '#64748b', margin: 0}}>Exportación Final de Campaña</p>
+                            </div>
+                        </div>
+                        <div style={{display: 'flex', gap: '10px'}}>
+                            <a href="estadisticas.html" className="btn btn-secondary">⬅ Volver</a>
+                            <button onClick={exportarPDF} className="btn btn-primary">⬇️ Descargar PDF Oficial</button>
+                        </div>
+                    </div>
+
+                    {/* CONTENEDOR QUE SE CAPTURA PARA EL PDF */}
+                    <div id="pdf-content">
+                        <div style={{textAlign: 'center', marginBottom: '40px'}}>
+                            <h1 style={{fontSize: '36px', color: '#1e3c72', textTransform: 'uppercase', letterSpacing: '2px'}}>Reporte de Campaña 2026</h1>
+                            <h2 style={{color: '#d4af37'}}>Equipo GOAT - Torneo UNCAS</h2>
+                        </div>
+
+                        <div className="kpi-grid">
+                            <div className="kpi-card">
+                                <div className="kpi-value">{estadisticas.totalGanados + estadisticas.totalPerdidos}</div>
+                                <div className="kpi-label">Partidos Jugados</div>
+                            </div>
+                            <div className="kpi-card">
+                                <div className="kpi-value" style={{color: '#10b981'}}>{estadisticas.totalGanados}</div>
+                                <div className="kpi-label">Victorias Globales</div>
+                            </div>
+                            <div className="kpi-card">
+                                <div className="kpi-value">{efectividadTotal}%</div>
+                                <div className="kpi-label">Efectividad Total</div>
+                            </div>
+                            <div className="kpi-card">
+                                <div className="kpi-value" style={{color: '#d4af37'}}>{estadisticas.puntosFavor}</div>
+                                <div className="kpi-label">Puntos a Favor</div>
+                            </div>
+                        </div>
+
+                        <div className="charts-grid">
+                            <div className="chart-container">
+                                <h3 style={{textAlign: 'center', marginBottom: '20px', color: '#334155'}}>Distribución de Resultados</h3>
+                                <div style={{height: '250px'}}><canvas ref={chartRendimientoRef}></canvas></div>
+                            </div>
+                            <div className="chart-container">
+                                <h3 style={{textAlign: 'center', marginBottom: '20px', color: '#334155'}}>Victorias por Formato</h3>
+                                <div style={{height: '250px'}}><canvas ref={chartCategoriasRef}></canvas></div>
+                            </div>
+                        </div>
+
+                        <div className="top-players">
+                            <h2 style={{color: '#1e3c72', borderBottom: '2px solid #d4af37', paddingBottom: '10px', marginBottom: '20px'}}>🎖️ Los 5 MVP del Equipo (Top Victorias)</h2>
+                            <div style={{background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', overflow: 'hidden'}}>
+                                {estadisticas.top5.map(([nombre, stats], index) => (
+                                    <div key={nombre} className="player-row">
+                                        <div style={{fontWeight: 'bold', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '15px'}}>
+                                            <span style={{color: index === 0 ? '#d4af37' : '#94a3b8', fontSize: '24px'}}>#{index + 1}</span>
+                                            {nombre}
+                                        </div>
+                                        <div style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
+                                            <span style={{background: '#d1fae5', color: '#065f46', padding: '5px 12px', borderRadius: '20px', fontWeight: 'bold'}}>{stats.ganados} G</span>
+                                            <span style={{background: '#fee2e2', color: '#991b1b', padding: '5px 12px', borderRadius: '20px', fontWeight: 'bold'}}>{stats.perdidos} P</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        ReactDOM.render(<ReporteApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
