@@ -813,7 +813,7 @@
                             </div>
                         )}
 
-                        {showCategoriasModal && (
+{showCategoriasModal && (
                             <div className="modal" onClick={() => setShowCategoriasModal(false)}>
                                 <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '600px'}}>
                                     <div className="modal-header">Ascensos de Jugadores</div>
@@ -822,8 +822,19 @@
                                     {['caballeros_5ta_en_4ta', 'caballeros_4ta_en_3ra', 'caballeros_3ra_en_2da', 'damas_c_en_b', 'damas_b_en_a'].map(catKey => {
                                         const catsH = cruce.categoriasHabilitadas || {}; const jugsH = cruce.jugadoresHabilitados || [];
                                         const isChecked = catsH[catKey] || false;
-                                        const srcCat = catKey.split('_en_')[0] + (catKey.includes('caballeros') ? '' : '_' + catKey.split('_')[1]);
-                                        const destCat = catKey.includes('caballeros') ? 'caballeros_' + catKey.split('_en_')[1] : 'damas_' + catKey.split('_en_')[1];
+                                        
+                                        // PARCHADO: Extracción limpia y segura de la categoría origen y destino para Damas y Caballeros
+                                        let srcCat = "";
+                                        let destCat = "";
+                                        
+                                        if (catKey.includes('caballeros')) {
+                                            srcCat = catKey.split('_en_')[0];
+                                            destCat = 'caballeros_' + catKey.split('_en_')[1];
+                                        } else {
+                                            // Si es damas_c_en_b -> origen: damas_c / destino: damas_b
+                                            srcCat = 'damas_' + catKey.split('_')[1];
+                                            destCat = 'damas_' + catKey.split('_en_')[1];
+                                        }
                                         
                                         const toggleCat = () => savePlayoff(cruceId, {...cruce, categoriasHabilitadas: {...catsH, [catKey]: !isChecked}});
                                         const toggleJug = (nombre) => {
@@ -838,7 +849,16 @@
                                                 <label style={{display:'flex', alignItems:'center', gap:'10px', fontSize: '15px', color:'#d4af37'}}>
                                                     <input type="checkbox" style={{width:'20px', height:'20px'}} checked={isChecked} onChange={toggleCat} /> {catKey.replace(/_/g, ' ').toUpperCase()}
                                                 </label>
-                                                {isChecked && <div style={{marginLeft:'30px', marginTop:'15px', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))', gap:'10px'}}>{JUGADORES_GOAT[srcCat].map(j => <label key={j.nombre} style={{color: '#fff', fontSize:'14px', display:'flex', gap:'5px', alignItems:'center'}}><input type="checkbox" style={{width:'16px', height:'16px'}} checked={jugsH.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === destCat)} onChange={() => toggleJug(j.nombre)} /> {j.nombre}</label>)}</div>}
+                                                {isChecked && JUGADORES_GOAT[srcCat] && (
+                                                    <div style={{marginLeft:'30px', marginTop:'15px', display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(120px, 1fr))', gap:'10px'}}>
+                                                        {JUGADORES_GOAT[srcCat].map(j => (
+                                                            <label key={j.nombre} style={{color: '#fff', fontSize:'14px', display:'flex', gap:'5px', alignItems:'center'}}>
+                                                                <input type="checkbox" style={{width:'16px', height:'16px'}} checked={jugsH.some(jh => jh.jugador === j.nombre && jh.categoriaDestino === destCat)} onChange={() => toggleJug(j.nombre)} /> 
+                                                                {j.nombre}
+                                                            </label>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
