@@ -259,8 +259,19 @@
                                 <p style={{margin: 0, fontSize: '14px', color: '#64748b'}}>Datos y efectividad del equipo</p>
                             </div>
                         </div>
-                        <div style={{display: 'flex', gap: '10px'}}>
+<div style={{display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'flex-end'}}>
                             <button className="btn-excel" onClick={exportarAExcel}>📊 Descargar CSV</button>
+                            
+                            {/* NUEVO BOTON HACIA EL REPORTE */}
+                            {userRole !== 'jugador' && (
+                                <button 
+                                    onClick={() => window.location.href = 'reporte-final.html'}
+                                    style={{background: '#d4af37', color: 'black', padding: '10px 20px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 6px rgba(212,175,55,0.3)'}}
+                                >
+                                    📄 Reporte Final PDF
+                                </button>
+                            )}
+
                             <button className="btn-volver" onClick={() => window.location.href = 'index.html'}>⬅️ Volver a la App</button>
                         </div>
                     </div>
