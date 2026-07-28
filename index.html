@@ -517,21 +517,10 @@ function App() {
             const [lastSync, setLastSync] = useState(null);
             const [showPlayoffWelcome, setShowPlayoffWelcome] = useState(false);
 
-            // NUEVO: Referencia para evitar notificaciones al cargar la app por primera vez
-            const esPrimeraCarga = useRef(true);
-
-            useEffect(() => {
-                const terminaronZonas = fechas.length > 0 && fechas.every(f => f.isClosed);
-                const yaEligio = sessionStorage.getItem('goat_playoff_decision');
-                if (terminaronZonas && !yaEligio) { setShowPlayoffWelcome(true); }
-            }, [fechas]);
-
-            const handlePermanecerEnZonas = () => {
-                setShowPlayoffWelcome(false);
-                sessionStorage.setItem('goat_playoff_decision', 'true');
-            };
-            
             const isReceivingData = useRef(true); 
+
+            // Como esPrimeraCarga ya está arriba, solo agregamos esta referencia:
+            const datosAnteriores = useRef(null);
 
             useEffect(() => {
                 if (userRole) localStorage.setItem('goat_user_role', userRole);
@@ -567,15 +556,74 @@ function App() {
 
                 const unsubscribe = escucharCambiosFirebase((datos) => {
                     if (datos) {
-                        // NUEVO: Sistema de Notificaciones Inteligente
-                        if (!esPrimeraCarga.current && !isReceivingData.current) {
-                            // Disparamos la notificación si los datos vinieron de otro usuario
-                            enviarNotificacionLocal(
-                                "GOAT V3 - ¡Actualización! 🎾",
-                                "Se han registrado nuevos movimientos en el torneo."
-                            );
+                        // --- SISTEMA DE NOTIFICACIONES INTELIGENTES ---
+                        if (!esPrimeraCarga.current && !isReceivingData.current && datosAnteriores.current) {
+                            const viejos = datosAnteriores.current;
+                            
+                            // 1. CONVOCATORIA FINALIZADA Y PUBLICADA
+                            if (viejos.fechas && datos.fechas) {
+                                datos.fechas.forEach((fechaNueva, index) => {
+                                    const fechaVieja = viejos.fechas[index];
+                                    if (fechaVieja && !fechaVieja.convocada && fechaNueva.convocada) {
+                                        enviarNotificacionLocal(
+                                            "📅 ¡Atención Equipo!", 
+                                            `Ya está la convocatoria finalizada y publicada para la Fecha ${fechaNueva.numero}. Ingresá para ver tu horario.`
+                                        );
+                                    }
+                                });
+                            }
+
+                            // 2. SEGUIMIENTO EN VIVO (Sets, STB y Retrasos)
+                            if (datos.estadoPartidos) {
+                                Object.keys(datos.estadoPartidos).forEach(partidoId => {
+                                    const estadoNuevo = datos.estadoPartidos[partidoId];
+                                    const estadoViejo = viejos.estadoPartidos ? viejos.estadoPartidos[partidoId] : null;
+
+                                    if (estadoNuevo && estadoViejo) {
+                                        if (estadoNuevo.estado === 'en_juego' && estadoViejo.estado !== 'en_juego') {
+                                            enviarNotificacionLocal("🎾 Partido en Juego", "Comenzó un nuevo cruce. Seguí el resultado en vivo en la app.");
+                                        }
+                                        if (estadoNuevo.parciales !== estadoViejo.parciales) {
+                                            if (estadoNuevo.parciales === '1-up') {
+                                                enviarNotificacionLocal("🔥 ¡1° Set Arriba!", "Excelente arranque, aseguramos el primer set.");
+                                            } else if (estadoNuevo.parciales === '1-down') {
+                                                enviarNotificacionLocal("⚠️ 1° Set Abajo", "Se nos escapó el primero, ¡a remontar!");
+                                            } else if (estadoNuevo.parciales === 'super') {
+                                                enviarNotificacionLocal("⚡ ¡Súper Tie-Break!", "Tensión máxima. El partido se define en el STB.");
+                                            }
+                                        }
+                                        if (estadoNuevo.retrasado && !estadoViejo.retrasado) {
+                                            enviarNotificacionLocal("⚠️ Partido Demorado", "Un cruce fue marcado con demora. Revisá la app.");
+                                        }
+                                    }
+                                });
+                            }
+
+                            // 3. RESULTADOS DE PARTIDOS
+                            if (datos.resultados) {
+                                Object.keys(datos.resultados).forEach(cruceId => {
+                                    const resNuevo = datos.resultados[cruceId]; 
+                                    const resViejo = viejos.resultados ? viejos.resultados[cruceId] : null;
+
+                                    if (resNuevo !== resViejo) {
+                                        if (resNuevo === true) {
+                                            enviarNotificacionLocal("✅ ¡Partido Ganado!", "Punto adentro. ¡Tremendo triunfo del equipo!");
+                                        } else if (resNuevo === false && resViejo !== null && resViejo !== undefined) {
+                                            enviarNotificacionLocal("❌ Partido Perdido", "Caímos en este cruce, pero seguimos sumando experiencia.");
+                                        }
+                                    }
+                                });
+                            }
+
+                            // 4. CONFIRMACIÓN DE PLAY-OFFS
+                            if (datos.crucesFinales && datos.crucesFinales.length > 0 && (!viejos.crucesFinales || viejos.crucesFinales.length === 0)) {
+                                enviarNotificacionLocal("🏆 ¡Play-offs Confirmados!", "Ya podés ver el cuadro completo de la fase final y los próximos cruces.");
+                            }
                         }
+
+                        datosAnteriores.current = datos;
                         esPrimeraCarga.current = false;
+                        // --------------------------------------------------------
 
                         isReceivingData.current = true;
                         setNumEquipos(datos.numEquipos || 11); setEquipos(datos.equipos || []); setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datos.fechas || []); setResultados(datos.resultados || {}); setEstadoPartidos(datos.estadoPartidos || {}); setPosiciones(datos.posiciones || {}); setCrucesFinales(datos.crucesFinales || []); setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datos.playoffAvances || {});
