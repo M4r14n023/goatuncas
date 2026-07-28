@@ -467,11 +467,43 @@
             );
         }
 
-        function App() {
+
+
+        // Pedir permiso para enviar notificaciones al celular
+const solicitarPermisoNotificaciones = async () => {
+    if (!("Notification" in window)) {
+        alert("Tu navegador no soporta notificaciones.");
+        return;
+    }
+    const permiso = await Notification.requestPermission();
+    if (permiso === "granted") {
+        new Notification("GOAT V3 🎾", {
+            body: "¡Notificaciones activadas con éxito!",
+            icon: "GOAT.jpeg"
+        });
+    }
+};
+
+// Disparar la notificación
+const enviarNotificacionLocal = (titulo, mensaje) => {
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(titulo, {
+            body: mensaje,
+            icon: "GOAT.jpeg",
+            badge: "GOAT.jpeg"
+        });
+    }
+};
+
+
+
+
+
+function App() {
             const [userRole, setUserRole] = useState(localStorage.getItem('goat_user_role') || null);
             const [activeTab, setActiveTab] = useState('busqueda'); 
             
-            const [numEquipos, setNumEquipos] = useState(11); // Actualizado V3
+            const [numEquipos, setNumEquipos] = useState(11); 
             const [equipos, setEquipos] = useState([]);
             const [baseEquipos, setBaseEquipos] = useState(EQUIPOS_POR_DEFECTO); 
             const [fechas, setFechas] = useState([]);
@@ -479,11 +511,14 @@
             const [resultados, setResultados] = useState({});
             const [estadoPartidos, setEstadoPartidos] = useState({}); 
             const [crucesFinales, setCrucesFinales] = useState([]);
-            const [zonasConfig, setZonasConfig] = useState({ zona1: [], zona2: [] }); // Mantenido para retrocompatibilidad
+            const [zonasConfig, setZonasConfig] = useState({ zona1: [], zona2: [] }); 
             const [playoffAvances, setPlayoffAvances] = useState({});
             const [syncStatus, setSyncStatus] = useState('local');
             const [lastSync, setLastSync] = useState(null);
             const [showPlayoffWelcome, setShowPlayoffWelcome] = useState(false);
+
+            // NUEVO: Referencia para evitar notificaciones al cargar la app por primera vez
+            const esPrimeraCarga = useRef(true);
 
             useEffect(() => {
                 const terminaronZonas = fechas.length > 0 && fechas.every(f => f.isClosed);
@@ -532,6 +567,16 @@
 
                 const unsubscribe = escucharCambiosFirebase((datos) => {
                     if (datos) {
+                        // NUEVO: Sistema de Notificaciones Inteligente
+                        if (!esPrimeraCarga.current && !isReceivingData.current) {
+                            // Disparamos la notificación si los datos vinieron de otro usuario
+                            enviarNotificacionLocal(
+                                "GOAT V3 - ¡Actualización! 🎾",
+                                "Se han registrado nuevos movimientos en el torneo."
+                            );
+                        }
+                        esPrimeraCarga.current = false;
+
                         isReceivingData.current = true;
                         setNumEquipos(datos.numEquipos || 11); setEquipos(datos.equipos || []); setBaseEquipos(datos.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datos.fechas || []); setResultados(datos.resultados || {}); setEstadoPartidos(datos.estadoPartidos || {}); setPosiciones(datos.posiciones || {}); setCrucesFinales(datos.crucesFinales || []); setZonasConfig(datos.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datos.playoffAvances || {});
                         setLastSync(datos.ultimaActualizacion); setSyncStatus('synced');
@@ -555,7 +600,6 @@
                         .catch((error) => { console.error('Error al sincronizar:', error); setSyncStatus('error'); });
                 }
             }, [numEquipos, equipos, baseEquipos, fechas, resultados, estadoPartidos, posiciones, crucesFinales, zonasConfig, playoffAvances, userRole]);
-
             const logout = () => {
                 setUserRole(null);
                 setActiveTab('busqueda');
@@ -781,6 +825,24 @@
                             </div>
 
                             <div style={{ background: 'rgba(255,255,255,0.1)', padding: '6px 10px', borderRadius: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {/* NUEVO BOTÓN DE NOTIFICACIONES */}
+                                <button 
+                                    onClick={solicitarPermisoNotificaciones}
+                                    title="Recibir notificaciones en el celular"
+                                    style={{
+                                        background: 'rgba(212, 175, 55, 0.2)',
+                                        border: '1px solid #d4af37',
+                                        color: '#d4af37',
+                                        padding: '4px 8px',
+                                        borderRadius: '8px',
+                                        fontSize: '11px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                        margin: 0
+                                    }}
+                                >
+                                    🔔 Avisos
+                                </button>
                                 <span style={{color: '#c5a572', fontSize: '11px', fontWeight: 'bold'}}>
                                     {userRole === 'admin' ? '⚙️ Admin' : userRole === 'capitan' ? '⭐ Capi' : '🎾 Jugador'}
                                 </span>
