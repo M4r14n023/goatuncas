@@ -1275,6 +1275,7 @@
             const [showCategoriasModal, setShowCategoriasModal] = useState(false);
             const [categoriasTemp, setCategoriasTemp] = useState({});
             const [jugadoresHabilitadosTemp, setJugadoresHabilitadosTemp] = useState([]);
+            const [pdfVisor, setPdfVisor] = useState(null);
             
             const [vistaInterna, setVistaInterna] = useState('convocatoria');
             const [grillaSeleccionada, setGrillaSeleccionada] = useState('');
@@ -1404,9 +1405,28 @@
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Convocatorias</h2>
                     
                     <div style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap'}}>
-                        <a href="Calendario - Edición 3.pdf" target="_blank" className="btn" style={{background: '#475569', color: 'white', textDecoration: 'none', fontSize: '13px', display: 'flex', alignItems: 'center'}}>📄 Calendario Oficial</a>
-                        <a href="Formato de Competencia – Edición 3.pdf" target="_blank" className="btn" style={{background: '#475569', color: 'white', textDecoration: 'none', fontSize: '13px', display: 'flex', alignItems: 'center'}}>📄 Formato V3</a>
-                    </div>
+    <button className="btn" onClick={() => setPdfVisor('Calendario - Edición 3.pdf')} style={{background: '#475569', color: 'white', fontSize: '13px', display: 'flex', alignItems: 'center', margin: 0}}>📄 Calendario Oficial</button>
+    <button className="btn" onClick={() => setPdfVisor('Formato de Competencia – Edición 3.pdf')} style={{background: '#475569', color: 'white', fontSize: '13px', display: 'flex', alignItems: 'center', margin: 0}}>📄 Formato V3</button>
+</div>
+
+{pdfVisor && (
+    <div className="modal" onClick={() => setPdfVisor(null)} style={{zIndex: 4000, background: 'rgba(0,0,0,0.9)'}}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{width: '95%', height: '90vh', maxWidth: '800px', display: 'flex', flexDirection: 'column', padding: '15px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #ddd', paddingBottom: '10px'}}>
+                <h3 style={{color: '#1e3c72', margin: 0, fontSize: '16px'}}>
+                    {pdfVisor.includes('Calendario') ? '📅 Calendario Oficial V3' : '📖 Formato de Competencia V3'}
+                </h3>
+                <button className="btn btn-danger" onClick={() => setPdfVisor(null)} style={{margin: 0, padding: '6px 12px', fontSize: '12px'}}>Cerrar</button>
+            </div>
+            
+            <iframe src={pdfVisor} style={{flex: 1, width: '100%', border: 'none', borderRadius: '8px', background: '#f5f5f5'}} title="Visor PDF"></iframe>
+            
+            <div style={{textAlign: 'center', marginTop: '15px', fontSize: '13px', color: '#666'}}>
+                ¿No podés leerlo bien en tu celular? <a href={pdfVisor} target="_blank" download style={{color: '#1e3c72', fontWeight: 'bold', textDecoration: 'underline'}}>Toca acá para descargarlo</a>.
+            </div>
+        </div>
+    </div>
+)}
                     
                     <div style={{display: 'flex', gap: '10px', marginBottom: '25px', flexWrap: 'wrap'}}>
                         {fechas.map((f, idx) => {
@@ -1452,7 +1472,7 @@
 
                                 <div style={{background: '#1e3c72', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37', display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap'}}>
                                     <div className="form-group" style={{marginBottom: 0, flex: 1, minWidth: '200px'}}>
-                                        <label style={{color: '#d4af37'}}>🎲 Asignación Rápida de Canchas</label>
+                                        <label style={{color: '#d4af37'}}>🎲 Asignación Rápida de Horarios</label>
                                         <select value={grillaSeleccionada} onChange={(e) => setGrillaSeleccionada(e.target.value)} style={{background: '#111', color: 'white', border: '1px solid #555'}}>
                                             <option value="">-- Seleccionar Grilla Oficial --</option>
                                             <option value="1">Grilla 1</option>
