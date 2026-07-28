@@ -1072,9 +1072,14 @@
             );
         }
 
-        // --- COMPONENTE CARGA DE EQUIPOS ---
+       // --- COMPONENTE CARGA DE EQUIPOS ---
         function ModalCargarEquipos({ baseEquipos, setBaseEquipos, onGuardar, onClose }) {
-            const [rivales, setRivales] = useState([...baseEquipos]);
+            // Aseguramos que SIEMPRE haya exactamente 10 espacios para los rivales
+            const [rivales, setRivales] = useState(() => {
+                const lista = [...baseEquipos];
+                while (lista.length < 10) lista.push('');
+                return lista.slice(0, 10);
+            });
 
             const handleCambioRival = (index, valor) => { const nuevos = [...rivales]; nuevos[index] = valor; setRivales(nuevos); };
 
@@ -1082,7 +1087,7 @@
                 <div className="modal" onClick={onClose}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px'}}>
                         <div className="modal-header">Cargar Equipos (Fase Regular V3)</div>
-                        <p style={{marginBottom: '20px', color: '#666', fontSize: '14px'}}>El equipo "GOAT" se añade automáticamente. Confirmá los 10 clubes rivales.</p>
+                        <p style={{marginBottom: '20px', color: '#666', fontSize: '14px'}}>El equipo "GOAT" se añade automáticamente. Confirmá los 10 clubes rivales para llegar a los 11 totales.</p>
                         
                         <div style={{maxHeight: '400px', overflowY: 'auto', paddingRight: '10px', marginBottom: '20px'}}>
                             {rivales.map((nombre, idx) => (
