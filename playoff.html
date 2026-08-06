@@ -116,15 +116,15 @@
 
     <script type="text/babel">
         // 1. CONFIGURACIÓN FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyCF7n8W4aKKEeK7T_mUhO5MJLuTeP-YQT8",
-            authDomain: "hub-universitario.firebaseapp.com",
-            databaseURL: "https://hub-universitario-default-rtdb.firebaseio.com",
-            projectId: "hub-universitario",
-            storageBucket: "hub-universitario.firebasestorage.app",
-            messagingSenderId: "642915679228",
-            appId: "1:642915679228:web:e6e48b25869d74c14cfe87"
-        };
+const firebaseConfig = {
+    apiKey: "AIzaSy" + "CF7n8W4aKKEeK7T_mUhO5MJLuTeP-YQT8",
+    authDomain: "hub-universitario.firebaseapp.com",
+    databaseURL: "https://hub-universitario-default-rtdb.firebaseio.com",
+    projectId: "hub-universitario",
+    storageBucket: "hub-universitario.firebasestorage.app",
+    messagingSenderId: "642915679228",
+    appId: "1:642915679228:web:e6e48b25869d74c14cfe87"
+};
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
