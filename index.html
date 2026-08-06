@@ -1444,30 +1444,46 @@ function App() {
             }, [fecha, userRole]);
 
             const aplicarGrillaAutomatica = () => {
-                if (!GRILLAS_AUTOMATICAS[grillaSeleccionada]) return;
+                if (!GRILLAS_AUTOMATICAS[grillaSeleccionada]) {
+                    alert("Seleccioná una grilla válida del menú.");
+                    return;
+                }
                 
-                // Formateamos el nombre para que se vea lindo en el aviso
                 const nombreLindo = grillaSeleccionada.replace('grilla_', '').replace(/_/g, ' ');
 
-                if (!confirm(`¿Aplicar la Grilla ${nombreLindo}? Esto borrará los horarios manuales actuales de esta fecha.`)) return;
+                if (!confirm(`¿Aplicar la Grilla ${nombreLindo}? Esto sobrescribirá los horarios de esta fecha.`)) return;
 
                 const grilla = GRILLAS_AUTOMATICAS[grillaSeleccionada];
                 const nuevasFechas = [...fechas];
-                const fechaActual = nuevasFechas[fechaSeleccionada];
+                const fechaActual = { ...nuevasFechas[fechaSeleccionada] };
 
+                // 1. Limpiamos todos los horarios previos de los partidos de la fecha
                 fechaActual.partidos = fechaActual.partidos.map(p => ({ 
-                    ...p, dia: 'sabado', horario: '', posicion: undefined 
+                    ...p, 
+                    dia: 'sabado', 
+                    horario: '', 
+                    posicion: undefined 
                 }));
 
+                // 2. Mapeo seguro id por id (asegurando comparación numérica)
+                let asignadosCount = 0;
                 grilla.forEach(g => {
-                    const partidoIndex = fechaActual.partidos.findIndex(p => p.id === g.id);
+                    const partidoIndex = fechaActual.partidos.findIndex(p => Number(p.id) === Number(g.id));
                     if (partidoIndex !== -1) {
-                        fechaActual.partidos[partidoIndex] = { ...fechaActual.partidos[partidoIndex], dia: g.dia, horario: g.hora, posicion: g.pos };
+                        fechaActual.partidos[partidoIndex] = { 
+                            ...fechaActual.partidos[partidoIndex], 
+                            dia: g.dia, 
+                            horario: g.hora, 
+                            posicion: g.pos 
+                        };
+                        asignadosCount++;
                     }
                 });
 
+                nuevasFechas[fechaSeleccionada] = fechaActual;
                 setFechas(nuevasFechas);
-                alert(`✅ Grilla ${nombreLindo} aplicada con éxito en la Fase Regular.`);
+
+                alert(`✅ Grilla ${nombreLindo} aplicada exitosamente (${asignadosCount} partidos programados).`);
                 setGrillaSeleccionada(''); 
             };
 
