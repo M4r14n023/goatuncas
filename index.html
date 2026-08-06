@@ -1457,7 +1457,7 @@ function App() {
                 const nuevasFechas = [...fechas];
                 const fechaActual = { ...nuevasFechas[fechaSeleccionada] };
 
-                // 1. Limpiamos todos los horarios previos de los partidos de la fecha
+                // 1. Limpiamos todos los horarios previos
                 fechaActual.partidos = fechaActual.partidos.map(p => ({ 
                     ...p, 
                     dia: 'sabado', 
