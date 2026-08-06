@@ -1445,7 +1445,11 @@ function App() {
 
             const aplicarGrillaAutomatica = () => {
                 if (!GRILLAS_AUTOMATICAS[grillaSeleccionada]) return;
-                if (!confirm(`¿Aplicar Grilla ${grillaSeleccionada}? Esto borrará los horarios manuales actuales de esta fecha.`)) return;
+                
+                // Formateamos el nombre para que se vea lindo en el aviso
+                const nombreLindo = grillaSeleccionada.replace('grilla_', '').replace(/_/g, ' ');
+
+                if (!confirm(`¿Aplicar la Grilla ${nombreLindo}? Esto borrará los horarios manuales actuales de esta fecha.`)) return;
 
                 const grilla = GRILLAS_AUTOMATICAS[grillaSeleccionada];
                 const nuevasFechas = [...fechas];
@@ -1463,7 +1467,7 @@ function App() {
                 });
 
                 setFechas(nuevasFechas);
-                alert(`✅ Grilla ${grillaSeleccionada} aplicada con éxito en la Fase Regular.`);
+                alert(`✅ Grilla ${nombreLindo} aplicada con éxito en la Fase Regular.`);
                 setGrillaSeleccionada(''); 
             };
 
@@ -1560,28 +1564,28 @@ function App() {
                     <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Convocatorias</h2>
                     
                     <div style={{display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap'}}>
-    <button className="btn" onClick={() => setPdfVisor('Calendario - Edición 3.pdf')} style={{background: '#475569', color: 'white', fontSize: '13px', display: 'flex', alignItems: 'center', margin: 0}}>📄 Calendario Oficial</button>
-    <button className="btn" onClick={() => setPdfVisor('Formato de Competencia – Edición 3.pdf')} style={{background: '#475569', color: 'white', fontSize: '13px', display: 'flex', alignItems: 'center', margin: 0}}>📄 Formato V3</button>
-</div>
+                        <button className="btn" onClick={() => setPdfVisor('Calendario - Edición 3.pdf')} style={{background: '#475569', color: 'white', fontSize: '13px', display: 'flex', alignItems: 'center', margin: 0}}>📄 Calendario Oficial</button>
+                        <button className="btn" onClick={() => setPdfVisor('Formato de Competencia – Edición 3.pdf')} style={{background: '#475569', color: 'white', fontSize: '13px', display: 'flex', alignItems: 'center', margin: 0}}>📄 Formato V3</button>
+                    </div>
 
-{pdfVisor && (
-    <div className="modal" onClick={() => setPdfVisor(null)} style={{zIndex: 4000, background: 'rgba(0,0,0,0.9)'}}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{width: '95%', height: '90vh', maxWidth: '800px', display: 'flex', flexDirection: 'column', padding: '15px'}}>
-            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #ddd', paddingBottom: '10px'}}>
-                <h3 style={{color: '#1e3c72', margin: 0, fontSize: '16px'}}>
-                    {pdfVisor.includes('Calendario') ? '📅 Calendario Oficial V3' : '📖 Formato de Competencia V3'}
-                </h3>
-                <button className="btn btn-danger" onClick={() => setPdfVisor(null)} style={{margin: 0, padding: '6px 12px', fontSize: '12px'}}>Cerrar</button>
-            </div>
-            
-            <iframe src={pdfVisor} style={{flex: 1, width: '100%', border: 'none', borderRadius: '8px', background: '#f5f5f5'}} title="Visor PDF"></iframe>
-            
-            <div style={{textAlign: 'center', marginTop: '15px', fontSize: '13px', color: '#666'}}>
-                ¿No podés leerlo bien en tu celular? <a href={pdfVisor} target="_blank" download style={{color: '#1e3c72', fontWeight: 'bold', textDecoration: 'underline'}}>Toca acá para descargarlo</a>.
-            </div>
-        </div>
-    </div>
-)}
+                    {pdfVisor && (
+                        <div className="modal" onClick={() => setPdfVisor(null)} style={{zIndex: 4000, background: 'rgba(0,0,0,0.9)'}}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{width: '95%', height: '90vh', maxWidth: '800px', display: 'flex', flexDirection: 'column', padding: '15px'}}>
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #ddd', paddingBottom: '10px'}}>
+                                    <h3 style={{color: '#1e3c72', margin: 0, fontSize: '16px'}}>
+                                        {pdfVisor.includes('Calendario') ? '📅 Calendario Oficial V3' : '📖 Formato de Competencia V3'}
+                                    </h3>
+                                    <button className="btn btn-danger" onClick={() => setPdfVisor(null)} style={{margin: 0, padding: '6px 12px', fontSize: '12px'}}>Cerrar</button>
+                                </div>
+                                
+                                <iframe src={pdfVisor} style={{flex: 1, width: '100%', border: 'none', borderRadius: '8px', background: '#f5f5f5'}} title="Visor PDF"></iframe>
+                                
+                                <div style={{textAlign: 'center', marginTop: '15px', fontSize: '13px', color: '#666'}}>
+                                    ¿No podés leerlo bien en tu celular? <a href={pdfVisor} target="_blank" download style={{color: '#1e3c72', fontWeight: 'bold', textDecoration: 'underline'}}>Toca acá para descargarlo</a>.
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     
                     <div style={{display: 'flex', gap: '10px', marginBottom: '25px', flexWrap: 'wrap'}}>
                         {fechas.map((f, idx) => {
