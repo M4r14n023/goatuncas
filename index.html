@@ -238,7 +238,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef } = React;
 
-        // Configuración de Firebase - Hub Universitario
+        // Configuración de Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDWut5pII90tdvaB_AwkvdQ6Oq3TgM5wKY",
             authDomain: "hub-universitario.firebaseapp.com",
@@ -512,39 +512,33 @@
             );
         }
 
-
-
         // Pedir permiso para enviar notificaciones al celular
-const solicitarPermisoNotificaciones = async () => {
-    if (!("Notification" in window)) {
-        alert("Tu navegador no soporta notificaciones.");
-        return;
-    }
-    const permiso = await Notification.requestPermission();
-    if (permiso === "granted") {
-        new Notification("GOAT V3 🎾", {
-            body: "¡Notificaciones activadas con éxito!",
-            icon: "GOAT.jpeg"
-        });
-    }
-};
+        const solicitarPermisoNotificaciones = async () => {
+            if (!("Notification" in window)) {
+                alert("Tu navegador no soporta notificaciones.");
+                return;
+            }
+            const permiso = await Notification.requestPermission();
+            if (permiso === "granted") {
+                new Notification("GOAT V3 🎾", {
+                    body: "¡Notificaciones activadas con éxito!",
+                    icon: "GOAT.jpeg"
+                });
+            }
+        };
 
-// Disparar la notificación
-const enviarNotificacionLocal = (titulo, mensaje) => {
-    if ("Notification" in window && Notification.permission === "granted") {
-        new Notification(titulo, {
-            body: mensaje,
-            icon: "GOAT.jpeg",
-            badge: "GOAT.jpeg"
-        });
-    }
-};
+        // Disparar la notificación
+        const enviarNotificacionLocal = (titulo, mensaje) => {
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(titulo, {
+                    body: mensaje,
+                    icon: "GOAT.jpeg",
+                    badge: "GOAT.jpeg"
+                });
+            }
+        };
 
-
-
-
-
-function App() {
+        function App() {
             const [userRole, setUserRole] = useState(localStorage.getItem('goat_user_role') || null);
             const [activeTab, setActiveTab] = useState('busqueda'); 
             
@@ -560,6 +554,7 @@ function App() {
             const [playoffAvances, setPlayoffAvances] = useState({});
             const [syncStatus, setSyncStatus] = useState('local');
             const [lastSync, setLastSync] = useState(null);
+            
             const [showPlayoffWelcome, setShowPlayoffWelcome] = useState(false);
 
             // --- NUEVO ESTADO GLOBAL PARA ALERTAS PERSONALIZADAS ---
@@ -573,7 +568,8 @@ function App() {
 
             const isReceivingData = useRef(true); 
 
-            // Como esPrimeraCarga ya está arriba, solo agregamos esta referencia:
+            // Referencias para notificaciones
+            const esPrimeraCarga = useRef(true);
             const datosAnteriores = useRef(null);
 
             useEffect(() => {
@@ -702,6 +698,7 @@ function App() {
                         .catch((error) => { console.error('Error al sincronizar:', error); setSyncStatus('error'); });
                 }
             }, [numEquipos, equipos, baseEquipos, fechas, resultados, estadoPartidos, posiciones, crucesFinales, zonasConfig, playoffAvances, userRole]);
+            
             const logout = () => {
                 setUserRole(null);
                 setActiveTab('busqueda');
@@ -927,7 +924,6 @@ function App() {
                             </div>
 
                             <div style={{ background: 'rgba(255,255,255,0.1)', padding: '6px 10px', borderRadius: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {/* NUEVO BOTÓN DE NOTIFICACIONES */}
                                 <button 
                                     onClick={solicitarPermisoNotificaciones}
                                     title="Recibir notificaciones en el celular"
@@ -1221,7 +1217,7 @@ function App() {
         function AdminTab({ numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances, setNumEquipos, setEquipos, setBaseEquipos, setFechas, setResultados, setPosiciones, setCrucesFinales, setZonasConfig, setPlayoffAvances, syncStatus, setSyncStatus, lastSync, setLastSync, guardarEnFirebase, cargarDesdeFirebase }) {
             const exportarDatos = () => {
                 const datos = localStorage.getItem('goat_torneo_data');
-                if (!datos) { alert('No hay datos guardados para exportar.'); return; }
+                if (!datos) { window.mostrarAlerta('Error', 'No hay datos guardados para exportar.'); return; }
                 const blob = new Blob([datos], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a'); a.href = url;
@@ -1237,13 +1233,13 @@ function App() {
                     try {
                         const contenido = JSON.parse(evento.target.result);
                         if (contenido && (contenido.equipos || contenido.baseEquipos)) {
-                            if (confirm('¿Estás seguro de sobreescribir los datos actuales con este respaldo?')) {
+                            window.mostrarConfirmacion('Importar Backup', '¿Estás seguro de sobrescribir los datos actuales con este respaldo?', () => {
                                 localStorage.setItem('goat_torneo_data', JSON.stringify(contenido));
-                                alert('Datos importados correctamente. La página se recargará.');
-                                window.location.reload();
-                            }
-                        } else { alert('El archivo no parece ser un respaldo válido de la app.'); }
-                    } catch (error) { alert('Error al leer el archivo. Asegurate de que sea un archivo JSON válido.'); }
+                                window.mostrarAlerta('Éxito', 'Datos importados correctamente. La página se recargará.');
+                                setTimeout(() => window.location.reload(), 1500);
+                            });
+                        } else { window.mostrarAlerta('Error', 'El archivo no parece ser un respaldo válido de la app.'); }
+                    } catch (error) { window.mostrarAlerta('Error', 'Error al leer el archivo. Asegurate de que sea un archivo JSON válido.'); }
                 };
                 reader.readAsText(file); e.target.value = ''; 
             };
@@ -1273,8 +1269,8 @@ function App() {
                                         const datos = { numEquipos, equipos, baseEquipos, fechas, resultados, posiciones, crucesFinales, zonasConfig, playoffAvances };
                                         const syncTime = await guardarEnFirebase(datos);
                                         setSyncStatus('synced'); setLastSync(syncTime);
-                                        alert('✓ Datos guardados en Firebase exitosamente');
-                                    } catch (error) { setSyncStatus('error'); alert('✗ Error al guardar en Firebase'); }
+                                        window.mostrarAlerta('Nube', 'Datos guardados en Firebase exitosamente');
+                                    } catch (error) { setSyncStatus('error'); window.mostrarAlerta('Error', 'Error al guardar en Firebase'); }
                                 }}
                                 disabled={syncStatus === 'syncing'}
                             >
@@ -1289,9 +1285,9 @@ function App() {
                                         if (datosFirebase) {
                                             setNumEquipos(datosFirebase.numEquipos || 11); setEquipos(datosFirebase.equipos || []); setBaseEquipos(datosFirebase.baseEquipos || EQUIPOS_POR_DEFECTO); setFechas(datosFirebase.fechas || []); setResultados(datosFirebase.resultados || {}); setPosiciones(datosFirebase.posiciones || {}); setCrucesFinales(datosFirebase.crucesFinales || []); setZonasConfig(datosFirebase.zonasConfig || { zona1: [], zona2: [] }); setPlayoffAvances(datosFirebase.playoffAvances || {});
                                             setLastSync(datosFirebase.ultimaActualizacion); setSyncStatus('synced'); localStorage.setItem('goat_torneo_data', JSON.stringify(datosFirebase));
-                                            alert('✓ Datos cargados desde Firebase exitosamente');
-                                        } else { alert('No hay datos guardados en Firebase'); setSyncStatus('local'); }
-                                    } catch (error) { setSyncStatus('error'); alert('✗ Error al cargar desde Firebase'); }
+                                            window.mostrarAlerta('Nube', 'Datos cargados desde Firebase exitosamente');
+                                        } else { window.mostrarAlerta('Nube', 'No hay datos guardados en Firebase'); setSyncStatus('local'); }
+                                    } catch (error) { setSyncStatus('error'); window.mostrarAlerta('Error', 'Error al cargar desde Firebase'); }
                                 }}
                                 disabled={syncStatus === 'syncing'}
                             >
@@ -1305,14 +1301,14 @@ function App() {
                         <h3 style={{marginBottom: '10px', color: '#b91c1c'}}>⚠️ Zona de Peligro</h3>
                         <p style={{marginBottom: '20px', color: '#991b1b', fontSize: '14px'}}>Estas acciones son destructivas y no se pueden deshacer.</p>
                         <button className="btn btn-danger btn-responsive" onClick={() => {
-                            if (confirm('¿Estás seguro de que querés borrar el torneo actual? OJO: La base de clubes se mantendrá, pero las fechas y resultados se borrarán de tu navegador (tendrás que pisarlo en la nube manualmente luego).')) {
+                            window.mostrarConfirmacion('Peligro', '¿Estás seguro de que querés borrar el torneo actual? OJO: La base de clubes se mantendrá, pero las fechas y resultados se borrarán de tu navegador (tendrás que pisarlo en la nube manualmente luego).', () => {
                                 const datosGuardados = localStorage.getItem('goat_torneo_data');
                                 let backupBase = EQUIPOS_POR_DEFECTO;
                                 if (datosGuardados) backupBase = JSON.parse(datosGuardados).baseEquipos || backupBase;
                                 localStorage.removeItem('goat_torneo_data');
                                 localStorage.setItem('goat_torneo_data', JSON.stringify({ baseEquipos: backupBase }));
                                 window.location.reload();
-                            }
+                            });
                         }}>🗑️ Resetear Torneo Actual</button>
                     </div>
                 </div>
@@ -1321,7 +1317,6 @@ function App() {
 
        // --- COMPONENTE CARGA DE EQUIPOS ---
         function ModalCargarEquipos({ baseEquipos, setBaseEquipos, onGuardar, onClose }) {
-            // Aseguramos que SIEMPRE haya exactamente 10 espacios para los rivales
             const [rivales, setRivales] = useState(() => {
                 const lista = [...baseEquipos];
                 while (lista.length < 10) lista.push('');
@@ -1357,10 +1352,9 @@ function App() {
         function ConfiguracionTab({ userRole, numEquipos, setNumEquipos, equipos, baseEquipos, setBaseEquipos, guardarEquiposSeleccionados, agregarFecha, fechas, setFechas }) {
             const [showEquiposModal, setShowEquiposModal] = useState(false);
 
-            // NUEVO: Generador automático del fixture GOAT (V3)
             const cargarFixtureOficial = () => {
-                if(equipos.length < 11) { alert("Cargá primero los equipos"); return; }
-                if(confirm("Esto sobreescribirá las fechas configuradas. ¿Continuar?")) {
+                if(equipos.length < 11) { window.mostrarAlerta("Error", "Cargá primero los equipos"); return; }
+                window.mostrarConfirmacion("Fixture", "Esto sobreescribirá las fechas configuradas. ¿Continuar?", () => {
                     const fixtureV3 = [
                         { numero: 1, rival: "La Sede", fechaCalendario: "2026-08-23" },
                         { numero: 2, rival: "Tresa", fechaCalendario: "2026-08-30" },
@@ -1380,8 +1374,8 @@ function App() {
                     }));
                     
                     setFechas(nuevasFechas);
-                    alert("¡Fixture Oficial V3 (GOAT) cargado exitosamente!");
-                }
+                    window.mostrarAlerta("Éxito", "¡Fixture Oficial V3 (GOAT) cargado exitosamente!");
+                });
             };
 
             return (
@@ -1999,7 +1993,7 @@ function App() {
             );
         }
 
-      function ResultadosTab({ userRole, fechas, setFechas, resultados, toggleResultado, estadoPartidos, setEstadoPartidos }) {
+        function ResultadosTab({ userRole, fechas, setFechas, resultados, toggleResultado, estadoPartidos, setEstadoPartidos }) {
             const [showPlayOffModal, setShowPlayOffModal] = useState(false);
             const [showCronogramaVivo, setShowCronogramaVivo] = useState(false);
             const [fechasExpandidas, setFechasExpandidas] = useState({});
@@ -2148,11 +2142,11 @@ function App() {
 
                     {showPlayOffModal && (
                         <div className="modal" onClick={() => setShowPlayOffModal(false)}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px', textAlign: 'center'}}>
-                                <div className="modal-header" style={{display: 'flex', justifyContent: 'center', gap: '10px'}}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px', textAlign: 'center', background: '#1a1a1a', border: '2px solid #d4af37'}}>
+                                <div className="modal-header" style={{display: 'flex', justifyContent: 'center', gap: '10px', color: '#d4af37'}}>
                                     <span>🏆 Modalidad Play-Off V3</span>
                                 </div>
-                                <p style={{marginBottom: '20px', color: '#666', fontSize: '15px'}}>Con el nuevo formato de Tabla General, la llave eliminatoria se gestiona directamente en la pestaña dedicada de Play-Offs.</p>
+                                <p style={{marginBottom: '20px', color: '#ccc', fontSize: '15px'}}>Con el nuevo formato de Tabla General, la llave eliminatoria se gestiona directamente en la pestaña dedicada de Play-Offs.</p>
                                 <button onClick={() => window.location.href = 'playoff.html'} className="btn btn-warning" style={{padding: '12px 25px', fontSize: '16px', margin: '15px 0', fontWeight: 'bold', background: '#d4af37', color: '#1a1a1a', border: 'none', boxShadow: '0 0 10px rgba(212, 175, 55, 0.5)', width: '100%'}}>
                                     ⚔️ IR A GESTIÓN DE PLAY-OFFS ⚔️
                                 </button>
@@ -2464,7 +2458,7 @@ function App() {
             );
         }
 
-function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales }) {
+        function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales }) {
             const [showCruceModal, setShowCruceModal] = useState(false);
             const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
             const [editandoCruce, setEditandoCruce] = useState(null);
@@ -2547,12 +2541,12 @@ function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCr
             };
 
             const agregarCruce = () => {
-                if (!cruceActual.equipo1 || !cruceActual.equipo2 || !cruceActual.tipo) { alert('Completá todos los campos'); return; }
+                if (!cruceActual.equipo1 || !cruceActual.equipo2 || !cruceActual.tipo) { window.mostrarAlerta('Atención', 'Completá todos los campos'); return; }
                 if (editandoCruce !== null) { const nuevosCruces = [...crucesFinales]; nuevosCruces[editandoCruce] = cruceActual; setCrucesFinales(nuevosCruces); } 
                 else { setCrucesFinales([...crucesFinales, cruceActual]); }
                 setShowCruceModal(false); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setEditandoCruce(null);
             };
-            const eliminarCruce = (idx) => { if (confirm('¿Eliminar este cruce?')) setCrucesFinales(crucesFinales.filter((_, i) => i !== idx)); };
+            const eliminarCruce = (idx) => { window.mostrarConfirmacion('Eliminar', '¿Eliminar este cruce?', () => setCrucesFinales(crucesFinales.filter((_, i) => i !== idx))); };
 
             const tablaGeneral = calcularPosiciones(equipos.map(e => e.nombre));
 
