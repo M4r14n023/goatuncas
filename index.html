@@ -562,6 +562,15 @@ function App() {
             const [lastSync, setLastSync] = useState(null);
             const [showPlayoffWelcome, setShowPlayoffWelcome] = useState(false);
 
+            // --- NUEVO ESTADO GLOBAL PARA ALERTAS PERSONALIZADAS ---
+            const [customDialog, setCustomDialog] = useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null });
+
+            useEffect(() => {
+                window.mostrarAlerta = (title, message) => setCustomDialog({ isOpen: true, type: 'alert', title, message, onConfirm: null });
+                window.mostrarConfirmacion = (title, message, onConfirm) => setCustomDialog({ isOpen: true, type: 'confirm', title, message, onConfirm });
+            }, []);
+            // -------------------------------------------------------
+
             const isReceivingData = useRef(true); 
 
             // Como esPrimeraCarga ya está arriba, solo agregamos esta referencia:
@@ -1032,6 +1041,26 @@ function App() {
 
                     <BotonVolverArriba />
 
+                    {/* --- NUEVO MODAL DE ALERTA PERSONALIZADA --- */}
+                    {customDialog.isOpen && (
+                        <div className="modal" style={{zIndex: 10000, background: 'rgba(0,0,0,0.85)'}}>
+                            <div className="modal-content" style={{maxWidth: '400px', textAlign: 'center', border: '2px solid #d4af37', background: '#1a1a1a'}}>
+                                <div style={{marginBottom: '15px', fontSize: '40px'}}>{customDialog.type === 'confirm' ? '⚠️' : '🔔'}</div>
+                                <h3 style={{color: '#d4af37', marginBottom: '10px'}}>{customDialog.title}</h3>
+                                <p style={{color: '#ccc', fontSize: '15px', marginBottom: '25px', lineHeight: '1.4'}}>{customDialog.message}</p>
+                                <div style={{display: 'flex', gap: '10px'}}>
+                                    {customDialog.type === 'confirm' && (
+                                        <button className="btn" style={{background: 'transparent', color: '#aaa', border: '1px solid #444', flex: 1}} onClick={() => setCustomDialog({...customDialog, isOpen: false})}>Cancelar</button>
+                                    )}
+                                    <button className="btn btn-warning" style={{flex: 1, background: '#d4af37', color: '#000', fontWeight: 'bold'}} onClick={() => {
+                                        if (customDialog.onConfirm) customDialog.onConfirm();
+                                        setCustomDialog({...customDialog, isOpen: false});
+                                    }}>Aceptar</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {showPlayoffWelcome && (
                         <div className="modal" style={{zIndex: 9999, background: 'rgba(0,0,0,0.85)'}}>
                             <div className="modal-content" style={{maxWidth: '400px', textAlign: 'center', border: '2px solid #d4af37', background: '#1a1a1a'}}>
@@ -1445,46 +1474,36 @@ function App() {
 
             const aplicarGrillaAutomatica = () => {
                 if (!GRILLAS_AUTOMATICAS[grillaSeleccionada]) {
-                    alert("Seleccioná una grilla válida del menú.");
+                    window.mostrarAlerta('Atención', "Seleccioná una grilla válida del menú.");
                     return;
                 }
                 
                 const nombreLindo = grillaSeleccionada.replace('grilla_', '').replace(/_/g, ' ');
 
-                if (!confirm(`¿Aplicar la Grilla ${nombreLindo}? Esto sobrescribirá los horarios de esta fecha.`)) return;
+                window.mostrarConfirmacion('Aplicar Grilla', `¿Aplicar la Grilla ${nombreLindo}? Esto sobrescribirá los horarios de esta fecha.`, () => {
+                    const grilla = GRILLAS_AUTOMATICAS[grillaSeleccionada];
+                    const nuevasFechas = [...fechas];
+                    const fechaActual = { ...nuevasFechas[fechaSeleccionada] };
 
-                const grilla = GRILLAS_AUTOMATICAS[grillaSeleccionada];
-                const nuevasFechas = [...fechas];
-                const fechaActual = { ...nuevasFechas[fechaSeleccionada] };
+                    fechaActual.partidos = fechaActual.partidos.map(p => ({ 
+                        ...p, dia: 'sabado', horario: '', posicion: undefined 
+                    }));
 
-                // 1. Limpiamos todos los horarios previos
-                fechaActual.partidos = fechaActual.partidos.map(p => ({ 
-                    ...p, 
-                    dia: 'sabado', 
-                    horario: '', 
-                    posicion: undefined 
-                }));
+                    let asignadosCount = 0;
+                    grilla.forEach(g => {
+                        const partidoIndex = fechaActual.partidos.findIndex(p => Number(p.id) === Number(g.id));
+                        if (partidoIndex !== -1) {
+                            fechaActual.partidos[partidoIndex] = { ...fechaActual.partidos[partidoIndex], dia: g.dia, horario: g.hora, posicion: g.pos };
+                            asignadosCount++;
+                        }
+                    });
 
-                // 2. Mapeo seguro id por id (asegurando comparación numérica)
-                let asignadosCount = 0;
-                grilla.forEach(g => {
-                    const partidoIndex = fechaActual.partidos.findIndex(p => Number(p.id) === Number(g.id));
-                    if (partidoIndex !== -1) {
-                        fechaActual.partidos[partidoIndex] = { 
-                            ...fechaActual.partidos[partidoIndex], 
-                            dia: g.dia, 
-                            horario: g.hora, 
-                            posicion: g.pos 
-                        };
-                        asignadosCount++;
-                    }
+                    nuevasFechas[fechaSeleccionada] = fechaActual;
+                    setFechas(nuevasFechas);
+
+                    window.mostrarAlerta('¡Éxito!', `Grilla ${nombreLindo} aplicada exitosamente (${asignadosCount} partidos programados).`);
+                    setGrillaSeleccionada(''); 
                 });
-
-                nuevasFechas[fechaSeleccionada] = fechaActual;
-                setFechas(nuevasFechas);
-
-                alert(`✅ Grilla ${nombreLindo} aplicada exitosamente (${asignadosCount} partidos programados).`);
-                setGrillaSeleccionada(''); 
             };
 
             if (fechas.length === 0) return <div className="warning">Por favor, que un Capitán configure primero los equipos y las fechas.</div>;
@@ -1520,7 +1539,7 @@ function App() {
             const partidosDisponiblesP1 = getPartidosDisponibles(); const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
 
             const agregarHorario = () => {
-                if (!horarioActual.partido1 || !horarioActual.partido2) { alert('Debes seleccionar los 2 partidos para este horario'); return; }
+                if (!horarioActual.partido1 || !horarioActual.partido2) { window.mostrarAlerta('Faltan datos', 'Debes seleccionar los 2 partidos para este horario'); return; }
                 const nuevasFechas = [...fechas]; const fechaIdx = fechaSeleccionada;
                 if (editandoHorario) { nuevasFechas[fechaIdx].partidos = nuevasFechas[fechaIdx].partidos.map(p => { if (p.dia === editandoHorario.dia && p.horario === editandoHorario.horario) return { ...p, dia: 'sabado', horario: '', posicion: undefined }; return p; }); }
                 const idx1 = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === parseInt(horarioActual.partido1));
@@ -1552,10 +1571,10 @@ function App() {
             };
 
             const eliminarHorario = (dia, hora) => {
-                if (confirm(`¿Eliminar los partidos del ${dia} a las ${hora}?`)) {
+                window.mostrarConfirmacion('Eliminar', `¿Eliminar los partidos del ${dia} a las ${hora}?`, () => {
                     const nuevasFechas = [...fechas]; nuevasFechas[fechaSeleccionada].partidos = nuevasFechas[fechaSeleccionada].partidos.map(p => { if (p.dia === dia && p.horario === hora) return { ...p, dia: 'sabado', horario: '', posicion: undefined }; return p; });
                     setFechas(nuevasFechas);
-                }
+                });
             };
             const editarHorario = (dia, hora) => {
                 const partidos = fecha.partidos.filter(p => p.dia === dia && p.horario === hora);
@@ -1615,13 +1634,25 @@ function App() {
                                 >
                                     Fecha {f.numero} {userRole !== 'jugador' && (!f.convocada ? '🔒' : '📢')} <br/>
                                     <span style={{fontSize: '13px', fontWeight: 'normal'}}>{isOcultaParaJugador ? '(Oculta)' : `vs ${f.rival}`}</span>
+                                    {f.fechaCalendario && !isOcultaParaJugador && (
+                                        <span style={{display: 'block', fontSize: '11px', color: fechaSeleccionada === idx ? '#1a1a1a' : '#94a3b8', marginTop: '4px', fontWeight: 'bold'}}>
+                                            📅 {f.fechaCalendario.split('-').reverse().join('/')}
+                                        </span>
+                                    )}
                                 </button>
                             );
                         })}
                     </div>
 
                     <div className="date-section">
-                        <div className="date-header">Fecha {fecha.numero} - vs {fecha.rival}</div>
+                        <div className="date-header">
+                            Fecha {fecha.numero} - vs {fecha.rival}
+                            {fecha.fechaCalendario && (
+                                <span style={{fontSize: '16px', color: '#64748b', marginLeft: '10px'}}>
+                                    ({fecha.fechaCalendario.split('-').reverse().join('/')})
+                                </span>
+                            )}
+                        </div>
                         
                         {userRole !== 'jugador' && (
                             <>
@@ -1726,7 +1757,11 @@ function App() {
                     {showCategoriasModal && ( <ModalCategorias categoriasTemp={categoriasTemp} setCategoriasTemp={setCategoriasTemp} jugadoresHabilitadosTemp={jugadoresHabilitadosTemp} toggleJugadorHabilitado={toggleJugadorHabilitado} guardarCategorias={guardarCategorias} setShowCategoriasModal={setShowCategoriasModal} /> )}
 
                     {showHorarioModal && (
-                        <div className="modal" onClick={() => { if (confirm('¿Cerrar sin guardar?')) { setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); setEditandoHorario(null); } }}>
+                        <div className="modal" onClick={() => { 
+                            window.mostrarConfirmacion('Descartar cambios', '¿Cerrar sin guardar los horarios seleccionados?', () => { 
+                                setShowHorarioModal(false); setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' }); setEditandoHorario(null); 
+                            }); 
+                        }}>
                             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                                 <div className="modal-header">{editandoHorario ? 'Editar Horario' : `Agregar Horario (${partidosSinAsignar.length} partidos restantes)`}</div>
                                 <div className="form-group"><label>Día</label><select value={horarioActual.dia} onChange={(e) => setHorarioActual({...horarioActual, dia: e.target.value})}><option value="sabado">Sábado</option><option value="domingo">Domingo</option></select></div>
@@ -1891,7 +1926,10 @@ function App() {
                 
                 if (!estaHabilitado) {
                     const countPartidos = contarPartidosJugador(fechaIndex, nombreJugador);
-                    if (countPartidos >= 3) { alert(`${nombreJugador} ya está convocado para 3 partidos. No puede jugar más.`); return; }
+                    if (countPartidos >= 3) { 
+                        window.mostrarAlerta('Límite Alcanzado', `${nombreJugador} ya está convocado para 3 partidos. Por reglamento, no puede jugar más en esta fecha.`); 
+                        return; 
+                    }
                 }
 
                 const nuevosJugadores = [...jugadoresSeleccionados, nombreJugador];
