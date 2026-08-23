@@ -85,10 +85,11 @@
             );
         };
 
-        function App() {
+function App() {
             const [fechas, setFechas] = useState([]);
             const [resultados, setResultados] = useState({});
-            const [playoffData, setPlayoffData] = useState({}); // NUEVO ESTADO PARA PLAYOFFS
+            const [estadoPartidos, setEstadoPartidos] = useState({}); // NUEVO: Para saber qué partidos terminaron
+            const [playoffData, setPlayoffData] = useState({});
             const [subTab, setSubTab] = useState('individual'); 
             
             const userRole = localStorage.getItem('goat_user_role') || null;
@@ -107,6 +108,7 @@
                         const datos = JSON.parse(datosGuardados);
                         setFechas(datos.fechas || []);
                         setResultados(datos.resultados || {});
+                        setEstadoPartidos(datos.estadoPartidos || {}); // CARGAMOS LOS ESTADOS
                     } catch (e) { console.error('Error al cargar datos torneo:', e); }
                 }
 
@@ -142,9 +144,10 @@
                     fecha.partidos.forEach(partido => {
                         if (partido.jugadores && partido.jugadores.length > 0) {
                             const key = `${fechaIdx}-${partido.id}`; 
-                            // Si el partido está cerrado pero no tiene resultado explícito, se asume perdido para las stats de los jugadores, 
-                            // O mejor aún, solo sumamos los que tengan explícitamente el resultado en el historial
-                            if (resultados.hasOwnProperty(key) || fecha.isClosed) {
+                            const estadoObj = estadoPartidos[key] || {};
+                            
+                            // Un partido se cuenta si se tocó "Finalizar" (estado: finalizado) o si toda la fecha está cerrada
+                            if (estadoObj.estado === 'finalizado' || fecha.isClosed) {
                                 const ganado = resultados[key] || false; 
                                 const esSingle = partido.numJugadores === 1;
                                 
