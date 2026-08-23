@@ -2109,13 +2109,18 @@ const firebaseConfig = {
                     });
                 });
                 
-                proximos.sort((a, b) => {
+            const sortLogic = (a, b) => {
                     if (a.fechaIdx !== b.fechaIdx) return a.fechaIdx - b.fechaIdx;
                     if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
-                    return a.horario.localeCompare(b.horario);
-                });
+                    if (a.horario !== b.horario) return a.horario.localeCompare(b.horario);
+                    return (a.posicion || 0) - (b.posicion || 0);
+                };
                 
-                return { enJuego, proximos: proximos.slice(0, 6), finalizadosHoy };
+                enJuego.sort(sortLogic);
+                proximos.sort(sortLogic);
+                finalizadosHoy.sort(sortLogic);
+                
+                return { enJuego, proximos, finalizadosHoy };
             };
 
             const toggleFecha = (idx) => { setFechasExpandidas(prev => ({ ...prev, [idx]: !prev[idx] })); };
@@ -2241,12 +2246,24 @@ const firebaseConfig = {
                                                 const ganado = resultados[`${p.fechaIdx}-${p.id}`] || false;
                                                 return (
                                                     <div key={idx} style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #475569', padding: '10px 15px', borderRadius: '8px', opacity: 0.8 }}>
-                                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                        <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px'}}>
                                                             <div>
-                                                                <div style={{color: '#94a3b8', fontSize: '12px'}}>{p.fechaNombre}</div>
+                                                                <div style={{color: '#94a3b8', fontSize: '12px'}}>{p.fechaNombre} - P{p.posicion}</div>
                                                                 <div style={{color: 'white', fontWeight: 'bold'}}>{p.tipo} ({p.esBonus ? '20pts' : '10pts'})</div>
                                                             </div>
-                                                            <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444'}}>{ganado ? 'GANADO' : 'PERDIDO'}</div>
+                                                            <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                                <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444', marginRight: '10px'}}>{ganado ? 'GANADO' : 'PERDIDO'}</div>
+                                                                {userRole !== 'jugador' && (
+                                                                    <div style={{display: 'flex', gap: '5px'}}>
+                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: '#f59e0b', color: '#000'}} onClick={() => actualizarEstadoPartido(p.fechaIdx, p.id, {estado: 'en_juego'})}>
+                                                                            ✏️ Reabrir
+                                                                        </button>
+                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: ganado ? '#ef4444' : '#10b981', color: 'white'}} onClick={() => toggleResultado(p.fechaIdx, p.id)}>
+                                                                            Cambiar
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 );
