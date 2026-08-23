@@ -555,6 +555,7 @@ const firebaseConfig = {
             const [lastSync, setLastSync] = useState(null);
             
             const [showPlayoffWelcome, setShowPlayoffWelcome] = useState(false);
+            const [showCronogramaVivo, setShowCronogramaVivo] = useState(false);
 
             // --- NUEVO ESTADO GLOBAL PARA ALERTAS PERSONALIZADAS ---
             const [customDialog, setCustomDialog] = useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null });
@@ -948,8 +949,14 @@ const firebaseConfig = {
                         </div>
 
                         {hasActiveFecha && (
-                            <div style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(212, 175, 55, 0.4)', borderRadius: '8px', padding: '10px', width: '100%' }}>
-                                <div style={{ color: '#10b981', fontWeight: 'bold', marginBottom: '5px', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>🔴 En Vivo</div>
+                            <div 
+                                onClick={() => { setActiveTab('resultados'); setShowCronogramaVivo(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                style={{ background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(212, 175, 55, 0.4)', borderRadius: '8px', padding: '10px', width: '100%', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}
+                            >
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px'}}>
+                                    <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>🔴 En Vivo</div>
+                                    <div style={{ color: '#d4af37', fontSize: '10px', fontWeight: 'bold' }}>VER CRONOGRAMA ▶</div>
+                                </div>
                                 <div style={{ marginBottom: '8px', fontSize: '13px', fontWeight: 'bold', color: '#cbd5e1' }}>
                                     GOAT <span style={{ color: colorBannerGoat }}>{activeScore.goat}</span> - <span style={{ color: colorBannerRival }}>{activeScore.rival}</span> {activeScore.rivalName.substring(0, 12)}
                                 </div>
@@ -1005,6 +1012,7 @@ const firebaseConfig = {
                             <ResultadosTab 
                                 userRole={userRole} fechas={fechas} setFechas={setFechas} resultados={resultados} toggleResultado={toggleResultado} 
                                 estadoPartidos={estadoPartidos} setEstadoPartidos={setEstadoPartidos}
+                                showCronogramaVivo={showCronogramaVivo} setShowCronogramaVivo={setShowCronogramaVivo}
                             />
                         )}
                         {activeTab === 'tablas' && (
@@ -1992,9 +2000,8 @@ const firebaseConfig = {
             );
         }
 
-        function ResultadosTab({ userRole, fechas, setFechas, resultados, toggleResultado, estadoPartidos, setEstadoPartidos }) {
+        function ResultadosTab({ userRole, fechas, setFechas, resultados, toggleResultado, estadoPartidos, setEstadoPartidos, showCronogramaVivo, setShowCronogramaVivo }) {
             const [showPlayOffModal, setShowPlayOffModal] = useState(false);
-            const [showCronogramaVivo, setShowCronogramaVivo] = useState(false);
             const [fechasExpandidas, setFechasExpandidas] = useState({});
             const [mostrarFinalizados, setMostrarFinalizados] = useState(false);
             const [modalFinalizar, setModalFinalizar] = useState({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
