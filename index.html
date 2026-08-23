@@ -1997,6 +1997,7 @@ const firebaseConfig = {
             const [showCronogramaVivo, setShowCronogramaVivo] = useState(false);
             const [fechasExpandidas, setFechasExpandidas] = useState({});
             const [mostrarFinalizados, setMostrarFinalizados] = useState(false);
+            const [modalFinalizar, setModalFinalizar] = useState({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
 
             useEffect(() => {
                 setFechasExpandidas({});
@@ -2224,8 +2225,9 @@ const firebaseConfig = {
                                                                         <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: p.estado.parciales==='super'?'#f59e0b':'#f1f5f9'}} onClick={() => setParcialSet(p.fechaIdx, p.id, 'super')}>STB</button>
                                                                     </div>
                                                                     <div style={{display: 'flex', gap: '5px'}}>
-                                                                        <button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => toggleResultado(p.fechaIdx, p.id)}>{ganado ? '✓ Ganado' : '✗ Perdido'}</button>
-                                                                        <button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(p.fechaIdx, p.id)}>Finalizar</button>
+                                                                        <button className="btn btn-primary" style={{fontSize: '12px', padding: '6px 12px', margin:0, width: '100%', fontWeight: 'bold'}} onClick={() => setModalFinalizar({ isOpen: true, fechaIdx: p.fechaIdx, partidoId: p.id, rivalName: fechas[p.fechaIdx].rival })}>
+                                                                            🏁 Finalizar
+                                                                        </button>
                                                                     </div>
                                                                 </div>
                                                             )}
@@ -2484,6 +2486,38 @@ const firebaseConfig = {
                             </div>
                         );
                     })}
+
+                    {/* --- MODAL PARA FINALIZAR Y ELEGIR GANADOR --- */}
+                    {modalFinalizar.isOpen && (
+                        <div className="modal" style={{zIndex: 10500, background: 'rgba(0,0,0,0.85)'}}>
+                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '400px', textAlign: 'center', background: '#1a1a1a', border: '2px solid #d4af37'}}>
+                                <h3 style={{color: '#d4af37', marginBottom: '15px'}}>¿Quién ganó el partido?</h3>
+                                <p style={{color: '#ccc', marginBottom: '25px', fontSize: '14px'}}>Seleccioná al ganador para registrar el resultado y finalizar el partido.</p>
+                                <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                                    <button className="btn btn-success" style={{padding: '15px', fontSize: '18px', fontWeight: 'bold', border: '2px solid #10b981'}} onClick={() => {
+                                        const key = `${modalFinalizar.fechaIdx}-${modalFinalizar.partidoId}`;
+                                        setResultados(prev => ({ ...prev, [key]: true }));
+                                        actualizarEstadoPartido(modalFinalizar.fechaIdx, modalFinalizar.partidoId, { estado: 'finalizado' });
+                                        setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
+                                    }}>
+                                        🏆 GOAT
+                                    </button>
+                                    <button className="btn btn-danger" style={{padding: '15px', fontSize: '18px', fontWeight: 'bold', border: '2px solid #ef4444'}} onClick={() => {
+                                        const key = `${modalFinalizar.fechaIdx}-${modalFinalizar.partidoId}`;
+                                        setResultados(prev => ({ ...prev, [key]: false }));
+                                        actualizarEstadoPartido(modalFinalizar.fechaIdx, modalFinalizar.partidoId, { estado: 'finalizado' });
+                                        setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
+                                    }}>
+                                        {modalFinalizar.rivalName}
+                                    </button>
+                                    <button className="btn" style={{background: 'transparent', color: '#aaa', border: '1px solid #444', marginTop: '10px'}} onClick={() => setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' })}>
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                 </div>
             );
         }
