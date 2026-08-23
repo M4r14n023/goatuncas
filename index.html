@@ -1996,6 +1996,7 @@ const firebaseConfig = {
             const [showPlayOffModal, setShowPlayOffModal] = useState(false);
             const [showCronogramaVivo, setShowCronogramaVivo] = useState(false);
             const [fechasExpandidas, setFechasExpandidas] = useState({});
+            const [mostrarFinalizados, setMostrarFinalizados] = useState(false);
 
             useEffect(() => {
                 setFechasExpandidas({});
@@ -2236,41 +2237,54 @@ const firebaseConfig = {
                                     )}
                                 </div>
 
-                                <div style={{marginBottom: '30px'}}>
-                                    <h4 style={{color: '#64748b', marginBottom: '15px'}}>🏁 Finalizados Hoy</h4>
-                                    {finalizadosHoy.length === 0 ? (
-                                        <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay partidos finalizados hoy.</p>
-                                    ) : (
-                                        <div style={{display: 'grid', gap: '10px'}}>
-                                            {finalizadosHoy.map((p, idx) => {
-                                                const ganado = resultados[`${p.fechaIdx}-${p.id}`] || false;
-                                                return (
-                                                    <div key={idx} style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #475569', padding: '10px 15px', borderRadius: '8px', opacity: 0.8 }}>
-                                                        <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px'}}>
-                                                            <div>
-                                                                <div style={{color: '#94a3b8', fontSize: '12px'}}>{p.fechaNombre} - P{p.posicion}</div>
-                                                                <div style={{color: 'white', fontWeight: 'bold'}}>{p.tipo} ({p.esBonus ? '20pts' : '10pts'})</div>
-                                                            </div>
-                                                            <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                                                                <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444', marginRight: '10px'}}>{ganado ? 'GANADO' : 'PERDIDO'}</div>
-                                                                {userRole !== 'jugador' && (
-                                                                    <div style={{display: 'flex', gap: '5px'}}>
-                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: '#f59e0b', color: '#000'}} onClick={() => actualizarEstadoPartido(p.fechaIdx, p.id, {estado: 'en_juego'})}>
-                                                                            ✏️ Reabrir
-                                                                        </button>
-                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: ganado ? '#ef4444' : '#10b981', color: 'white'}} onClick={() => toggleResultado(p.fechaIdx, p.id)}>
-                                                                            Cambiar
-                                                                        </button>
+                               {/* --- SECCIÓN DESPLEGABLE DE FINALIZADOS --- */}
+                                <div style={{marginBottom: '30px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid #475569'}}>
+                                    <div 
+                                        onClick={() => setMostrarFinalizados(!mostrarFinalizados)}
+                                        style={{padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none'}}
+                                    >
+                                        <h4 style={{color: '#94a3b8', margin: 0}}>🏁 Finalizados Hoy ({finalizadosHoy.length})</h4>
+                                        <span style={{color: '#d4af37', transform: mostrarFinalizados ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
+                                    </div>
+                                    
+                                    {mostrarFinalizados && (
+                                        <div style={{padding: '0 15px 15px 15px'}}>
+                                            {finalizadosHoy.length === 0 ? (
+                                                <p style={{color: '#94a3b8', fontStyle: 'italic', margin: 0}}>No hay partidos finalizados hoy.</p>
+                                            ) : (
+                                                <div style={{display: 'grid', gap: '10px'}}>
+                                                    {finalizadosHoy.map((p, idx) => {
+                                                        const ganado = resultados[`${p.fechaIdx}-${p.id}`] || false;
+                                                        return (
+                                                            <div key={idx} style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #475569', padding: '10px 15px', borderRadius: '8px', opacity: 0.8 }}>
+                                                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px'}}>
+                                                                    <div>
+                                                                        <div style={{color: '#94a3b8', fontSize: '12px'}}>{p.fechaNombre} - P{p.posicion}</div>
+                                                                        <div style={{color: 'white', fontWeight: 'bold'}}>{p.tipo} ({p.esBonus ? '20pts' : '10pts'})</div>
                                                                     </div>
-                                                                )}
+                                                                    <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                                        <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444', marginRight: '10px'}}>{ganado ? 'GANADO' : 'PERDIDO'}</div>
+                                                                        {userRole !== 'jugador' && (
+                                                                            <div style={{display: 'flex', gap: '5px'}}>
+                                                                                <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: '#f59e0b', color: '#000'}} onClick={() => actualizarEstadoPartido(p.fechaIdx, p.id, {estado: 'en_juego'})}>
+                                                                                    ✏️ Reabrir
+                                                                                </button>
+                                                                                <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: ganado ? '#ef4444' : '#10b981', color: 'white'}} onClick={() => toggleResultado(p.fechaIdx, p.id)}>
+                                                                                    Cambiar
+                                                                                </button>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
+                                {/* ------------------------------------------ */}
 
                                 <div>
                                     <h4 style={{color: '#f59e0b', marginBottom: '15px'}}>⏳ Próximos Partidos</h4>
