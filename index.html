@@ -864,6 +864,10 @@ const firebaseConfig = {
                 return stats;
             };
 
+            let liveMatches = [];
+            let activeScore = { goat: 0, rival: 0, rivalName: '' };
+            let hasActiveFecha = false;
+
             for (let i = fechas.length - 1; i >= 0; i--) {
                 const fecha = fechas[i];
                 if (fecha.isClosed) continue;
@@ -874,7 +878,7 @@ const firebaseConfig = {
                 fecha.partidos?.forEach(p => {
                     const key = `${i}-${p.id}`;
                     const est = estadoPartidos[key] || {};
-                    // Si es WO, siempre es false (perdido para GOAT). Si no, mira el resultado real.
+                    // Si es WO, fuerza false. Si no, lee el resultado normal.
                     const isGanado = p.wo ? false : (resultados[key] || false);
                     const pts = fecha.partidoBonus === p.id ? 20 : 10;
 
@@ -882,7 +886,6 @@ const firebaseConfig = {
                         liveMatches.push({ ...p, parciales: est.parciales });
                         hasActiveFecha = true;
                     }
-                    // Si está finalizado, tiene resultado, o es WO, cuenta los puntos.
                     if (est.estado === 'finalizado' || resultados.hasOwnProperty(key) || p.wo) {
                         if (isGanado) currentGoat += pts; else currentRival += pts;
                         hasActiveFecha = true;
