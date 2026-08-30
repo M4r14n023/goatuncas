@@ -1527,6 +1527,18 @@ const firebaseConfig = {
                 setFechas(nuevasFechas);
             };
 
+            const toggleWO = (fechaIdx, partidoId) => {
+                window.mostrarConfirmacion('Declarar Walkover (WO)', '¿Confirmar WO por falta de jugadores? El equipo rival recibirá los puntos y no afectará las estadísticas individuales.', () => {
+                    const nuevasFechas = [...fechas];
+                    const pIdx = nuevasFechas[fechaIdx].partidos.findIndex(p => p.id === partidoId);
+                    nuevasFechas[fechaIdx].partidos[pIdx].wo = !nuevasFechas[fechaIdx].partidos[pIdx].wo;
+                    if (nuevasFechas[fechaIdx].partidos[pIdx].wo) {
+                        nuevasFechas[fechaIdx].partidos[pIdx].jugadores = []; // Limpiamos jugadores
+                    }
+                    setFechas(nuevasFechas);
+                });
+            };
+
             const getPartidosDisponibles = (excluirPartido = null) => {
                 return PARTIDOS.filter(p => {
                     if (editandoHorario) {
@@ -1820,6 +1832,7 @@ const firebaseConfig = {
                                 <PartidoCard 
                                     key={partido.id} partido={partido} fechaIndex={fechaSeleccionada} fecha={fecha} userRole={userRole}
                                     actualizarJugadores={actualizarJugadores} contarPartidosJugador={contarPartidosJugador} esBonus={fecha.partidoBonus === partido.id}
+                                    toggleWO={toggleWO}
                                 />
                             ))}
                         </div>
@@ -1864,44 +1877,32 @@ const firebaseConfig = {
             );
         }
 
-        function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPartidosJugador, esBonus, userRole }) {
+function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPartidosJugador, esBonus, userRole, toggleWO }) {
             const [jugadoresSeleccionados, setJugadoresSeleccionados] = useState(partido.jugadores || []);
             useEffect(() => { setJugadoresSeleccionados(partido.jugadores || []); }, [partido.jugadores]);
 
             const jugadoresHabilitados = fecha.jugadoresHabilitados || [];
-
             let slotsRequeridos = [];
-            if (partido.categorias.length === partido.numJugadores) {
-                slotsRequeridos = [...partido.categorias];
-            } else if (partido.categorias.length === 1) {
-                slotsRequeridos = Array(partido.numJugadores).fill(partido.categorias[0]);
-            } else {
-                slotsRequeridos = [...partido.categorias]; 
-            }
+            if (partido.categorias.length === partido.numJugadores) { slotsRequeridos = [...partido.categorias]; } 
+            else if (partido.categorias.length === 1) { slotsRequeridos = Array(partido.numJugadores).fill(partido.categorias[0]); } 
+            else { slotsRequeridos = [...partido.categorias]; }
 
             const slotsRestantes = [...slotsRequeridos];
             jugadoresSeleccionados.forEach(playerName => {
                 const jugadorObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === playerName);
                 if (jugadorObj) {
                     let slotIndex = slotsRestantes.indexOf(jugadorObj.categoria);
-                    if (slotIndex !== -1) {
-                        slotsRestantes.splice(slotIndex, 1);
-                    } else {
+                    if (slotIndex !== -1) { slotsRestantes.splice(slotIndex, 1); } 
+                    else {
                         const habilitaciones = jugadoresHabilitados.filter(jh => jh.jugador === playerName);
                         let found = false;
                         for (let hab of habilitaciones) {
                             const hIndex = slotsRestantes.indexOf(hab.categoriaDestino);
-                            if (hIndex !== -1) {
-                                slotsRestantes.splice(hIndex, 1);
-                                found = true;
-                                break;
-                            }
+                            if (hIndex !== -1) { slotsRestantes.splice(hIndex, 1); found = true; break; }
                         }
                         if (!found && slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
                     }
-                } else {
-                    if (slotsRestantes.length > 0) slotsRestantes.splice(0, 1);
-                }
+                } else { if (slotsRestantes.length > 0) slotsRestantes.splice(0, 1); }
             });
 
             const getOpcionesParaSlot = (reqCat) => {
@@ -1921,28 +1922,22 @@ const firebaseConfig = {
 
             const agregarJugador = (nombreJugador, reqCat) => {
                 if (jugadoresSeleccionados.length >= partido.numJugadores) return;
-                
                 const opciones = getOpcionesParaSlot(reqCat);
                 const jugadorInfo = opciones.find(j => j.nombre === nombreJugador);
                 const estaHabilitado = jugadorInfo && jugadorInfo.esHabilitado;
                 
                 if (!estaHabilitado) {
-                    const countPartidos = contarPartidosJugador(fechaIndex, nombreJugador);
-                    if (countPartidos >= 3) { 
-                        window.mostrarAlerta('Límite Alcanzado', `${nombreJugador} ya está convocado para 3 partidos. Por reglamento, no puede jugar más en esta fecha.`); 
-                        return; 
+                    if (contarPartidosJugador(fechaIndex, nombreJugador) >= 3) { 
+                        window.mostrarAlerta('Límite Alcanzado', `${nombreJugador} ya está convocado para 3 partidos.`); return; 
                     }
                 }
-
                 const nuevosJugadores = [...jugadoresSeleccionados, nombreJugador];
-                setJugadoresSeleccionados(nuevosJugadores); 
-                actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
             };
 
             const eliminarJugador = (index) => {
                 const nuevosJugadores = jugadoresSeleccionados.filter((_, i) => i !== index);
-                setJugadoresSeleccionados(nuevosJugadores); 
-                actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
+                setJugadoresSeleccionados(nuevosJugadores); actualizarJugadores(fechaIndex, partido.id, nuevosJugadores);
             };
 
             const getBadgeInfo = (playerName) => {
@@ -1952,51 +1947,73 @@ const firebaseConfig = {
             };
 
             return (
-                <div className={`match-card ${esBonus ? 'bonus' : ''}`}>
+                <div className={`match-card ${esBonus ? 'bonus' : ''}`} style={partido.wo ? {borderColor: '#ef4444', background: '#fef2f2'} : {}}>
                     <div className="match-header">
                         <div>
-                            <div className="match-type">{partido.tipo}</div>
+                            <div className="match-type">{partido.tipo} {partido.wo && <span style={{color: '#ef4444'}}>🚨 WO</span>}</div>
                             {esBonus && <div style={{color: '#f59e0b', fontSize: '14px', fontWeight: '600'}}>⭐ PARTIDO BONUS (20 pts)</div>}
                         </div>
                         <div className="match-time">{partido.dia === 'sabado' ? 'Sáb' : 'Dom'} {partido.horario} - P{partido.posicion}</div>
                     </div>
 
-                    <div style={{marginBottom: '10px'}}>
-                        <strong>Jugadores asignados:</strong> {jugadoresSeleccionados.length === 0 && <span style={{color: '#999'}}> Ninguno</span>}
-                        <div style={{marginTop: '8px'}}>
-                            {jugadoresSeleccionados.map((jugador, idx) => {
-                                const info = getBadgeInfo(jugador);
-                                return (
-                                    <div key={idx} style={{ display: 'inline-block', background: info.esHabilitado ? '#10b981' : '#667eea', color: 'white', padding: '5px 12px', borderRadius: '6px', marginRight: '8px', marginBottom: '8px' }}>
-                                        {jugador} {info?.capitan && <span className="captain-badge">CAPITÁN</span>}
-                                        {info.esHabilitado && <span style={{ background: 'rgba(255,255,255,0.3)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginLeft: '6px' }}>↑</span>}
-                                        {userRole !== 'jugador' && (
-                                            <button onClick={() => eliminarJugador(idx)} style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px' }}>✕</button>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                    {partido.wo ? (
+                        <div style={{background: '#fee2e2', padding: '15px', borderRadius: '8px', border: '2px dashed #ef4444', textAlign: 'center', marginBottom: '10px'}}>
+                            <h4 style={{color: '#991b1b', marginBottom: '5px'}}>🚨 WALKOVER DECLARADO</h4>
+                            <p style={{color: '#7f1d1d', fontSize: '12px', marginBottom: '10px'}}>Puntos transferidos al rival. Sin impacto en estadísticas.</p>
+                            {userRole !== 'jugador' && (
+                                <button className="btn" style={{background: 'white', color: '#ef4444', border: '1px solid #ef4444', padding: '6px 12px', fontSize: '12px', fontWeight: 'bold'}} onClick={() => toggleWO(fechaIndex, partido.id)}>
+                                    Anular WO
+                                </button>
+                            )}
                         </div>
-                    </div>
+                    ) : (
+                        <>
+                            <div style={{marginBottom: '10px'}}>
+                                <strong>Jugadores asignados:</strong> {jugadoresSeleccionados.length === 0 && <span style={{color: '#999'}}> Ninguno</span>}
+                                <div style={{marginTop: '8px'}}>
+                                    {jugadoresSeleccionados.map((jugador, idx) => {
+                                        const info = getBadgeInfo(jugador);
+                                        return (
+                                            <div key={idx} style={{ display: 'inline-block', background: info.esHabilitado ? '#10b981' : '#667eea', color: 'white', padding: '5px 12px', borderRadius: '6px', marginRight: '8px', marginBottom: '8px' }}>
+                                                {jugador} {info?.capitan && <span className="captain-badge">CAPITÁN</span>}
+                                                {info.esHabilitado && <span style={{ background: 'rgba(255,255,255,0.3)', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', marginLeft: '6px' }}>↑</span>}
+                                                {userRole !== 'jugador' && (
+                                                    <button onClick={() => eliminarJugador(idx)} style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.3)', border: 'none', color: 'white', borderRadius: '4px', cursor: 'pointer', padding: '2px 6px' }}>✕</button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
 
-                    {userRole !== 'jugador' && slotsRestantes.map((reqCat, idx) => (
-                        <div className="form-group" style={{marginBottom: '8px'}} key={`slot-${idx}`}>
-                            <label style={{fontSize: '13px', color: '#475569', marginBottom: '4px'}}>Seleccionar {formatCatName(reqCat)}:</label>
-                            <select onChange={(e) => { if (e.target.value) { agregarJugador(e.target.value, reqCat); } }} value="">
-                                <option value="">-- Elegir {formatCatName(reqCat)} --</option>
-                                {getOpcionesParaSlot(reqCat).map((j, i) => {
-                                    const count = contarPartidosJugador(fechaIndex, j.nombre);
-                                    return ( <option key={i} value={j.nombre}>{j.nombre} {j.capitan ? '(C)' : ''} {j.esHabilitado ? '↑ ' : `- ${count}/3 partidos`}</option> );
-                                })}
-                            </select>
-                        </div>
-                    ))}
+                            {userRole !== 'jugador' && slotsRestantes.map((reqCat, idx) => (
+                                <div className="form-group" style={{marginBottom: '8px'}} key={`slot-${idx}`}>
+                                    <label style={{fontSize: '13px', color: '#475569', marginBottom: '4px'}}>Seleccionar {formatCatName(reqCat)}:</label>
+                                    <select onChange={(e) => { if (e.target.value) { agregarJugador(e.target.value, reqCat); } }} value="">
+                                        <option value="">-- Elegir {formatCatName(reqCat)} --</option>
+                                        {getOpcionesParaSlot(reqCat).map((j, i) => {
+                                            const count = contarPartidosJugador(fechaIndex, j.nombre);
+                                            return ( <option key={i} value={j.nombre}>{j.nombre} {j.capitan ? '(C)' : ''} {j.esHabilitado ? '↑ ' : `- ${count}/3 partidos`}</option> );
+                                        })}
+                                    </select>
+                                </div>
+                            ))}
 
-                    {jugadoresSeleccionados.some(j => {
-                        const info = getBadgeInfo(j);
-                        if (info.esHabilitado) return false; 
-                        return contarPartidosJugador(fechaIndex, j) > 3;
-                    }) && (<div className="player-count-warning">⚠️ Advertencia: Algún jugador supera el límite de 3 partidos</div>)}
+                            {jugadoresSeleccionados.some(j => {
+                                const info = getBadgeInfo(j);
+                                if (info.esHabilitado) return false; 
+                                return contarPartidosJugador(fechaIndex, j) > 3;
+                            }) && (<div className="player-count-warning">⚠️ Advertencia: Algún jugador supera el límite de 3 partidos</div>)}
+
+                            {userRole !== 'jugador' && (
+                                <div style={{marginTop: '15px', borderTop: '1px dashed #cbd5e1', paddingTop: '10px', textAlign: 'right'}}>
+                                    <button className="btn" style={{background: 'transparent', color: '#ef4444', fontSize: '12px', padding: '4px 8px', border: '1px solid #ef4444'}} onClick={() => toggleWO(fechaIndex, partido.id)}>
+                                        🚨 Declarar WO (Walkover)
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
             );
         }
@@ -2071,12 +2088,12 @@ const firebaseConfig = {
                 const fechaCerrada = fecha.isClosed === true; 
                 
                 fecha.partidos.forEach(partido => {
-                    if (partido.jugadores && partido.jugadores.length > 0) {
+                    if ((partido.jugadores && partido.jugadores.length > 0) || partido.wo) {
                         const key = `${fechaIdx}-${partido.id}`;
                         const estadoObj = getEstadoPartido(fechaIdx, partido.id);
                         
-                        if (estadoObj.estado === 'finalizado' || fechaCerrada) {
-                            const ganado = resultados[key] || false;
+                        if (estadoObj.estado === 'finalizado' || fechaCerrada || partido.wo) {
+                            const ganado = partido.wo ? false : (resultados[key] || false);
                             const esBonus = fecha.partidoBonus === partido.id;
                             const puntos = esBonus ? 20 : 10;
                             
@@ -2103,12 +2120,14 @@ const firebaseConfig = {
                     const esFechaPasada = fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') < limitePasado;
                     
                     fecha.partidos.forEach(partido => {
-                        if (!partido.jugadores || partido.jugadores.length === 0) return;
+                        if ((!partido.jugadores || partido.jugadores.length === 0) && !partido.wo) return;
                         
                         const estado = getEstadoPartido(fechaIdx, partido.id);
                         const partidoData = { ...partido, fechaIdx, fechaNombre: `Fecha ${fecha.numero} vs ${fecha.rival}`, esBonus: fecha.partidoBonus === partido.id };
                         
-                        if (estado.estado === 'en_juego') {
+                        if (partido.wo) {
+                            finalizadosHoy.push({ ...partidoData, estado: { estado: 'finalizado' } });
+                        } else if (estado.estado === 'en_juego') {
                             enJuego.push({ ...partidoData, estado });
                         } else if (estado.estado === 'pendiente' && !fecha.isClosed && !esFechaPasada) {
                             proximos.push({ ...partidoData, estado });
@@ -2550,11 +2569,11 @@ const firebaseConfig = {
                         let puntosGOAT = 0; let puntosRival = 0;
                         
                         fecha.partidos.forEach(partido => {
-                            if (partido.jugadores && partido.jugadores.length > 0) {
+                            if ((partido.jugadores && partido.jugadores.length > 0) || partido.wo) {
                                 const key = `${fechaIdx}-${partido.id}`; 
                                 
-                                if (fecha.isClosed || resultados.hasOwnProperty(key)) {
-                                    const ganado = resultados[key] || false; 
+                                if (fecha.isClosed || resultados.hasOwnProperty(key) || partido.wo) {
+                                    const ganado = partido.wo ? false : (resultados[key] || false); 
                                     const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
                                     if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                                 }
