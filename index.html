@@ -511,6 +511,31 @@ const firebaseConfig = {
             );
         }
 
+        // Disparar la notificación (Lógica centralizada y compatible con Android)
+        const enviarNotificacionLocal = (titulo, mensaje) => {
+            if ("Notification" in window && Notification.permission === "granted") {
+                const opciones = {
+                    body: mensaje,
+                    icon: "GOAT.jpeg",
+                    badge: "GOAT.jpeg",
+                    vibrate: [200, 100, 200] // Le agregamos vibración para móviles
+                };
+
+                // Intentar usar el Service Worker (Requisito para Android Chrome)
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistration().then((reg) => {
+                        if (reg && reg.showNotification) {
+                            reg.showNotification(titulo, opciones);
+                        } else {
+                            new Notification(titulo, opciones); // Fallback PC
+                        }
+                    }).catch(() => new Notification(titulo, opciones));
+                } else {
+                    new Notification(titulo, opciones); // Fallback si no hay SW
+                }
+            }
+        };
+
         // Pedir permiso para enviar notificaciones al celular
         const solicitarPermisoNotificaciones = async () => {
             if (!("Notification" in window)) {
@@ -519,21 +544,9 @@ const firebaseConfig = {
             }
             const permiso = await Notification.requestPermission();
             if (permiso === "granted") {
-                new Notification("GOAT V3 🎾", {
-                    body: "¡Notificaciones activadas con éxito!",
-                    icon: "GOAT.jpeg"
-                });
-            }
-        };
-
-        // Disparar la notificación
-        const enviarNotificacionLocal = (titulo, mensaje) => {
-            if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(titulo, {
-                    body: mensaje,
-                    icon: "GOAT.jpeg",
-                    badge: "GOAT.jpeg"
-                });
+                enviarNotificacionLocal("GOAT V3 🎾", "¡Notificaciones activadas con éxito!");
+            } else {
+                alert("Permiso denegado. Podés habilitarlo desde la configuración del navegador.");
             }
         };
 
@@ -2051,7 +2064,8 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
             };
 
             const marcarRetrasado = (fechaIdx, partidoId) => {
-                actualizarEstadoPartido(fechaIdx, partidoId, { retrasado: true });
+                const actual = getEstadoPartido(fechaIdx, partidoId).retrasado || false;
+                actualizarEstadoPartido(fechaIdx, partidoId, { retrasado: !actual });
             };
 
             const iniciarPartido = (fechaIdx, partidoId) => {
@@ -2328,15 +2342,26 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                                                 <div key={idx} style={{ background: 'rgba(148, 163, 184, 0.1)', border: '2px solid #475569', padding: '15px', borderRadius: '8px' }}>
                                                     <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px', flexWrap: 'wrap'}}>
                                                         <div style={{flex: 1}}>
-                                                            <div style={{color: '#d4af37', fontSize: '12px', marginBottom: '5px'}}>{p.fechaNombre} • {p.dia === 'sabado' ? 'Sábado' : 'Domingo'} {p.horario}</div>
+                                                            <div style={{color: '#d4af37', fontSize: '12px', marginBottom: '5px'}}>
+                                                                {p.fechaNombre} • {p.dia === 'sabado' ? 'Sábado' : 'Domingo'} {p.horario}
+                                                                {p.estado.retrasado && (
+                                                                    <span style={{background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', marginLeft: '8px'}}>
+                                                                        ⚠️ DEMORADO
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                             <div style={{color: 'white', fontWeight: '700', fontSize: '16px', marginBottom: '5px'}}>{p.tipo}</div>
                                                             <div style={{color: '#94a3b8', fontSize: '14px'}}>{p.jugadores.join(' / ')}</div>
                                                         </div>
                                                         {userRole !== 'jugador' && (
                                                             <div style={{display: 'flex', gap: '5px'}}>
-                                                                {!p.estado.retrasado && (
-                                                                    <button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(p.fechaIdx, p.id)}>⚠️ Marcar Demora</button>
-                                                                )}
+                                                                <button 
+                                                                    className="btn" 
+                                                                    style={{fontSize: '12px', padding: '5px 10px', margin:0, background: p.estado.retrasado ? '#475569' : '#f59e0b', color: 'white'}} 
+                                                                    onClick={() => marcarRetrasado(p.fechaIdx, p.id)}
+                                                                >
+                                                                    {p.estado.retrasado ? 'Quitar Demora' : '⚠️ Demora'}
+                                                                </button>
                                                                 <button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(p.fechaIdx, p.id)}>▶️ Iniciar</button>
                                                             </div>
                                                         )}
