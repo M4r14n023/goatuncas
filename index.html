@@ -2052,7 +2052,13 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
 
             const getEstadoPartido = (fechaIdx, partidoId) => {
                 const key = `${fechaIdx}-${partidoId}`;
-                return estadoPartidos[key] || { estado: 'pendiente', horaInicioReal: null, retrasado: false };
+                const data = estadoPartidos[key] || {};
+                return {
+                    estado: data.estado || 'pendiente',
+                    horaInicioReal: data.horaInicioReal || null,
+                    retrasado: data.retrasado || false,
+                    parciales: data.parciales || null
+                };
             };
 
             const actualizarEstadoPartido = (fechaIdx, partidoId, nuevoEstado) => {
@@ -2064,8 +2070,11 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
             };
 
             const marcarRetrasado = (fechaIdx, partidoId) => {
-                const actual = getEstadoPartido(fechaIdx, partidoId).retrasado || false;
-                actualizarEstadoPartido(fechaIdx, partidoId, { retrasado: !actual });
+                const estadoActual = getEstadoPartido(fechaIdx, partidoId);
+                actualizarEstadoPartido(fechaIdx, partidoId, { 
+                    estado: estadoActual.estado || 'pendiente',
+                    retrasado: !estadoActual.retrasado 
+                });
             };
 
             const iniciarPartido = (fechaIdx, partidoId) => {
