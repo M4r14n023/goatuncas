@@ -2126,13 +2126,16 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                         const estado = getEstadoPartido(fechaIdx, partido.id);
                         const partidoData = { ...partido, fechaIdx, fechaNombre: `Fecha ${fecha.numero} vs ${fecha.rival}`, esBonus: fecha.partidoBonus === partido.id };
                         
+                        // Si la fecha ya pasó o está cerrada, no debe entrar al cronograma en vivo de hoy
+                        if (fecha.isClosed || esFechaPasada) return;
+
                         if (partido.wo) {
                             finalizadosHoy.push({ ...partidoData, estado: { estado: 'finalizado' } });
                         } else if (estado.estado === 'en_juego') {
                             enJuego.push({ ...partidoData, estado });
-                        } else if (estado.estado === 'pendiente' && !fecha.isClosed && !esFechaPasada) {
+                        } else if (estado.estado === 'pendiente') {
                             proximos.push({ ...partidoData, estado });
-                        } else if (estado.estado === 'finalizado' && !fecha.isClosed) {
+                        } else if (estado.estado === 'finalizado') {
                             finalizadosHoy.push({ ...partidoData, estado });
                         }
                     });
