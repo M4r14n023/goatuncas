@@ -2108,7 +2108,6 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                 if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
                 
                 let ganados = 0, perdidos = 0, puntosGanados = 0, puntosPerdidos = 0;
-                
                 const fechaCerrada = fecha.isClosed === true; 
                 
                 fecha.partidos.forEach(partido => {
@@ -2117,11 +2116,17 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                         const estadoObj = getEstadoPartido(fechaIdx, partido.id);
                         
                         if (estadoObj.estado === 'finalizado' || fechaCerrada || partido.wo) {
-                            const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false));
+                            const esBonus = fecha.partidoBonus === partido.id;
                             const puntos = esBonus ? 20 : 10;
+                            const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false));
                             
-                            if (ganado) { ganados++; puntosGanados += puntos; } 
-                            else { perdidos++; puntosPerdidos += puntos; }
+                            if (ganado) { 
+                                ganados++; 
+                                puntosGanados += puntos; 
+                            } else { 
+                                perdidos++; 
+                                puntosPerdidos += puntos; 
+                            }
                         }
                     }
                 });
