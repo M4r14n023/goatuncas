@@ -2032,262 +2032,309 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
             );
         }
 
-        function ResultadosTab({ userRole, fechas, setFechas, resultados, setResultados, toggleResultado, estadoPartidos, setEstadoPartidos, showCronogramaVivo, setShowCronogramaVivo }) {            const [showPlayOffModal, setShowPlayOffModal] = useState(false);
-            const [fechasExpandidas, setFechasExpandidas] = useState({});
-            const [mostrarFinalizados, setMostrarFinalizados] = useState(false);
-            const [modalFinalizar, setModalFinalizar] = useState({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
+        function ResultadosTab({ userRole, fechas, setFechas, resultados, setResultados, toggleResultado, estadoPartidos, setEstadoPartidos, showCronogramaVivo, setShowCronogramaVivo }) {
+    const [showPlayOffModal, setShowPlayOffModal] = useState(false);
+    const [fechasExpandidas, setFechasExpandidas] = useState({});
+    const [mostrarFinalizados, setMostrarFinalizados] = useState(false);
+    const [modalFinalizar, setModalFinalizar] = useState({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
 
-            useEffect(() => {
-                setFechasExpandidas({});
-            }, []);
+    useEffect(() => {
+        setFechasExpandidas({});
+    }, []);
 
-            if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
+    if (fechas.length === 0) return <div className="warning">No hay fechas configuradas todavía.</div>;
 
-            const handleDateChange = (idx, dateStr) => {
-                const nuevasFechas = [...fechas];
-                nuevasFechas[idx].fechaCalendario = dateStr;
-                setFechas(nuevasFechas);
-            };
-            const hoy = new Date();
+    const handleDateChange = (idx, dateStr) => {
+        const nuevasFechas = [...fechas];
+        nuevasFechas[idx].fechaCalendario = dateStr;
+        setFechas(nuevasFechas);
+    };
+    const hoy = new Date();
 
-            const getEstadoPartido = (fechaIdx, partidoId) => {
-                const key = `${fechaIdx}-${partidoId}`;
-                const data = estadoPartidos[key] || {};
-                return {
-                    estado: data.estado || 'pendiente',
-                    horaInicioReal: data.horaInicioReal || null,
-                    retrasado: data.retrasado || false,
-                    parciales: data.parciales || null
-                };
-            };
+    const getEstadoPartido = (fechaIdx, partidoId) => {
+        const key = `${fechaIdx}-${partidoId}`;
+        const data = estadoPartidos[key] || {};
+        return {
+            estado: data.estado || 'pendiente',
+            horaInicioReal: data.horaInicioReal || null,
+            retrasado: data.retrasado || false,
+            parciales: data.parciales || null
+        };
+    };
 
-            const actualizarEstadoPartido = (fechaIdx, partidoId, nuevoEstado) => {
-                const key = `${fechaIdx}-${partidoId}`;
-                setEstadoPartidos(prev => ({
-                    ...prev,
-                    [key]: { ...prev[key], ...nuevoEstado }
-                }));
-            };
+    const actualizarEstadoPartido = (fechaIdx, partidoId, nuevoEstado) => {
+        const key = `${fechaIdx}-${partidoId}`;
+        setEstadoPartidos(prev => ({
+            ...prev,
+            [key]: { ...prev[key], ...nuevoEstado }
+        }));
+    };
 
-            const marcarRetrasado = (fechaIdx, partidoId) => {
-                const estadoActual = getEstadoPartido(fechaIdx, partidoId);
-                actualizarEstadoPartido(fechaIdx, partidoId, { 
-                    estado: estadoActual.estado || 'pendiente',
-                    retrasado: !estadoActual.retrasado 
-                });
-            };
+    const marcarRetrasado = (fechaIdx, partidoId) => {
+        const estadoActual = getEstadoPartido(fechaIdx, partidoId);
+        actualizarEstadoPartido(fechaIdx, partidoId, { 
+            estado: estadoActual.estado || 'pendiente',
+            retrasado: !estadoActual.retrasado 
+        });
+    };
 
-            const iniciarPartido = (fechaIdx, partidoId) => {
-                const ahora = new Date().toISOString();
-                actualizarEstadoPartido(fechaIdx, partidoId, {
-                    estado: 'en_juego',
-                    horaInicioReal: ahora,
-                    retrasado: getEstadoPartido(fechaIdx, partidoId).retrasado
-                });
-            };
-            
-            const setParcialSet = (fechaIdx, partidoId, valor) => {
-                actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'en_juego', parciales: valor });
-            };
+    const iniciarPartido = (fechaIdx, partidoId) => {
+        const ahora = new Date().toISOString();
+        actualizarEstadoPartido(fechaIdx, partidoId, {
+            estado: 'en_juego',
+            horaInicioReal: ahora,
+            retrasado: getEstadoPartido(fechaIdx, partidoId).retrasado
+        });
+    };
+    
+    const setParcialSet = (fechaIdx, partidoId, valor) => {
+        actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'en_juego', parciales: valor });
+    };
 
-            const finalizarPartido = (fechaIdx, partidoId) => {
-                actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'finalizado' });
-            };
+    const finalizarPartido = (fechaIdx, partidoId) => {
+        actualizarEstadoPartido(fechaIdx, partidoId, { estado: 'finalizado' });
+    };
 
-            const toggleCerrarFecha = (fechaIdx) => {
-                const nuevasFechas = [...fechas];
-                nuevasFechas[fechaIdx] = {
-                    ...nuevasFechas[fechaIdx],
-                    isClosed: !nuevasFechas[fechaIdx].isClosed
-                };
-                setFechas(nuevasFechas);
-            };
+    const toggleCerrarFecha = (fechaIdx) => {
+        const nuevasFechas = [...fechas];
+        nuevasFechas[fechaIdx] = {
+            ...nuevasFechas[fechaIdx],
+            isClosed: !nuevasFechas[fechaIdx].isClosed
+        };
+        setFechas(nuevasFechas);
+    };
 
-            const calcularResultadoFecha = (fechaIdx) => {
-                const fecha = fechas[fechaIdx];
-                if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
+    const calcularResultadoFecha = (fechaIdx) => {
+        const fecha = fechas[fechaIdx];
+        if (!fecha || !fecha.partidos) return { ganados: 0, perdidos: 0, puntosGanados: 0, puntosPerdidos: 0 };
+        
+        let ganados = 0, perdidos = 0, puntosGanados = 0, puntosPerdidos = 0;
+        const fechaCerrada = fecha.isClosed === true; 
+        
+        fecha.partidos.forEach(partido => {
+            if ((partido.jugadores && partido.jugadores.length > 0) || partido.wo) {
+                const key = `${fechaIdx}-${partido.id}`;
+                const estadoObj = getEstadoPartido(fechaIdx, partido.id);
                 
-                let ganados = 0, perdidos = 0, puntosGanados = 0, puntosPerdidos = 0;
-                const fechaCerrada = fecha.isClosed === true; 
-                
-                fecha.partidos.forEach(partido => {
-                    if ((partido.jugadores && partido.jugadores.length > 0) || partido.wo) {
-                        const key = `${fechaIdx}-${partido.id}`;
-                        const estadoObj = getEstadoPartido(fechaIdx, partido.id);
-                        
-                        if (estadoObj.estado === 'finalizado' || fechaCerrada || partido.wo) {
-                            const esBonus = fecha.partidoBonus === partido.id;
-                            const puntos = esBonus ? 20 : 10;
-                            const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false));
-                            
-                            if (ganado) { 
-                                ganados++; 
-                                puntosGanados += puntos; 
-                            } else { 
-                                perdidos++; 
-                                puntosPerdidos += puntos; 
-                            }
-                        }
+                if (estadoObj.estado === 'finalizado' || fechaCerrada || partido.wo) {
+                    const esBonus = fecha.partidoBonus === partido.id;
+                    const puntos = esBonus ? 20 : 10;
+                    const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false));
+                    
+                    if (ganado) { 
+                        ganados++; 
+                        puntosGanados += puntos; 
+                    } else { 
+                        perdidos++; 
+                        puntosPerdidos += puntos; 
                     }
-                });
-                
-                return { ganados, perdidos, puntosGanados, puntosPerdidos };
-            };
+                }
+            }
+        });
+        
+        return { ganados, perdidos, puntosGanados, puntosPerdidos };
+    };
 
-            const getPartidosEnVivoYProximos = () => {
-                const enJuego = [];
-                const proximos = [];
-                const finalizadosHoy = [];
+    const getPartidosEnVivoYProximos = () => {
+        const enJuego = [];
+        const proximos = [];
+        const finalizadosHoy = [];
+        
+        const limitePasado = new Date();
+        limitePasado.setDate(limitePasado.getDate() - 3); 
+        
+        fechas.forEach((fecha, fechaIdx) => {
+            if (!fecha.partidos) return;
+            
+            const esFechaPasada = fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') < limitePasado;
+            
+            fecha.partidos.forEach(partido => {
+                if ((!partido.jugadores || partido.jugadores.length === 0) && !partido.wo) return;
                 
-                const limitePasado = new Date();
-                limitePasado.setDate(limitePasado.getDate() - 3); 
+                const estado = getEstadoPartido(fechaIdx, partido.id);
+                const partidoData = { ...partido, fechaIdx, fechaNombre: `Fecha ${fecha.numero} vs ${fecha.rival}`, esBonus: fecha.partidoBonus === partido.id };
                 
-                fechas.forEach((fecha, fechaIdx) => {
-                    if (!fecha.partidos) return;
-                    
-                    const esFechaPasada = fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') < limitePasado;
-                    
-                    fecha.partidos.forEach(partido => {
-                        if ((!partido.jugadores || partido.jugadores.length === 0) && !partido.wo) return;
-                        
-                        const estado = getEstadoPartido(fechaIdx, partido.id);
-                        const partidoData = { ...partido, fechaIdx, fechaNombre: `Fecha ${fecha.numero} vs ${fecha.rival}`, esBonus: fecha.partidoBonus === partido.id };
-                        
-                        // Si la fecha ya pasó o está cerrada, no debe entrar al cronograma en vivo de hoy
-                        if (fecha.isClosed || esFechaPasada) return;
+                if (fecha.isClosed || esFechaPasada) return;
 
-                        if (partido.wo) {
-                            finalizadosHoy.push({ ...partidoData, estado: { estado: 'finalizado' } });
-                        } else if (estado.estado === 'en_juego') {
-                            enJuego.push({ ...partidoData, estado });
-                        } else if (estado.estado === 'pendiente') {
-                            proximos.push({ ...partidoData, estado });
-                        } else if (estado.estado === 'finalizado') {
-                            finalizadosHoy.push({ ...partidoData, estado });
-                        }
-                    });
-                });
-                
-            const sortLogic = (a, b) => {
-                    if (a.fechaIdx !== b.fechaIdx) return a.fechaIdx - b.fechaIdx;
-                    if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
-                    if (a.horario !== b.horario) return a.horario.localeCompare(b.horario);
-                    return (a.posicion || 0) - (b.posicion || 0);
-                };
-                
-                enJuego.sort(sortLogic);
-                proximos.sort(sortLogic);
-                finalizadosHoy.sort(sortLogic);
-                
-                return { enJuego, proximos, finalizadosHoy };
-            };
+                if (partido.wo) {
+                    finalizadosHoy.push({ ...partidoData, estado: { estado: 'finalizado' } });
+                } else if (estado.estado === 'en_juego') {
+                    enJuego.push({ ...partidoData, estado });
+                } else if (estado.estado === 'pendiente') {
+                    proximos.push({ ...partidoData, estado });
+                } else if (estado.estado === 'finalizado') {
+                    finalizadosHoy.push({ ...partidoData, estado });
+                }
+            });
+        });
+        
+        const sortLogic = (a, b) => {
+            if (a.fechaIdx !== b.fechaIdx) return a.fechaIdx - b.fechaIdx;
+            if (a.dia !== b.dia) return a.dia === 'sabado' ? -1 : 1;
+            if (a.horario !== b.horario) return a.horario.localeCompare(b.horario);
+            return (a.posicion || 0) - (b.posicion || 0);
+        };
+        
+        enJuego.sort(sortLogic);
+        proximos.sort(sortLogic);
+        finalizadosHoy.sort(sortLogic);
+        
+        return { enJuego, proximos, finalizadosHoy };
+    };
 
-            const toggleFecha = (idx) => { setFechasExpandidas(prev => ({ ...prev, [idx]: !prev[idx] })); };
-            const agruparPorDia = (partidos) => {
-                const sabado = partidos.filter(p => p.dia === 'sabado').sort((a, b) => a.horario.localeCompare(b.horario));
-                const domingo = partidos.filter(p => p.dia === 'domingo').sort((a, b) => a.horario.localeCompare(b.horario));
-                return { sabado, domingo };
-            };
+    const toggleFecha = (idx) => { setFechasExpandidas(prev => ({ ...prev, [idx]: !prev[idx] })); };
+    const agruparPorDia = (partidos) => {
+        const sabado = partidos.filter(p => p.dia === 'sabado').sort((a, b) => a.horario.localeCompare(b.horario));
+        const domingo = partidos.filter(p => p.dia === 'domingo').sort((a, b) => a.horario.localeCompare(b.horario));
+        return { sabado, domingo };
+    };
 
-            return (
-                <div>
-                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px'}}>
-                        <h2 style={{marginBottom: 0, color: '#1e3c72'}}>Resultados en Vivo</h2>
-                        <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
-                            <button className="btn btn-success btn-responsive" onClick={() => setShowCronogramaVivo(!showCronogramaVivo)} style={{margin: 0}}>
-                                {showCronogramaVivo ? '📅 Ver Todas las Fechas' : '🔴 Cronograma en Vivo'}
-                            </button>
-                            <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{margin: 0}}>
-                                🏆 Play-Off
-                            </button>
+    return (
+        <div>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px'}}>
+                <h2 style={{marginBottom: 0, color: '#1e3c72'}}>Resultados en Vivo</h2>
+                <div style={{display: 'flex', gap: '10px', flexWrap: 'wrap'}}>
+                    <button className="btn btn-success btn-responsive" onClick={() => setShowCronogramaVivo(!showCronogramaVivo)} style={{margin: 0}}>
+                        {showCronogramaVivo ? '📅 Ver Todas las Fechas' : '🔴 Cronograma en Vivo'}
+                    </button>
+                    <button className="btn btn-primary btn-responsive" onClick={() => setShowPlayOffModal(true)} style={{margin: 0}}>
+                        🏆 Play-Off
+                    </button>
+                </div>
+            </div>
+
+            {showPlayOffModal && (
+                <div className="modal" onClick={() => setShowPlayOffModal(false)}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px', textAlign: 'center', background: '#1a1a1a', border: '2px solid #d4af37'}}>
+                        <div className="modal-header" style={{display: 'flex', justifyContent: 'center', gap: '10px', color: '#d4af37'}}>
+                            <span>🏆 Modalidad Play-Off V3</span>
                         </div>
+                        <p style={{marginBottom: '20px', color: '#ccc', fontSize: '15px'}}>Con el nuevo formato de Tabla General, la llave eliminatoria se gestiona directamente en la pestaña dedicada de Play-Offs.</p>
+                        <button onClick={() => window.location.href = 'playoff.html'} className="btn btn-warning" style={{padding: '12px 25px', fontSize: '16px', margin: '15px 0', fontWeight: 'bold', background: '#d4af37', color: '#1a1a1a', border: 'none', boxShadow: '0 0 10px rgba(212, 175, 55, 0.5)', width: '100%'}}>
+                            ⚔️ IR A GESTIÓN DE PLAY-OFFS ⚔️
+                        </button>
+                        <div style={{marginTop: '10px'}}><button className="btn btn-danger btn-responsive" onClick={() => setShowPlayOffModal(false)}>Cerrar</button></div>
                     </div>
+                </div>
+            )}
 
-                    {showPlayOffModal && (
-                        <div className="modal" onClick={() => setShowPlayOffModal(false)}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '500px', textAlign: 'center', background: '#1a1a1a', border: '2px solid #d4af37'}}>
-                                <div className="modal-header" style={{display: 'flex', justifyContent: 'center', gap: '10px', color: '#d4af37'}}>
-                                    <span>🏆 Modalidad Play-Off V3</span>
-                                </div>
-                                <p style={{marginBottom: '20px', color: '#ccc', fontSize: '15px'}}>Con el nuevo formato de Tabla General, la llave eliminatoria se gestiona directamente en la pestaña dedicada de Play-Offs.</p>
-                                <button onClick={() => window.location.href = 'playoff.html'} className="btn btn-warning" style={{padding: '12px 25px', fontSize: '16px', margin: '15px 0', fontWeight: 'bold', background: '#d4af37', color: '#1a1a1a', border: 'none', boxShadow: '0 0 10px rgba(212, 175, 55, 0.5)', width: '100%'}}>
-                                    ⚔️ IR A GESTIÓN DE PLAY-OFFS ⚔️
-                                </button>
-                                <div style={{marginTop: '10px'}}><button className="btn btn-danger btn-responsive" onClick={() => setShowPlayOffModal(false)}>Cerrar</button></div>
-                            </div>
-                        </div>
-                    )}
+            {showCronogramaVivo && (() => {
+                const { enJuego, proximos, finalizadosHoy } = getPartidosEnVivoYProximos();
+                const fechasActivasIds = [...new Set([...enJuego, ...finalizadosHoy].map(p => p.fechaIdx))];
+                
+                return (
+                    <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '12px', marginBottom: '30px', border: '2px solid #d4af37' }}>
+                        <h3 style={{color: '#d4af37', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}><span style={{fontSize: '24px'}}>🔴</span> Cronograma en Vivo</h3>
 
-                    {showCronogramaVivo && (() => {
-                        const { enJuego, proximos, finalizadosHoy } = getPartidosEnVivoYProximos();
-                        const fechasActivasIds = [...new Set([...enJuego, ...finalizadosHoy].map(p => p.fechaIdx))];
-                        
-                        return (
-                            <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '12px', marginBottom: '30px', border: '2px solid #d4af37' }}>
-                                <h3 style={{color: '#d4af37', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px'}}><span style={{fontSize: '24px'}}>🔴</span> Cronograma en Vivo</h3>
-
-                                {fechasActivasIds.length > 0 && (
-                                    <div style={{marginBottom: '30px', display: 'flex', gap: '15px', flexWrap: 'wrap'}}>
-                                        {fechasActivasIds.map(fIdx => {
-                                            const res = calcularResultadoFecha(fIdx);
-                                            const fechaActiva = fechas[fIdx];
-                                            const colorGOAT = res.puntosGanados >= 140 ? '#10b981' : 'white';
-                                            const colorRival = res.puntosPerdidos >= 140 ? '#ef4444' : 'white';
-                                            
-                                            return (
-                                                <div key={fIdx} style={{background: 'linear-gradient(135deg, #1e3c72 0%, #0f1e3b 100%)', padding: '15px 20px', borderRadius: '10px', border: '1px solid #d4af37', flex: '1', minWidth: '280px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)'}}>
-                                                    <div style={{color: '#94a3b8', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold'}}>Marcador Parcial • Fecha {fechaActiva.numero}</div>
-                                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                                                        <div style={{fontSize: '18px', fontWeight: 'bold', color: colorGOAT, flex: 1}}>GOAT</div>
-                                                        <div style={{fontSize: '24px', fontWeight: 'bold', background: 'rgba(0,0,0,0.5)', padding: '4px 15px', borderRadius: '8px', border: '1px solid rgba(212, 175, 55, 0.3)'}}>
-                                                            <span style={{color: colorGOAT}}>{res.puntosGanados}</span> 
-                                                            <span style={{color: '#d4af37', fontSize:'18px', margin: '0 8px'}}>-</span> 
-                                                            <span style={{color: colorRival}}>{res.puntosPerdidos}</span>
-                                                        </div>
-                                                        <div style={{fontSize: '18px', fontWeight: 'bold', color: colorRival, flex: 1, textAlign: 'right'}}>{fechaActiva.rival}</div>
-                                                    </div>
+                        {fechasActivasIds.length > 0 && (
+                            <div style={{marginBottom: '30px', display: 'flex', gap: '15px', flexWrap: 'wrap'}}>
+                                {fechasActivasIds.map(fIdx => {
+                                    const res = calcularResultadoFecha(fIdx);
+                                    const fechaActiva = fechas[fIdx];
+                                    const colorGOAT = res.puntosGanados >= 140 ? '#10b981' : 'white';
+                                    const colorRival = res.puntosPerdidos >= 140 ? '#ef4444' : 'white';
+                                    
+                                    return (
+                                        <div key={fIdx} style={{background: 'linear-gradient(135deg, #1e3c72 0%, #0f1e3b 100%)', padding: '15px 20px', borderRadius: '10px', border: '1px solid #d4af37', flex: '1', minWidth: '280px', boxShadow: '0 4px 6px rgba(0,0,0,0.3)'}}>
+                                            <div style={{color: '#94a3b8', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold'}}>Marcador Parcial • Fecha {fechaActiva.numero}</div>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                                                <div style={{fontSize: '18px', fontWeight: 'bold', color: colorGOAT, flex: 1}}>GOAT</div>
+                                                <div style={{fontSize: '24px', fontWeight: 'bold', background: 'rgba(0,0,0,0.5)', padding: '4px 15px', borderRadius: '8px', border: '1px solid rgba(212, 175, 55, 0.3)'}}>
+                                                    <span style={{color: colorGOAT}}>{res.puntosGanados}</span> 
+                                                    <span style={{color: '#d4af37', fontSize:'18px', margin: '0 8px'}}>-</span> 
+                                                    <span style={{color: colorRival}}>{res.puntosPerdidos}</span>
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                                <div style={{fontSize: '18px', fontWeight: 'bold', color: colorRival, flex: 1, textAlign: 'right'}}>{fechaActiva.rival}</div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
 
-                                <div style={{marginBottom: '30px'}}>
-                                    <h4 style={{color: '#10b981', marginBottom: '15px'}}>⚡ En Juego ({enJuego.length})</h4>
-                                    {enJuego.length === 0 ? (
-                                        <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay partidos en juego en este momento</p>
+                        <div style={{marginBottom: '30px'}}>
+                            <h4 style={{color: '#10b981', marginBottom: '15px'}}>⚡ En Juego ({enJuego.length})</h4>
+                            {enJuego.length === 0 ? (
+                                <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay partidos en juego en este momento</p>
+                            ) : (
+                                <div style={{display: 'grid', gap: '10px'}}>
+                                    {enJuego.map((p, idx) => {
+                                        return (
+                                            <div key={idx} style={{ background: 'rgba(245, 158, 11, 0.1)', border: `2px solid #f59e0b`, padding: '15px', borderRadius: '8px' }}>
+                                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px', flexWrap: 'wrap'}}>
+                                                    <div style={{flex: 1}}>
+                                                        <div style={{color: '#d4af37', fontSize: '12px', marginBottom: '5px'}}>{p.fechaNombre}</div>
+                                                        <div style={{color: 'white', fontWeight: '700', fontSize: '16px', marginBottom: '5px'}}>{p.tipo} {p.esBonus && '⭐'}</div>
+                                                        <div style={{color: '#94a3b8', fontSize: '14px'}}>{p.jugadores.join(' / ')}</div>
+                                                        
+                                                        {p.estado.parciales && (
+                                                            <div style={{marginTop: '8px', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', display: 'inline-block', background: p.estado.parciales === '1-up' ? '#d1fae5' : p.estado.parciales === '1-down' ? '#fee2e2' : '#fef3c7', color: p.estado.parciales === '1-up' ? '#065f46' : p.estado.parciales === '1-down' ? '#991b1b' : '#92400e'}}>
+                                                                {p.estado.parciales === '1-up' ? '✅ 1er Set Ganado' : p.estado.parciales === '1-down' ? '❌ 1er Set Perdido' : '⚡ En Súper Tie-Break'}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    {userRole !== 'jugador' && (
+                                                        <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                                                            <div style={{display: 'flex', gap: '5px'}}>
+                                                                <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: p.estado.parciales==='1-up'?'#10b981':'#f1f5f9'}} onClick={() => setParcialSet(p.fechaIdx, p.id, '1-up')}>1°↑</button>
+                                                                <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: p.estado.parciales==='1-down'?'#ef4444':'#f1f5f9'}} onClick={() => setParcialSet(p.fechaIdx, p.id, '1-down')}>1°↓</button>
+                                                                <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: p.estado.parciales==='super'?'#f59e0b':'#f1f5f9'}} onClick={() => setParcialSet(p.fechaIdx, p.id, 'super')}>STB</button>
+                                                            </div>
+                                                            <div style={{display: 'flex', gap: '5px'}}>
+                                                                <button className="btn btn-primary" style={{fontSize: '12px', padding: '6px 12px', margin:0, width: '100%', fontWeight: 'bold'}} onClick={() => setModalFinalizar({ isOpen: true, fechaIdx: p.fechaIdx, partidoId: p.id, rivalName: fechas[p.fechaIdx].rival })}>
+                                                                    🏁 Finalizar
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* --- SECCIÓN DESPLEGABLE DE FINALIZADOS --- */}
+                        <div style={{marginBottom: '30px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid #475569'}}>
+                            <div 
+                                onClick={() => setMostrarFinalizados(!mostrarFinalizados)}
+                                style={{padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none'}}
+                            >
+                                <h4 style={{color: '#94a3b8', margin: 0}}>🏁 Finalizados Hoy ({finalizadosHoy.length})</h4>
+                                <span style={{color: '#d4af37', transform: mostrarFinalizados ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
+                            </div>
+                            
+                            {mostrarFinalizados && (
+                                <div style={{padding: '0 15px 15px 15px'}}>
+                                    {finalizadosHoy.length === 0 ? (
+                                        <p style={{color: '#94a3b8', fontStyle: 'italic', margin: 0}}>No hay partidos finalizados hoy.</p>
                                     ) : (
                                         <div style={{display: 'grid', gap: '10px'}}>
-                                            {enJuego.map((p, idx) => {
-                                                const key = `${p.fechaIdx}-${p.id}`; const ganado = resultados[key] || false;
+                                            {finalizadosHoy.map((p, idx) => {
+                                                const ganado = p.wo === 'goat' ? true : (p.wo === 'rival' || p.wo === true ? false : (resultados[`${p.fechaIdx}-${p.id}`] || false));
                                                 return (
-                                                    <div key={idx} style={{ background: 'rgba(245, 158, 11, 0.1)', border: `2px solid #f59e0b`, padding: '15px', borderRadius: '8px' }}>
-                                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px', flexWrap: 'wrap'}}>
-                                                            <div style={{flex: 1}}>
-                                                                <div style={{color: '#d4af37', fontSize: '12px', marginBottom: '5px'}}>{p.fechaNombre}</div>
-                                                                <div style={{color: 'white', fontWeight: '700', fontSize: '16px', marginBottom: '5px'}}>{p.tipo} {p.esBonus && '⭐'}</div>
-                                                                <div style={{color: '#94a3b8', fontSize: '14px'}}>{p.jugadores.join(' / ')}</div>
-                                                                
-                                                                {p.estado.parciales && (
-                                                                    <div style={{marginTop: '8px', padding: '4px 10px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', display: 'inline-block', background: p.estado.parciales === '1-up' ? '#d1fae5' : p.estado.parciales === '1-down' ? '#fee2e2' : '#fef3c7', color: p.estado.parciales === '1-up' ? '#065f46' : p.estado.parciales === '1-down' ? '#991b1b' : '#92400e'}}>
-                                                                        {p.estado.parciales === '1-up' ? '✅ 1er Set Ganado' : p.estado.parciales === '1-down' ? '❌ 1er Set Perdido' : '⚡ En Súper Tie-Break'}
+                                                    <div key={idx} style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #475569', padding: '10px 15px', borderRadius: '8px', opacity: 0.8 }}>
+                                                        <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px'}}>
+                                                            <div>
+                                                                <div style={{color: '#94a3b8', fontSize: '12px'}}>{p.fechaNombre} - P{p.posicion}</div>
+                                                                <div style={{color: 'white', fontWeight: 'bold'}}>{p.tipo} ({p.esBonus ? '20pts' : '10pts'})</div>
+                                                            </div>
+                                                            <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                                                                <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444', marginRight: '10px'}}>
+                                                                    {ganado ? 'GANADO' : 'PERDIDO'} {p.wo && <span style={{fontSize: '11px', color: '#f59e0b', marginLeft: '4px'}}>(WO)</span>}
+                                                                </div>
+                                                                {userRole !== 'jugador' && (
+                                                                    <div style={{display: 'flex', gap: '5px'}}>
+                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: '#f59e0b', color: '#000'}} onClick={() => actualizarEstadoPartido(p.fechaIdx, p.id, {estado: 'en_juego'})}>
+                                                                            ✏️️ Reabrir
+                                                                        </button>
+                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: ganado ? '#ef4444' : '#10b981', color: 'white'}} onClick={() => toggleResultado(p.fechaIdx, p.id)}>
+                                                                            Cambiar
+                                                                        </button>
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            {userRole !== 'jugador' && (
-                                                                <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
-                                                                    <div style={{display: 'flex', gap: '5px'}}>
-                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: p.estado.parciales==='1-up'?'#10b981':'#f1f5f9'}} onClick={() => setParcialSet(p.fechaIdx, p.id, '1-up')}>1°↑</button>
-                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: p.estado.parciales==='1-down'?'#ef4444':'#f1f5f9'}} onClick={() => setParcialSet(p.fechaIdx, p.id, '1-down')}>1°↓</button>
-                                                                        <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: p.estado.parciales==='super'?'#f59e0b':'#f1f5f9'}} onClick={() => setParcialSet(p.fechaIdx, p.id, 'super')}>STB</button>
-                                                                    </div>
-                                                                    <div style={{display: 'flex', gap: '5px'}}>
-                                                                        <button className="btn btn-primary" style={{fontSize: '12px', padding: '6px 12px', margin:0, width: '100%', fontWeight: 'bold'}} onClick={() => setModalFinalizar({ isOpen: true, fechaIdx: p.fechaIdx, partidoId: p.id, rivalName: fechas[p.fechaIdx].rival })}>
-                                                                            🏁 Finalizar
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            )}
                                                         </div>
                                                     </div>
                                                 );
@@ -2295,302 +2342,288 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                                         </div>
                                     )}
                                 </div>
+                            )}
+                        </div>
 
-                               {/* --- SECCIÓN DESPLEGABLE DE FINALIZADOS --- */}
-                                <div style={{marginBottom: '30px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid #475569'}}>
-                                    <div 
-                                        onClick={() => setMostrarFinalizados(!mostrarFinalizados)}
-                                        style={{padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', userSelect: 'none'}}
-                                    >
-                                        <h4 style={{color: '#94a3b8', margin: 0}}>🏁 Finalizados Hoy ({finalizadosHoy.length})</h4>
-                                        <span style={{color: '#d4af37', transform: mostrarFinalizados ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s'}}>▼</span>
+                        <div>
+                            <h4 style={{color: '#f59e0b', marginBottom: '15px'}}>⏳ Próximos Partidos</h4>
+                            {proximos.length === 0 ? (
+                                <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay próximos partidos programados</p>
+                            ) : (
+                                <div style={{display: 'grid', gap: '10px'}}>
+                                    {proximos.map((p, idx) => (
+                                        <div key={idx} style={{ background: 'rgba(148, 163, 184, 0.1)', border: '2px solid #475569', padding: '15px', borderRadius: '8px' }}>
+                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px', flexWrap: 'wrap'}}>
+                                                <div style={{flex: 1}}>
+                                                    <div style={{color: '#d4af37', fontSize: '12px', marginBottom: '5px'}}>
+                                                        {p.fechaNombre} • {p.dia === 'sabado' ? 'Sábado' : 'Domingo'} {p.horario}
+                                                        {p.estado.retrasado && (
+                                                            <span style={{background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', marginLeft: '8px'}}>
+                                                                ⚠️ DEMORADO
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div style={{color: 'white', fontWeight: '700', fontSize: '16px', marginBottom: '5px'}}>{p.tipo}</div>
+                                                    <div style={{color: '#94a3b8', fontSize: '14px'}}>{p.jugadores.join(' / ')}</div>
+                                                </div>
+                                                {userRole !== 'jugador' && (
+                                                    <div style={{display: 'flex', gap: '5px'}}>
+                                                        <button 
+                                                            className="btn" 
+                                                            style={{fontSize: '12px', padding: '5px 10px', margin:0, background: p.estado.retrasado ? '#475569' : '#f59e0b', color: 'white'}} 
+                                                            onClick={() => marcarRetrasado(p.fechaIdx, p.id)}
+                                                        >
+                                                            {p.estado.retrasado ? 'Quitar Demora' : '⚠️ Demora'}
+                                                        </button>
+                                                        <button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(p.fechaIdx, p.id)}>▶️ Iniciar</button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })()}
+
+            {!showCronogramaVivo && fechas.map((fecha, fechaIdx) => {
+                const resultado = calcularResultadoFecha(fechaIdx);
+                const total = resultado.ganados + resultado.perdidos;
+                const isExpanded = fechasExpandidas[fechaIdx];
+                const isClosed = fecha.isClosed || false;
+                const isOcultaParaJugador = userRole === 'jugador' && !fecha.convocada;
+                const isFuture = fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > hoy;
+
+                return (
+                    <div key={fechaIdx} className="date-section" style={{ opacity: isClosed ? 0.7 : 1, border: isClosed ? '2px solid #64748b' : isFuture ? '2px dashed #cbd5e1' : '2px solid #d4af37' }}>
+                        <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', cursor: 'pointer', userSelect: 'none'}} onClick={() => toggleFecha(fechaIdx)}>
+                            
+                            <div style={{display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap'}}>
+                                <span style={{ color: '#d4af37', fontSize: '18px', transition: 'transform 0.3s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}}>▶</span>
+                                <div className="date-header" style={{marginBottom: 0}}>Fecha {fecha.numero} - vs {fecha.rival}</div>
+                                
+                                <div onClick={(e) => e.stopPropagation()} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+                                    <input 
+                                        type="date" value={fecha.fechaCalendario || ''} onChange={(e) => handleDateChange(fechaIdx, e.target.value)}
+                                        disabled={userRole === 'jugador'} title="Fecha programada del encuentro"
+                                        style={{padding: '2px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', background: userRole === 'jugador' ? '#f1f5f9' : '#fff', color: '#475569'}}
+                                    />
+                                    {isFuture && <span style={{fontSize: '10px', background: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '12px', fontWeight: 'bold', textTransform: 'uppercase'}}>⏳ Futuro</span>}
+                                </div>
+
+                                {isClosed && (<span style={{ background: '#64748b', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>🔒 CERRADA</span>)}
+                            </div>
+
+                            <div style={{display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap'}}>
+                                {total > 0 && (
+                                    <div style={{ background: resultado.puntosGanados > resultado.puntosPerdidos ? '#d1fae5' : resultado.puntosGanados < resultado.puntosPerdidos ? '#fee2e2' : '#fef3c7', padding: '6px 15px', borderRadius: '8px', border: `2px solid ${resultado.puntosGanados > resultado.puntosPerdidos ? '#10b981' : resultado.puntosGanados < resultado.puntosPerdidos ? '#ef4444' : '#f59e0b'}`, fontWeight: '700', fontSize: '14px'}}>
+                                        <div style={{color: '#1e3c72'}}>Puntos: {resultado.puntosGanados} - {resultado.puntosPerdidos}</div>
                                     </div>
-                                    
-                                    {mostrarFinalizados && (
-                                        <div style={{padding: '0 15px 15px 15px'}}>
-                                            {finalizadosHoy.length === 0 ? (
-                                                <p style={{color: '#94a3b8', fontStyle: 'italic', margin: 0}}>No hay partidos finalizados hoy.</p>
-                                            ) : (
-                                                <div style={{display: 'grid', gap: '10px'}}>
-                                                    {finalizadosHoy.map((p, idx) => {
-                                                        const ganado = resultados[`${p.fechaIdx}-${p.id}`] || false;
-                                                        return (
-                                                            <div key={idx} style={{ background: 'rgba(100, 116, 139, 0.1)', border: '1px solid #475569', padding: '10px 15px', borderRadius: '8px', opacity: 0.8 }}>
-                                                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px'}}>
-                                                                    <div>
-                                                                        <div style={{color: '#94a3b8', fontSize: '12px'}}>{p.fechaNombre} - P{p.posicion}</div>
-                                                                        <div style={{color: 'white', fontWeight: 'bold'}}>{p.tipo} ({p.esBonus ? '20pts' : '10pts'})</div>
-                                                                    </div>
-                                                                    <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                                                                        <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444', marginRight: '10px'}}>
-                                                                            {ganado ? 'GANADO' : 'PERDIDO'} {p.wo && <span style={{fontSize: '11px', color: '#f59e0b', marginLeft: '4px'}}>(WO)</span>}
+                                )}
+                                {userRole === 'admin' && (
+                                    <button className={isClosed ? 'btn btn-success' : 'btn btn-danger'} style={{fontSize: '12px', padding: '6px 12px', margin: 0}} onClick={(e) => { e.stopPropagation(); toggleCerrarFecha(fechaIdx); }}>
+                                        {isClosed ? '🔓 Abrir' : '🔒 Cerrar'} Fecha
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {isExpanded && (
+                            <div style={{marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #cbd5e1'}}>
+                                {isFuture && <div className="warning" style={{marginBottom: '15px'}}>⏳ Los resultados estarán habilitados el día del encuentro. Las tablas no computarán esta fecha aún.</div>}
+                                
+                                {userRole === 'jugador' && (
+                                    <div>
+                                        <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
+                                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px'}}>
+                                                <div><div style={{fontSize: '12px', color: '#64748b'}}>Partidos Finalizados</div><div style={{fontSize: '24px', fontWeight: '700', color: '#1e3c72'}}>{total}</div></div>
+                                                <div><div style={{fontSize: '12px', color: '#64748b'}}>Ganados</div><div style={{fontSize: '24px', fontWeight: '700', color: '#10b981'}}>{resultado.ganados}</div></div>
+                                                <div><div style={{fontSize: '12px', color: '#64748b'}}>Perdidos</div><div style={{fontSize: '24px', fontWeight: '700', color: '#ef4444'}}>{resultado.perdidos}</div></div>
+                                                <div><div style={{fontSize: '12px', color: '#64748b'}}>Puntos Totales</div><div style={{fontSize: '24px', fontWeight: '700', color: '#d4af37'}}>{resultado.puntosGanados} - {resultado.puntosPerdidos}</div></div>
+                                            </div>
+                                        </div>
+
+                                        {fecha.partidos && fecha.partidos.filter(p => (p.jugadores && p.jugadores.length > 0) || p.wo).map(partido => {
+                                            const key = `${fechaIdx}-${partido.id}`; 
+                                            const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false));
+                                            return (
+                                                <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '10px 15px', borderRadius: '8px', marginBottom: '8px', border: `2px solid ${ganado ? '#10b981' : '#ef4444'}` }}>
+                                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
+                                                        <div style={{flex: 1}}>
+                                                            <strong>{partido.tipo}</strong>
+                                                            <div style={{fontSize: '14px', color: '#64748b', marginTop: '4px'}}>{partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario}</div>
+                                                            {partido.wo && <div style={{fontSize: '12px', color: '#b45309', fontStyle: 'italic', marginTop: '2px'}}>Declarado por Walkover</div>}
+                                                        </div>
+                                                        <div style={{fontWeight: '700', fontSize: '16px', color: ganado ? '#10b981' : '#ef4444'}}>
+                                                            {ganado ? '✓ GANADO' : '✗ PERDIDO'} {partido.wo && <span style={{fontSize: '12px', color: '#f59e0b', marginLeft: '6px'}}>(WO)</span>}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
+                                {userRole !== 'jugador' && (() => {
+                                    const partidosFiltrados = fecha.partidos ? fecha.partidos.filter(p => (p.jugadores && p.jugadores.length > 0) || p.wo) : [];
+                                    const { sabado, domingo } = agruparPorDia(partidosFiltrados);
+
+                                    return (
+                                        <div>
+                                            {sabado.length > 0 && (
+                                                <div style={{marginBottom: '20px'}}>
+                                                    <div style={{ background: '#1e3c72', color: 'white', padding: '10px 15px', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}><strong style={{color: 'white'}}>Sábado ({sabado.length} partidos)</strong></div>
+                                                    </div>
+                                                    <div style={{ border: '1px solid #1e3c72', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '10px', background: 'white' }}>
+                                                        {sabado.map(partido => {
+                                                            const key = `${fechaIdx}-${partido.id}`; 
+                                                            const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false)); 
+                                                            const esBonus = fecha.partidoBonus === partido.id; 
+                                                            const estado = getEstadoPartido(fechaIdx, partido.id);
+                                                            return (
+                                                                <div key={partido.id} style={{ background: estado.estado === 'en_juego' ? '#fef3c7' : (ganado ? '#d1fae5' : '#fee2e2'), padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : `2px solid ${estado.estado === 'en_juego' ? '#f59e0b' : 'transparent'}`, opacity: isFuture ? 0.6 : 1 }}>
+                                                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '15px', flexWrap: 'wrap'}}>
+                                                                        <div style={{flex: 1}}>
+                                                                            <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>
+                                                                                {partido.horario} - Partido {partido.posicion}
+                                                                                {estado.estado === 'en_juego' && <span style={{color: '#f59e0b', marginLeft: '10px'}}>🔴 EN JUEGO</span>}
+                                                                                {(estado.estado === 'finalizado' || partido.wo) && <span style={{color: '#64748b', marginLeft: '10px'}}>✓ FINALIZADO</span>}
+                                                                            </div>
+                                                                            <strong>{partido.tipo}</strong>
+                                                                            {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS (20 pts)</span>}
+                                                                            
+                                                                            <div style={{fontSize: '14px', marginTop: '5px', color: isOcultaParaJugador ? '#991b1b' : 'inherit'}}>
+                                                                                {partido.wo 
+                                                                                    ? <span style={{color: '#b45309', fontStyle: 'italic', fontWeight: 'bold'}}>🚨 Sin jugadores (Declarado por Walkover)</span>
+                                                                                    : (isOcultaParaJugador ? '🔒 Convocatoria en armado' : partido.jugadores.join(' / '))
+                                                                                }
+                                                                            </div>
+                                                                            
+                                                                            {estado.retrasado && estado.horaInicioReal && (<div style={{color: '#f59e0b', fontSize: '12px', marginTop: '5px'}}>⏱️ Comienzo retrasado. Iniciado a las {new Date(estado.horaInicioReal).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>)}
                                                                         </div>
-                                                                        {userRole !== 'jugador' && (
-                                                                            <div style={{display: 'flex', gap: '5px'}}>
-                                                                                <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: '#f59e0b', color: '#000'}} onClick={() => actualizarEstadoPartido(p.fechaIdx, p.id, {estado: 'en_juego'})}>
-                                                                                    ✏️ Reabrir
-                                                                                </button>
-                                                                                <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: ganado ? '#ef4444' : '#10b981', color: 'white'}} onClick={() => toggleResultado(p.fechaIdx, p.id)}>
-                                                                                    Cambiar
-                                                                                </button>
+                                                                        
+                                                                        {!isClosed && !isFuture && !partido.wo && (
+                                                                            <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
+                                                                                {estado.estado === 'pendiente' && !estado.retrasado && (<button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(fechaIdx, partido.id)}>⚠️ Marcar Demora</button>)}
+                                                                                {estado.estado === 'pendiente' && (<button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(fechaIdx, partido.id)}>▶️ Iniciar</button>)}
+                                                                                {estado.estado === 'en_juego' && (<button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(fechaIdx, partido.id)}>✓ Finalizar</button>)}
+                                                                                <div className="checkbox-container" style={{margin: 0}}><input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={isClosed} /><label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label></div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {partido.wo && (
+                                                                            <div style={{fontWeight: '700', fontSize: '15px', color: ganado ? '#10b981' : '#ef4444'}}>
+                                                                                {ganado ? '✓ GANADO' : '✗ PERDIDO'} (WO)
                                                                             </div>
                                                                         )}
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        );
-                                                    })}
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {domingo.length > 0 && (
+                                                <div style={{marginBottom: '20px'}}>
+                                                    <div style={{ background: '#065f46', color: 'white', padding: '10px 15px', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}><strong style={{color: 'white'}}>Domingo ({domingo.length} partidos)</strong></div>
+                                                    </div>
+                                                    <div style={{ border: '1px solid #065f46', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '10px', background: 'white' }}>
+                                                        {domingo.map(partido => {
+                                                            const key = `${fechaIdx}-${partido.id}`; 
+                                                            const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false)); 
+                                                            const esBonus = fecha.partidoBonus === partido.id; 
+                                                            const estado = getEstadoPartido(fechaIdx, partido.id);
+                                                            return (
+                                                                <div key={partido.id} style={{ background: estado.estado === 'en_juego' ? '#fef3c7' : (ganado ? '#d1fae5' : '#fee2e2'), padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : `2px solid ${estado.estado === 'en_juego' ? '#f59e0b' : 'transparent'}`, opacity: isFuture ? 0.6 : 1 }}>
+                                                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '15px', flexWrap: 'wrap'}}>
+                                                                        <div style={{flex: 1}}>
+                                                                            <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>
+                                                                                {partido.horario} - Partido {partido.posicion}
+                                                                                {estado.estado === 'en_juego' && <span style={{color: '#f59e0b', marginLeft: '10px'}}>🔴 EN JUEGO</span>}
+                                                                                {(estado.estado === 'finalizado' || partido.wo) && <span style={{color: '#64748b', marginLeft: '10px'}}>✓ FINALIZADO</span>}
+                                                                            </div>
+                                                                            <strong>{partido.tipo}</strong>
+                                                                            {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS (20 pts)</span>}
+                                                                            
+                                                                            <div style={{fontSize: '14px', marginTop: '5px', color: isOcultaParaJugador ? '#991b1b' : 'inherit'}}>
+                                                                                {partido.wo 
+                                                                                    ? <span style={{color: '#b45309', fontStyle: 'italic', fontWeight: 'bold'}}>🚨 Sin jugadores (Declarado por Walkover)</span>
+                                                                                    : (isOcultaParaJugador ? '🔒 Convocatoria en armado' : partido.jugadores.join(' / '))
+                                                                                }
+                                                                            </div>
+                                                                            
+                                                                            {estado.retrasado && estado.horaInicioReal && (<div style={{color: '#f59e0b', fontSize: '12px', marginTop: '5px'}}>⏱️ Comienzo retrasado. Iniciado a las {new Date(estado.horaInicioReal).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>)}
+                                                                        </div>
+                                                                        
+                                                                        {!isClosed && !isFuture && !partido.wo && (
+                                                                            <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
+                                                                                {estado.estado === 'pendiente' && !estado.retrasado && (<button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(fechaIdx, partido.id)}>⚠️ Marcar Demora</button>)}
+                                                                                {estado.estado === 'pendiente' && (<button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(fechaIdx, partido.id)}>▶️ Iniciar</button>)}
+                                                                                {estado.estado === 'en_juego' && (<button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(fechaIdx, partido.id)}>✓ Finalizar</button>)}
+                                                                                <div className="checkbox-container" style={{margin: 0}}><input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={isClosed} /><label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label></div>
+                                                                            </div>
+                                                                        )}
+
+                                                                        {partido.wo && (
+                                                                            <div style={{fontWeight: '700', fontSize: '15px', color: ganado ? '#10b981' : '#ef4444'}}>
+                                                                                {ganado ? '✓ GANADO' : '✗ PERDIDO'} (WO)
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
-                                    )}
-                                </div>
-                                {/* ------------------------------------------ */}
-
-                                <div>
-                                    <h4 style={{color: '#f59e0b', marginBottom: '15px'}}>⏳ Próximos Partidos</h4>
-                                    {proximos.length === 0 ? (
-                                        <p style={{color: '#94a3b8', fontStyle: 'italic'}}>No hay próximos partidos programados</p>
-                                    ) : (
-                                        <div style={{display: 'grid', gap: '10px'}}>
-                                            {proximos.map((p, idx) => (
-                                                <div key={idx} style={{ background: 'rgba(148, 163, 184, 0.1)', border: '2px solid #475569', padding: '15px', borderRadius: '8px' }}>
-                                                    <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '10px', flexWrap: 'wrap'}}>
-                                                        <div style={{flex: 1}}>
-                                                            <div style={{color: '#d4af37', fontSize: '12px', marginBottom: '5px'}}>
-                                                                {p.fechaNombre} • {p.dia === 'sabado' ? 'Sábado' : 'Domingo'} {p.horario}
-                                                                {p.estado.retrasado && (
-                                                                    <span style={{background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', marginLeft: '8px'}}>
-                                                                        ⚠️ DEMORADO
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <div style={{color: 'white', fontWeight: '700', fontSize: '16px', marginBottom: '5px'}}>{p.tipo}</div>
-                                                            <div style={{color: '#94a3b8', fontSize: '14px'}}>{p.jugadores.join(' / ')}</div>
-                                                        </div>
-                                                        {userRole !== 'jugador' && (
-                                                            <div style={{display: 'flex', gap: '5px'}}>
-                                                                <button 
-                                                                    className="btn" 
-                                                                    style={{fontSize: '12px', padding: '5px 10px', margin:0, background: p.estado.retrasado ? '#475569' : '#f59e0b', color: 'white'}} 
-                                                                    onClick={() => marcarRetrasado(p.fechaIdx, p.id)}
-                                                                >
-                                                                    {p.estado.retrasado ? 'Quitar Demora' : '⚠️ Demora'}
-                                                                </button>
-                                                                <button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(p.fechaIdx, p.id)}>▶️ Iniciar</button>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
+                                    );
+                                })()}
                             </div>
-                        );
-                    })()}
+                        )}
+                    </div>
+                );
+            })}
 
-                    {!showCronogramaVivo && fechas.map((fecha, fechaIdx) => {
-                        const resultado = calcularResultadoFecha(fechaIdx);
-                        const total = resultado.ganados + resultado.perdidos;
-                        const isExpanded = fechasExpandidas[fechaIdx];
-                        const isClosed = fecha.isClosed || false;
-                        const isOcultaParaJugador = userRole === 'jugador' && !fecha.convocada;
-                        const isFuture = fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > hoy;
-
-                        return (
-                            <div key={fechaIdx} className="date-section" style={{ opacity: isClosed ? 0.7 : 1, border: isClosed ? '2px solid #64748b' : isFuture ? '2px dashed #cbd5e1' : '2px solid #d4af37' }}>
-                                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', cursor: 'pointer', userSelect: 'none'}} onClick={() => toggleFecha(fechaIdx)}>
-                                    
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap'}}>
-                                        <span style={{ color: '#d4af37', fontSize: '18px', transition: 'transform 0.3s', display: 'inline-block', transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'}}>▶</span>
-                                        <div className="date-header" style={{marginBottom: 0}}>Fecha {fecha.numero} - vs {fecha.rival}</div>
-                                        
-                                        <div onClick={(e) => e.stopPropagation()} style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                                            <input 
-                                                type="date" value={fecha.fechaCalendario || ''} onChange={(e) => handleDateChange(fechaIdx, e.target.value)}
-                                                disabled={userRole === 'jugador'} title="Fecha programada del encuentro"
-                                                style={{padding: '2px 8px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '12px', background: userRole === 'jugador' ? '#f1f5f9' : '#fff', color: '#475569'}}
-                                            />
-                                            {isFuture && <span style={{fontSize: '10px', background: '#fef3c7', color: '#b45309', padding: '2px 6px', borderRadius: '12px', fontWeight: 'bold', textTransform: 'uppercase'}}>⏳ Futuro</span>}
-                                        </div>
-
-                                        {isClosed && (<span style={{ background: '#64748b', color: 'white', padding: '4px 12px', borderRadius: '12px', fontSize: '11px', fontWeight: '700' }}>🔒 CERRADA</span>)}
-                                    </div>
-
-                                    <div style={{display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap'}}>
-                                        {total > 0 && (
-                                            <div style={{ background: resultado.puntosGanados > resultado.puntosPerdidos ? '#d1fae5' : resultado.puntosGanados < resultado.puntosPerdidos ? '#fee2e2' : '#fef3c7', padding: '6px 15px', borderRadius: '8px', border: `2px solid ${resultado.puntosGanados > resultado.puntosPerdidos ? '#10b981' : resultado.puntosGanados < resultado.puntosPerdidos ? '#ef4444' : '#f59e0b'}`, fontWeight: '700', fontSize: '14px'}}>
-                                                <div style={{color: '#1e3c72'}}>Puntos: {resultado.puntosGanados} - {resultado.puntosPerdidos}</div>
-                                            </div>
-                                        )}
-                                        {userRole === 'admin' && (
-                                            <button className={isClosed ? 'btn btn-success' : 'btn btn-danger'} style={{fontSize: '12px', padding: '6px 12px', margin: 0}} onClick={(e) => { e.stopPropagation(); toggleCerrarFecha(fechaIdx); }}>
-                                                {isClosed ? '🔓 Abrir' : '🔒 Cerrar'} Fecha
-                                            </button>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {isExpanded && (
-                                    <div style={{marginTop: '20px', paddingTop: '20px', borderTop: '1px dashed #cbd5e1'}}>
-                                        {isFuture && <div className="warning" style={{marginBottom: '15px'}}>⏳ Los resultados estarán habilitados el día del encuentro. Las tablas no computarán esta fecha aún.</div>}
-                                        
-                                        {userRole === 'jugador' && (
-                                            <div>
-                                                <div style={{ background: '#f0f9ff', padding: '15px', borderRadius: '8px', marginBottom: '15px' }}>
-                                                    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px'}}>
-                                                        <div><div style={{fontSize: '12px', color: '#64748b'}}>Partidos Finalizados</div><div style={{fontSize: '24px', fontWeight: '700', color: '#1e3c72'}}>{total}</div></div>
-                                                        <div><div style={{fontSize: '12px', color: '#64748b'}}>Ganados</div><div style={{fontSize: '24px', fontWeight: '700', color: '#10b981'}}>{resultado.ganados}</div></div>
-                                                        <div><div style={{fontSize: '12px', color: '#64748b'}}>Perdidos</div><div style={{fontSize: '24px', fontWeight: '700', color: '#ef4444'}}>{resultado.perdidos}</div></div>
-                                                        <div><div style={{fontSize: '12px', color: '#64748b'}}>Puntos Totales</div><div style={{fontSize: '24px', fontWeight: '700', color: '#d4af37'}}>{resultado.puntosGanados} - {resultado.puntosPerdidos}</div></div>
-                                                    </div>
-                                                </div>
-
-                                                {fecha.partidos && fecha.partidos.filter(p => p.jugadores && p.jugadores.length > 0).map(partido => {
-                                                    const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false;
-                                                    return (
-                                                        <div key={partido.id} style={{ background: ganado ? '#d1fae5' : '#fee2e2', padding: '10px 15px', borderRadius: '8px', marginBottom: '8px', border: `2px solid ${ganado ? '#10b981' : '#ef4444'}` }}>
-                                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px'}}>
-                                                                <div style={{flex: 1}}>
-                                                                    <strong>{partido.tipo}</strong>
-                                                                    <div style={{fontSize: '14px', color: '#64748b', marginTop: '4px'}}>{partido.dia === 'sabado' ? 'Sábado' : 'Domingo'} {partido.horario}</div>
-                                                                </div>
-                                                                <div style={{fontWeight: '700', fontSize: '16px', color: ganado ? '#10b981' : '#ef4444'}}>{ganado ? '✓ GANADO' : '✗ PERDIDO'}</div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })
-                                                }
-                                            </div>
-                                        )}
-
-                                        {userRole !== 'jugador' && (() => {
-                                            const partidosFiltrados = fecha.partidos ? fecha.partidos.filter(p => p.jugadores && p.jugadores.length > 0) : [];
-                                            const { sabado, domingo } = agruparPorDia(partidosFiltrados);
-
-                                            return (
-                                                <div>
-                                                    {sabado.length > 0 && (
-                                                        <div style={{marginBottom: '20px'}}>
-                                                            <div style={{ background: '#1e3c72', color: 'white', padding: '10px 15px', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}><strong style={{color: 'white'}}>Sábado ({sabado.length} partidos)</strong></div>
-                                                            </div>
-                                                            <div style={{ border: '1px solid #1e3c72', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '10px', background: 'white' }}>
-                                                                {sabado.map(partido => {
-                                                                    const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const estado = getEstadoPartido(fechaIdx, partido.id);
-                                                                    return (
-                                                                        <div key={partido.id} style={{ background: estado.estado === 'en_juego' ? '#fef3c7' : (ganado ? '#d1fae5' : '#fee2e2'), padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : `2px solid ${estado.estado === 'en_juego' ? '#f59e0b' : 'transparent'}`, opacity: isFuture ? 0.6 : 1 }}>
-                                                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '15px', flexWrap: 'wrap'}}>
-                                                                                <div style={{flex: 1}}>
-                                                                                    <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>
-                                                                                        {partido.horario} - Partido {partido.posicion}
-                                                                                        {estado.estado === 'en_juego' && <span style={{color: '#f59e0b', marginLeft: '10px'}}>🔴 EN JUEGO</span>}
-                                                                                        {estado.estado === 'finalizado' && <span style={{color: '#64748b', marginLeft: '10px'}}>✓ FINALIZADO</span>}
-                                                                                    </div>
-                                                                                    <strong>{partido.tipo}</strong>
-                                                                                    {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS (20 pts)</span>}
-                                                                                    <div style={{fontSize: '14px', marginTop: '5px', color: isOcultaParaJugador ? '#991b1b' : 'inherit'}}>{isOcultaParaJugador ? '🔒 Convocatoria en armado' : partido.jugadores.join(' / ')}</div>
-                                                                                    {estado.retrasado && estado.horaInicioReal && (<div style={{color: '#f59e0b', fontSize: '12px', marginTop: '5px'}}>⏱️ Comienzo retrasado. Iniciado a las {new Date(estado.horaInicioReal).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>)}
-                                                                                </div>
-                                                                                
-                                                                                {!isClosed && !isFuture && (
-                                                                                    <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
-                                                                                        {estado.estado === 'pendiente' && !estado.retrasado && (<button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(fechaIdx, partido.id)}>⚠️ Marcar Demora</button>)}
-                                                                                        {estado.estado === 'pendiente' && (<button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(fechaIdx, partido.id)}>▶️ Iniciar</button>)}
-                                                                                        {estado.estado === 'en_juego' && (<button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(fechaIdx, partido.id)}>✓ Finalizar</button>)}
-                                                                                        <div className="checkbox-container" style={{margin: 0}}><input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={isClosed} /><label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label></div>
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    )}
-
-                                                    {domingo.length > 0 && (
-                                                        <div style={{marginBottom: '20px'}}>
-                                                            <div style={{ background: '#065f46', color: 'white', padding: '10px 15px', borderRadius: '8px 8px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}><strong style={{color: 'white'}}>Domingo ({domingo.length} partidos)</strong></div>
-                                                            </div>
-                                                            <div style={{ border: '1px solid #065f46', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '10px', background: 'white' }}>
-                                                                {domingo.map(partido => {
-                                                                    const key = `${fechaIdx}-${partido.id}`; const ganado = resultados[key] || false; const esBonus = fecha.partidoBonus === partido.id; const estado = getEstadoPartido(fechaIdx, partido.id);
-                                                                    return (
-                                                                        <div key={partido.id} style={{ background: estado.estado === 'en_juego' ? '#fef3c7' : (ganado ? '#d1fae5' : '#fee2e2'), padding: '15px', borderRadius: '8px', marginBottom: '10px', border: esBonus ? '2px solid #f59e0b' : `2px solid ${estado.estado === 'en_juego' ? '#f59e0b' : 'transparent'}`, opacity: isFuture ? 0.6 : 1 }}>
-                                                                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '15px', flexWrap: 'wrap'}}>
-                                                                                <div style={{flex: 1}}>
-                                                                                    <div style={{fontSize: '12px', color: '#666', marginBottom: '4px'}}>
-                                                                                        {partido.horario} - Partido {partido.posicion}
-                                                                                        {estado.estado === 'en_juego' && <span style={{color: '#f59e0b', marginLeft: '10px'}}>🔴 EN JUEGO</span>}
-                                                                                        {estado.estado === 'finalizado' && <span style={{color: '#64748b', marginLeft: '10px'}}>✓ FINALIZADO</span>}
-                                                                                    </div>
-                                                                                    <strong>{partido.tipo}</strong>
-                                                                                    {esBonus && <span style={{color: '#f59e0b', marginLeft: '10px'}}>⭐ BONUS (20 pts)</span>}
-                                                                                    <div style={{fontSize: '14px', marginTop: '5px', color: isOcultaParaJugador ? '#991b1b' : 'inherit'}}>{isOcultaParaJugador ? '🔒 Convocatoria en armado' : partido.jugadores.join(' / ')}</div>
-                                                                                    {estado.retrasado && estado.horaInicioReal && (<div style={{color: '#f59e0b', fontSize: '12px', marginTop: '5px'}}>⏱️ Comienzo retrasado. Iniciado a las {new Date(estado.horaInicioReal).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>)}
-                                                                                </div>
-                                                                                
-                                                                                {!isClosed && !isFuture && (
-                                                                                    <div style={{display: 'flex', gap: '5px', flexWrap: 'wrap'}}>
-                                                                                        {estado.estado === 'pendiente' && !estado.retrasado && (<button className="btn btn-warning" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => marcarRetrasado(fechaIdx, partido.id)}>⚠️ Marcar Demora</button>)}
-                                                                                        {estado.estado === 'pendiente' && (<button className="btn btn-primary" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => iniciarPartido(fechaIdx, partido.id)}>▶️ Iniciar</button>)}
-                                                                                        {estado.estado === 'en_juego' && (<button className="btn btn-success" style={{fontSize: '12px', padding: '5px 10px', margin:0}} onClick={() => finalizarPartido(fechaIdx, partido.id)}>✓ Finalizar</button>)}
-                                                                                        <div className="checkbox-container" style={{margin: 0}}><input type="checkbox" checked={ganado} onChange={() => toggleResultado(fechaIdx, partido.id)} disabled={isClosed} /><label style={{margin: 0}}>{ganado ? 'GANADO ✓' : 'PERDIDO'}</label></div>
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    );
-                                                                })}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })()}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-
-                    {/* --- MODAL PARA FINALIZAR Y ELEGIR GANADOR --- */}
-                    {modalFinalizar.isOpen && (
-                        <div className="modal" style={{zIndex: 10500, background: 'rgba(0,0,0,0.85)'}}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '400px', textAlign: 'center', background: '#1a1a1a', border: '2px solid #d4af37'}}>
-                                <h3 style={{color: '#d4af37', marginBottom: '15px'}}>¿Quién ganó el partido?</h3>
-                                <p style={{color: '#ccc', marginBottom: '25px', fontSize: '14px'}}>Seleccioná al ganador para registrar el resultado y finalizar el partido.</p>
-                                <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-                                    <button className="btn btn-success" style={{padding: '15px', fontSize: '18px', fontWeight: 'bold', border: '2px solid #10b981'}} onClick={() => {
-                                        const key = `${modalFinalizar.fechaIdx}-${modalFinalizar.partidoId}`;
-                                        setResultados(prev => ({ ...prev, [key]: true }));
-                                        actualizarEstadoPartido(modalFinalizar.fechaIdx, modalFinalizar.partidoId, { estado: 'finalizado' });
-                                        setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
-                                    }}>
-                                        🏆 GOAT
-                                    </button>
-                                    <button className="btn btn-danger" style={{padding: '15px', fontSize: '18px', fontWeight: 'bold', border: '2px solid #ef4444'}} onClick={() => {
-                                        const key = `${modalFinalizar.fechaIdx}-${modalFinalizar.partidoId}`;
-                                        setResultados(prev => ({ ...prev, [key]: false }));
-                                        actualizarEstadoPartido(modalFinalizar.fechaIdx, modalFinalizar.partidoId, { estado: 'finalizado' });
-                                        setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
-                                    }}>
-                                        {modalFinalizar.rivalName}
-                                    </button>
-                                    <button className="btn" style={{background: 'transparent', color: '#aaa', border: '1px solid #444', marginTop: '10px'}} onClick={() => setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' })}>
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </div>
+            {/* --- MODAL PARA FINALIZAR Y ELEGIR GANADOR --- */}
+            {modalFinalizar.isOpen && (
+                <div className="modal" style={{zIndex: 10500, background: 'rgba(0,0,0,0.85)'}}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{maxWidth: '400px', textAlign: 'center', background: '#1a1a1a', border: '2px solid #d4af37'}}>
+                        <h3 style={{color: '#d4af37', marginBottom: '15px'}}>¿Quién ganó el partido?</h3>
+                        <p style={{color: '#ccc', marginBottom: '25px', fontSize: '14px'}}>Seleccioná al ganador para registrar el resultado y finalizar el partido.</p>
+                        <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                            <button className="btn btn-success" style={{padding: '15px', fontSize: '18px', fontWeight: 'bold', border: '2px solid #10b981'}} onClick={() => {
+                                const key = `${modalFinalizar.fechaIdx}-${modalFinalizar.partidoId}`;
+                                setResultados(prev => ({ ...prev, [key]: true }));
+                                actualizarEstadoPartido(modalFinalizar.fechaIdx, modalFinalizar.partidoId, { estado: 'finalizado' });
+                                setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
+                            }}>
+                                🏆 GOAT
+                            </button>
+                            <button className="btn btn-danger" style={{padding: '15px', fontSize: '18px', fontWeight: 'bold', border: '2px solid #ef4444'}} onClick={() => {
+                                const key = `${modalFinalizar.fechaIdx}-${modalFinalizar.partidoId}`;
+                                setResultados(prev => ({ ...prev, [key]: false }));
+                                actualizarEstadoPartido(modalFinalizar.fechaIdx, modalFinalizar.partidoId, { estado: 'finalizado' });
+                                setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' });
+                            }}>
+                                {modalFinalizar.rivalName}
+                            </button>
+                            <button className="btn" style={{background: 'transparent', color: '#aaa', border: '1px solid #444', marginTop: '10px'}} onClick={() => setModalFinalizar({ isOpen: false, fechaIdx: null, partidoId: null, rivalName: '' })}>
+                                Cancelar
+                            </button>
                         </div>
-                    )}
-
+                    </div>
                 </div>
-            );
-        }
+            )}
+
+        </div>
+    );
+}
 
         function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales }) {
             const [showCruceModal, setShowCruceModal] = useState(false);
