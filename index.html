@@ -892,7 +892,7 @@ const firebaseConfig = {
                     const key = `${i}-${p.id}`;
                     const est = estadoPartidos[key] || {};
                     // Si es WO, fuerza false. Si no, lee el resultado normal.
-                    const isGanado = p.wo ? false : (resultados[key] || false);
+                    const isGanado = p.wo === 'goat' ? true : (p.wo === 'rival' || p.wo === true ? false : (resultados[key] || false));
                     const pts = fecha.partidoBonus === p.id ? 20 : 10;
 
                     if (est.estado === 'en_juego' && !p.wo) {
@@ -2117,8 +2117,7 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                         const estadoObj = getEstadoPartido(fechaIdx, partido.id);
                         
                         if (estadoObj.estado === 'finalizado' || fechaCerrada || partido.wo) {
-                            const ganado = partido.wo ? false : (resultados[key] || false);
-                            const esBonus = fecha.partidoBonus === partido.id;
+                            const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false));
                             const puntos = esBonus ? 20 : 10;
                             
                             if (ganado) { ganados++; puntosGanados += puntos; } 
@@ -2318,7 +2317,9 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                                                                         <div style={{color: 'white', fontWeight: 'bold'}}>{p.tipo} ({p.esBonus ? '20pts' : '10pts'})</div>
                                                                     </div>
                                                                     <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
-                                                                        <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444', marginRight: '10px'}}>{ganado ? 'GANADO' : 'PERDIDO'}</div>
+                                                                        <div style={{fontWeight: '700', color: ganado ? '#10b981' : '#ef4444', marginRight: '10px'}}>
+                                                                            {ganado ? 'GANADO' : 'PERDIDO'} {p.wo && <span style={{fontSize: '11px', color: '#f59e0b', marginLeft: '4px'}}>(WO)</span>}
+                                                                        </div>
                                                                         {userRole !== 'jugador' && (
                                                                             <div style={{display: 'flex', gap: '5px'}}>
                                                                                 <button className="btn" style={{fontSize: '11px', padding: '4px 8px', margin:0, background: '#f59e0b', color: '#000'}} onClick={() => actualizarEstadoPartido(p.fechaIdx, p.id, {estado: 'en_juego'})}>
@@ -2611,7 +2612,7 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                                 const key = `${fechaIdx}-${partido.id}`; 
                                 
                                 if (fecha.isClosed || resultados.hasOwnProperty(key) || partido.wo) {
-                                    const ganado = partido.wo ? false : (resultados[key] || false); 
+                                    const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false)); 
                                     const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
                                     if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                                 }
