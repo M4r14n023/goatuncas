@@ -2497,7 +2497,7 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                                                                             
                                                                             <div style={{fontSize: '14px', marginTop: '5px', color: isOcultaParaJugador ? '#991b1b' : 'inherit'}}>
                                                                                 {partido.wo 
-                                                                                    ? <span style={{color: '#b45309', fontStyle: 'italic', fontWeight: 'bold'}}>🚨 Sin jugadores (Declarado por Walkover)</span>
+                                                                                    ? <span style={{color: '#b45309', fontStyle: 'italic', fontWeight: 'bold'}}>🚨 Sin jugadores (Declarado WO)</span>
                                                                                     : (isOcultaParaJugador ? '🔒 Convocatoria en armado' : partido.jugadores.join(' / '))
                                                                                 }
                                                                             </div>
