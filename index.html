@@ -2626,234 +2626,297 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
 }
 
         function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales }) {
-            const [showCruceModal, setShowCruceModal] = useState(false);
-            const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
-            const [editandoCruce, setEditandoCruce] = useState(null);
+    const [showCruceModal, setShowCruceModal] = useState(false);
+    const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
+    const [editandoCruce, setEditandoCruce] = useState(null);
 
-            if (equipos.length < 11) return <div className="warning">Por favor, que un Capitán configure primero los 11 equipos en la pestaña "Configuración".</div>;
+    if (equipos.length < 11) return <div className="warning">Por favor, que un Capitán configure primero los 11 equipos en la pestaña "Configuración".</div>;
 
-            const calcularPosiciones = (filtroEquipos) => {
-                const tabla = {};
-                filtroEquipos.forEach((equipo, index) => { 
-                    if (equipo) tabla[equipo] = { 
-                        nombre: equipo, partidos: 0, seriesGanadas: 0, perdidos: 0, 
-                        puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, 
-                        SJT: 0, SPT: 0, PPJ: 0, // <-- NUEVAS ESTADÍSTICAS
-                        originalIndex: index 
-                    }; 
+    const calcularPosiciones = (filtroEquipos) => {
+        const tabla = {};
+        
+        // Inicializar tabla con nombres limpios
+        filtroEquipos.forEach((equipo, index) => { 
+            if (equipo) {
+                const nombreLimpio = equipo.trim();
+                tabla[nombreLimpio] = { 
+                    nombre: nombreLimpio, partidos: 0, seriesGanadas: 0, perdidos: 0, 
+                    puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, 
+                    SJT: 0, SPT: 0, PPJ: 0,
+                    originalIndex: index 
+                }; 
+            }
+        });
+
+        // 1. Procesar partidos de GOAT desde el fixture oficial
+        fechas.forEach((fecha, fechaIdx) => {
+            if (!fecha || !fecha.partidos || (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date())) return;
+            
+            const rival = (fecha.rival || '').trim();
+            if (tabla['GOAT'] && tabla[rival]) {
+                let puntosGOAT = 0; 
+                let puntosRival = 0;
+                let puntosPendientes = 0;
+                let estaTerminada = true;
+                
+                fecha.partidos.forEach(partido => {
+                    const key = `${fechaIdx}-${partido.id}`; 
+                    const resuelto = fecha.isClosed || resultados.hasOwnProperty(key) || partido.wo;
+                    const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
+
+                    if (resuelto) {
+                        if ((partido.jugadores && partido.jugadores.length > 0) || partido.wo) {
+                            const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false)); 
+                            if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
+                        }
+                    } else {
+                        estaTerminada = false;
+                        puntosPendientes += puntos;
+                    }
                 });
 
-                fechas.forEach((fecha, fechaIdx) => {
-                    if (!fecha || !fecha.partidos || (fecha.fechaCalendario && new Date(fecha.fechaCalendario + 'T23:59:59') > new Date())) return;
+                if (fecha.isClosed) {
+                    estaTerminada = true;
+                    puntosPendientes = 0;
+                }
+                
+                if (puntosGOAT > 0 || puntosRival > 0 || fecha.isClosed || puntosPendientes > 0) {
+                    tabla['GOAT'].partidos++; 
+                    tabla['GOAT'].puntosFavor += puntosGOAT; 
+                    tabla['GOAT'].puntosContra += puntosRival; 
+                    tabla['GOAT'].puntosTotales += puntosGOAT;
+                    if (puntosGOAT >= 140) tabla['GOAT'].seriesGanadas++; 
+                    tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
+
+                    tabla[rival].partidos++; 
+                    tabla[rival].puntosFavor += puntosRival; 
+                    tabla[rival].puntosContra += puntosGOAT; 
+                    tabla[rival].puntosTotales += puntosRival;
+                    if (puntosRival >= 140) tabla[rival].seriesGanadas++; 
+                    tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+
+                    if (estaTerminada) {
+                        tabla['GOAT'].SJT++;
+                        tabla[rival].SJT++;
+                    } else {
+                        tabla['GOAT'].SPT++;
+                        tabla[rival].SPT++;
+                        tabla['GOAT'].PPJ += puntosPendientes;
+                        tabla[rival].PPJ += puntosPendientes;
+                    }
+                }
+            }
+        });
+
+        // 2. Procesar cruces adicionales entre los demás equipos
+        crucesFinales.forEach(cruce => {
+            const eq1 = (cruce.equipo1 || '').trim();
+            const eq2 = (cruce.equipo2 || '').trim();
+
+            if (tabla[eq1] && tabla[eq2]) {
+                const pts1 = parseInt(cruce.resultado1, 10) || 0; 
+                const pts2 = parseInt(cruce.resultado2, 10) || 0;
+                const sumaPuntos = pts1 + pts2;
+
+                if (pts1 > 0 || pts2 > 0) {
+                    tabla[eq1].partidos++; 
+                    tabla[eq1].puntosFavor += pts1; 
+                    tabla[eq1].puntosContra += pts2; 
+                    tabla[eq1].puntosTotales += pts1;
                     
-                    const rival = fecha.rival;
-                    if (tabla['GOAT'] && tabla[rival]) {
-                        let puntosGOAT = 0; let puntosRival = 0;
-                        let puntosPendientes = 0;
-                        let estaTerminada = true;
-                        
-                        fecha.partidos.forEach(partido => {
-                            const key = `${fechaIdx}-${partido.id}`; 
-                            const resuelto = fecha.isClosed || resultados.hasOwnProperty(key) || partido.wo;
-                            const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
+                    tabla[eq2].partidos++; 
+                    tabla[eq2].puntosFavor += pts2; 
+                    tabla[eq2].puntosContra += pts1; 
+                    tabla[eq2].puntosTotales += pts2;
+                    
+                    if (pts1 >= 140) tabla[eq1].seriesGanadas++; 
+                    else if (pts2 >= 140) tabla[eq2].seriesGanadas++;
 
-                            if (resuelto) {
-                                if ((partido.jugadores && partido.jugadores.length > 0) || partido.wo) {
-                                    const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false)); 
-                                    if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
-                                }
-                            } else {
-                                estaTerminada = false;
-                                puntosPendientes += puntos;
-                            }
-                        });
+                    tabla[eq1].diferencia = tabla[eq1].puntosFavor - tabla[eq1].puntosContra; 
+                    tabla[eq2].diferencia = tabla[eq2].puntosFavor - tabla[eq2].puntosContra;
 
-                        if (fecha.isClosed) {
-                            estaTerminada = true;
-                            puntosPendientes = 0; // Si se cerró la fecha, se descartan los pendientes
-                        }
-                        
-                        if (puntosGOAT > 0 || puntosRival > 0 || fecha.isClosed || puntosPendientes > 0) {
-                            tabla['GOAT'].partidos++; 
-                            tabla['GOAT'].puntosFavor += puntosGOAT; 
-                            tabla['GOAT'].puntosContra += puntosRival; 
-                            tabla['GOAT'].puntosTotales += puntosGOAT;
-                            if (puntosGOAT >= 140) tabla['GOAT'].seriesGanadas++; 
-                            tabla['GOAT'].diferencia = tabla['GOAT'].puntosFavor - tabla['GOAT'].puntosContra;
-
-                            tabla[rival].partidos++; 
-                            tabla[rival].puntosFavor += puntosRival; 
-                            tabla[rival].puntosContra += puntosGOAT; 
-                            tabla[rival].puntosTotales += puntosRival;
-                            if (puntosRival >= 140) tabla[rival].seriesGanadas++; 
-                            tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
-
-                            // ASIGNACIÓN DE SERIES Y PUNTOS PENDIENTES
-                            if (estaTerminada) {
-                                tabla['GOAT'].SJT++;
-                                tabla[rival].SJT++;
-                            } else {
-                                tabla['GOAT'].SPT++;
-                                tabla[rival].SPT++;
-                                tabla['GOAT'].PPJ += puntosPendientes;
-                                tabla[rival].PPJ += puntosPendientes;
-                            }
-                        }
+                    // Deducción sobre los 270 puntos totales reglamentarios
+                    if (sumaPuntos >= 270) {
+                        tabla[eq1].SJT++;
+                        tabla[eq2].SJT++;
+                    } else {
+                        const puntosPendientes = Math.max(0, 270 - sumaPuntos);
+                        tabla[eq1].SPT++;
+                        tabla[eq2].SPT++;
+                        tabla[eq1].PPJ += puntosPendientes;
+                        tabla[eq2].PPJ += puntosPendientes;
                     }
-                });
+                }
+            }
+        });
 
-                crucesFinales.forEach(cruce => {
-                    if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
-                        const pts1 = parseInt(cruce.resultado1) || 0; 
-                        const pts2 = parseInt(cruce.resultado2) || 0;
-                        const sumaPuntos = pts1 + pts2;
+        return Object.values(tabla).sort((a, b) => { 
+            if (b.seriesGanadas !== a.seriesGanadas) return b.seriesGanadas - a.seriesGanadas; 
+            if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales;
+            if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia;
+            return a.originalIndex - b.originalIndex;
+        });
+    };
 
-                        if (pts1 > 0 || pts2 > 0) {
-                            tabla[cruce.equipo1].partidos++; 
-                            tabla[cruce.equipo1].puntosFavor += pts1; 
-                            tabla[cruce.equipo1].puntosContra += pts2; 
-                            tabla[cruce.equipo1].puntosTotales += pts1;
-                            
-                            tabla[cruce.equipo2].partidos++; 
-                            tabla[cruce.equipo2].puntosFavor += pts2; 
-                            tabla[cruce.equipo2].puntosContra += pts1; 
-                            tabla[cruce.equipo2].puntosTotales += pts2;
-                            
-                            if (pts1 >= 140) tabla[cruce.equipo1].seriesGanadas++; 
-                            else if (pts2 >= 140) tabla[cruce.equipo2].seriesGanadas++;
+    const agregarCruce = () => {
+        if (!cruceActual.equipo1 || !cruceActual.equipo2 || !cruceActual.tipo) { 
+            window.mostrarAlerta('Atención', 'Completá todos los campos'); 
+            return; 
+        }
+        if (editandoCruce !== null) { 
+            const nuevosCruces = [...crucesFinales]; 
+            nuevosCruces[editandoCruce] = cruceActual; 
+            setCrucesFinales(nuevosCruces); 
+        } else { 
+            setCrucesFinales([...crucesFinales, cruceActual]); 
+        }
+        setShowCruceModal(false); 
+        setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); 
+        setEditandoCruce(null);
+    };
 
-                            tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; 
-                            tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+    const eliminarCruce = (idx) => { 
+        window.mostrarConfirmacion('Eliminar', '¿Eliminar este cruce?', () => setCrucesFinales(crucesFinales.filter((_, i) => i !== idx))); 
+    };
 
-                            // LÓGICA DE SERIE COMPLETA (270 PTS) O PENDIENTE
-                            if (sumaPuntos >= 270) {
-                                tabla[cruce.equipo1].SJT++;
-                                tabla[cruce.equipo2].SJT++;
-                            } else {
-                                const puntosPendientes = Math.max(0, 270 - sumaPuntos);
-                                tabla[cruce.equipo1].SPT++;
-                                tabla[cruce.equipo2].SPT++;
-                                tabla[cruce.equipo1].PPJ += puntosPendientes;
-                                tabla[cruce.equipo2].PPJ += puntosPendientes;
-                            }
-                        }
-                    }
-                });
+    const tablaGeneral = calcularPosiciones(equipos.map(e => e.nombre));
 
-                return Object.values(tabla).sort((a, b) => { 
-                    if (b.seriesGanadas !== a.seriesGanadas) return b.seriesGanadas - a.seriesGanadas; 
-                    if (b.puntosTotales !== a.puntosTotales) return b.puntosTotales - a.puntosTotales;
-                    if (b.diferencia !== a.diferencia) return b.diferencia - a.diferencia;
-                    return a.originalIndex - b.originalIndex;
-                });
-            };
+    return (
+        <div>
+            <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Tabla de Posiciones Oficial V3</h2>
+            
+            <p style={{color: '#64748b', marginBottom: '20px', fontSize: '14px'}}>Ordenadas por Reglamento: 1° Series Ganadas (SG) | 2° Puntos Totales (Pts).</p>
 
-            const agregarCruce = () => {
-                if (!cruceActual.equipo1 || !cruceActual.equipo2 || !cruceActual.tipo) { window.mostrarAlerta('Atención', 'Completá todos los campos'); return; }
-                if (editandoCruce !== null) { const nuevosCruces = [...crucesFinales]; nuevosCruces[editandoCruce] = cruceActual; setCrucesFinales(nuevosCruces); } 
-                else { setCrucesFinales([...crucesFinales, cruceActual]); }
-                setShowCruceModal(false); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setEditandoCruce(null);
-            };
-            const eliminarCruce = (idx) => { window.mostrarConfirmacion('Eliminar', '¿Eliminar este cruce?', () => setCrucesFinales(crucesFinales.filter((_, i) => i !== idx))); };
+            <div style={{marginBottom: '40px'}}>
+                <div className="table-container">
+                    <table className="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Pos</th>
+                                <th>Equipo</th>
+                                <th title="Series Jugadas Terminadas (Serie completa de 270 pts)">SJT</th>
+                                <th title="Series Pendientes de Terminar (Suman menos de 270 pts)">SPT</th>
+                                <th title="Puntos Pendientes de Jugar (Faltantes para llegar a 270)">PPJ</th>
+                                <th title="Series Ganadas">SG</th>
+                                <th>Pts Totales</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {tablaGeneral.map((data, idx) => (
+                                <tr key={data.nombre} style={{
+                                    background: idx < 5 ? '#ecfdf5' : idx < 11 ? '#f8fafc' : 'white',
+                                    borderLeft: idx < 5 ? '4px solid #10b981' : idx < 11 ? '4px solid #3b82f6' : 'none'
+                                }}>
+                                    <td><strong>{idx + 1}</strong></td>
+                                    <td><strong>{data.nombre}</strong></td>
+                                    <td>{data.SJT}</td>
+                                    <td>{data.SPT}</td>
+                                    <td style={{color: data.PPJ > 0 ? '#b45309' : 'inherit', fontWeight: data.PPJ > 0 ? 'bold' : 'normal'}}>
+                                        {data.PPJ > 0 ? `+${data.PPJ}` : '0'}
+                                    </td>
+                                    <td><strong>{data.seriesGanadas}</strong></td>
+                                    <td>{data.puntosTotales}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div style={{display: 'flex', gap: '15px', marginTop: '10px', fontSize: '12px', color: '#64748b', flexWrap: 'wrap'}}>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}><span style={{width: '12px', height: '12px', background: '#10b981', display: 'inline-block', borderRadius: '2px'}}></span> Clasifican a Cuartos de Final (1° al 5°)</div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}><span style={{width: '12px', height: '12px', background: '#3b82f6', display: 'inline-block', borderRadius: '2px'}}></span> Juegan Octavos de Final (6° al 11°)</div>
+                </div>
+            </div>
 
-            const tablaGeneral = calcularPosiciones(equipos.map(e => e.nombre));
-
-            return (
+            {userRole !== 'jugador' && (
                 <div>
-                    <h2 style={{marginBottom: '20px', color: '#1e3c72'}}>Tabla de Posiciones Oficial V3</h2>
-                    
-                    <p style={{color: '#64748b', marginBottom: '20px', fontSize: '14px'}}>Ordenadas por Reglamento: 1° Series Ganadas (SG) | 2° Puntos Totales (Pts).</p>
+                    <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Cruces Adicionales</h3>
+                    <button className="btn btn-primary btn-responsive" onClick={() => { setEditandoCruce(null); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setShowCruceModal(true); }}>
+                        ➕ Agregar Cruce
+                    </button>
+                    {crucesFinales.length > 0 && (
+                        <div style={{marginTop: '20px'}}>
+                            {crucesFinales.map((cruce, idx) => {
+                                const pts1 = parseInt(cruce.resultado1, 10) || 0;
+                                const pts2 = parseInt(cruce.resultado2, 10) || 0;
+                                const suma = pts1 + pts2;
+                                const cerrada = suma >= 270;
+                                const faltan = Math.max(0, 270 - suma);
 
-                    <div style={{marginBottom: '40px'}}>
-                        <div className="table-container">
-                            <table className="stats-table">
-                                <thead>
-                                    <tr>
-                                        <th>Pos</th>
-                                        <th>Equipo</th>
-                                        <th title="Series Jugadas Terminadas">SJT</th>
-                                        <th title="Series Pendientes de Terminar">SPT</th>
-                                        <th title="Puntos Pendientes de Jugar">PPJ</th>
-                                        <th title="Series Ganadas">SG</th>
-                                        <th>Pts Totales</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {tablaGeneral.map((data, idx) => (
-                                        <tr key={data.nombre} style={{
-                                            background: idx < 5 ? '#ecfdf5' : idx < 11 ? '#f8fafc' : 'white',
-                                            borderLeft: idx < 5 ? '4px solid #10b981' : idx < 11 ? '4px solid #3b82f6' : 'none'
-                                        }}>
-                                            <td><strong>{idx + 1}</strong></td>
-                                            <td><strong>{data.nombre}</strong></td>
-                                            <td>{data.SJT}</td>
-                                            <td>{data.SPT}</td>
-                                            <td style={{color: data.PPJ > 0 ? '#b45309' : 'inherit', fontWeight: data.PPJ > 0 ? 'bold' : 'normal'}}>
-                                                {data.PPJ > 0 ? `+${data.PPJ}` : '0'}
-                                            </td>
-                                            <td><strong>{data.seriesGanadas}</strong></td>
-                                            <td>{data.puntosTotales}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div style={{display: 'flex', gap: '15px', marginTop: '10px', fontSize: '12px', color: '#64748b', flexWrap: 'wrap'}}>
-                            <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}><span style={{width: '12px', height: '12px', background: '#10b981', display: 'inline-block', borderRadius: '2px'}}></span> Clasifican a Cuartos de Final (1° al 5°)</div>
-                            <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}><span style={{width: '12px', height: '12px', background: '#3b82f6', display: 'inline-block', borderRadius: '2px'}}></span> Juegan Octavos de Final (6° al 11°)</div>
-                        </div>
-                    </div>
-
-                    {userRole !== 'jugador' && (
-                        <div>
-                            <h3 style={{marginBottom: '15px', color: '#1e3c72'}}>Cruces Adicionales</h3>
-                            <button className="btn btn-primary btn-responsive" onClick={() => { setEditandoCruce(null); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setShowCruceModal(true); }}>
-                                ➕ Agregar Cruce
-                            </button>
-                            {crucesFinales.length > 0 && (
-                                <div style={{marginTop: '20px'}}>
-                                    {crucesFinales.map((cruce, idx) => (
-                                        <div key={idx} className="flex-mobile-col" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: '2px solid #ddd', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
-                                            <div>
+                                return (
+                                    <div key={idx} className="flex-mobile-col" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '10px', border: cerrada ? '2px solid #10b981' : '2px dashed #f59e0b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px' }}>
+                                        <div>
+                                            <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
                                                 <strong>{cruce.tipo}</strong>
-                                                <div style={{marginTop: '8px'}}>{cruce.equipo1} <strong>{cruce.resultado1 || '0'}</strong> - <strong>{cruce.resultado2 || '0'}</strong> {cruce.equipo2}</div>
+                                                <span style={{fontSize: '11px', padding: '2px 8px', borderRadius: '10px', background: cerrada ? '#d1fae5' : '#fef3c7', color: cerrada ? '#065f46' : '#b45309', fontWeight: 'bold'}}>
+                                                    {cerrada ? '✓ Serie Terminada (270 pts)' : `⏳ Incompleta (${suma}/270 pts • Faltan ${faltan})`}
+                                                </span>
                                             </div>
-                                            <div style={{display: 'flex', gap: '10px'}}>
-                                                <button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => { setEditandoCruce(idx); setCruceActual(cruce); setShowCruceModal(true); }}>✏️</button>
-                                                <button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarCruce(idx)}>🗑️</button>
+                                            <div style={{marginTop: '8px', fontSize: '15px'}}>
+                                                {cruce.equipo1} <strong>{pts1}</strong> - <strong>{pts2}</strong> {cruce.equipo2}
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {showCruceModal && (
-                        <div className="modal" onClick={() => {}}>
-                            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                                <div className="modal-header">{editandoCruce !== null ? 'Editar Cruce' : 'Agregar Cruce'}</div>
-                                <div className="form-group">
-                                    <label>Tipo de Cruce</label>
-                                    <select value={cruceActual.tipo} onChange={(e) => setCruceActual({...cruceActual, tipo: e.target.value})}>
-                                        <option value="">Seleccionar...</option><option value="Fecha 1">Fecha 1</option><option value="Fecha 2">Fecha 2</option><option value="Fecha 3">Fecha 3</option><option value="Fecha 4">Fecha 4</option><option value="Octavos de Final">Octavos de Final</option><option value="Cuartos de Final">Cuartos de Final</option><option value="Semifinal">Semifinal</option><option value="Final">Final</option>
-                                    </select>
-                                </div>
-                                <div className="form-group"><label>Equipo 1</label><select value={cruceActual.equipo1} onChange={(e) => setCruceActual({...cruceActual, equipo1: e.target.value})}><option value="">Seleccionar...</option>{equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}</select></div>
-                                <div className="form-group"><label>Resultado Equipo 1</label><input type="number" value={cruceActual.resultado1} onChange={(e) => setCruceActual({...cruceActual, resultado1: e.target.value})} placeholder="Puntos"/></div>
-                                <div className="form-group"><label>Equipo 2</label><select value={cruceActual.equipo2} onChange={(e) => setCruceActual({...cruceActual, equipo2: e.target.value})}><option value="">Seleccionar...</option>{equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}</select></div>
-                                <div className="form-group"><label>Resultado Equipo 2</label><input type="number" value={cruceActual.resultado2} onChange={(e) => setCruceActual({...cruceActual, resultado2: e.target.value})} placeholder="Puntos"/></div>
-                                <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
-                                    <button className="btn btn-primary btn-responsive" onClick={agregarCruce}>{editandoCruce !== null ? 'Actualizar' : 'Guardar'}</button>
-                                    <button className="btn btn-danger btn-responsive" onClick={() => { setShowCruceModal(false); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setEditandoCruce(null); }}>Cancelar</button>
-                                </div>
-                            </div>
+                                        <div style={{display: 'flex', gap: '10px'}}>
+                                            <button className="btn btn-primary" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => { setEditandoCruce(idx); setCruceActual(cruce); setShowCruceModal(true); }}>✏️</button>
+                                            <button className="btn btn-danger" style={{padding: '6px 12px', fontSize: '14px', margin: '0'}} onClick={() => eliminarCruce(idx)}>🗑️</button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
-            );
-        }
+            )}
 
+            {showCruceModal && (
+                <div className="modal" onClick={() => {}}>
+                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">{editandoCruce !== null ? 'Editar Cruce' : 'Agregar Cruce'}</div>
+                        <div className="form-group">
+                            <label>Tipo de Cruce</label>
+                            <select value={cruceActual.tipo} onChange={(e) => setCruceActual({...cruceActual, tipo: e.target.value})}>
+                                <option value="">Seleccionar...</option>
+                                <option value="Fecha 1">Fecha 1</option>
+                                <option value="Fecha 2">Fecha 2</option>
+                                <option value="Fecha 3">Fecha 3</option>
+                                <option value="Fecha 4">Fecha 4</option>
+                                <option value="Octavos de Final">Octavos de Final</option>
+                                <option value="Cuartos de Final">Cuartos de Final</option>
+                                <option value="Semifinal">Semifinal</option>
+                                <option value="Final">Final</option>
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Equipo 1</label>
+                            <select value={cruceActual.equipo1} onChange={(e) => setCruceActual({...cruceActual, equipo1: e.target.value})}>
+                                <option value="">Seleccionar...</option>
+                                {equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Resultado Equipo 1</label>
+                            <input type="number" value={cruceActual.resultado1} onChange={(e) => setCruceActual({...cruceActual, resultado1: e.target.value})} placeholder="Puntos"/>
+                        </div>
+                        <div className="form-group">
+                            <label>Equipo 2</label>
+                            <select value={cruceActual.equipo2} onChange={(e) => setCruceActual({...cruceActual, equipo2: e.target.value})}>
+                                <option value="">Seleccionar...</option>
+                                {equipos.map((eq, idx) => (<option key={idx} value={eq.nombre}>{eq.nombre}</option>))}
+                            </select>
+                        </div>
+                        <div className="form-group">
+                            <label>Resultado Equipo 2</label>
+                            <input type="number" value={cruceActual.resultado2} onChange={(e) => setCruceActual({...cruceActual, resultado2: e.target.value})} placeholder="Puntos"/>
+                        </div>
+                        <div className="flex-mobile-col" style={{display: 'flex', gap: '10px', marginTop: '20px'}}>
+                            <button className="btn btn-primary btn-responsive" onClick={agregarCruce}>{editandoCruce !== null ? 'Actualizar' : 'Guardar'}</button>
+                            <button className="btn btn-danger btn-responsive" onClick={() => { setShowCruceModal(false); setCruceActual({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' }); setEditandoCruce(null); }}>Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
         function EstadisticasTab({ calcularEstadisticas }) {
             const stats = calcularEstadisticas();
             
