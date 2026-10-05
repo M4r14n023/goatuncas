@@ -2706,24 +2706,36 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                     if (tabla[cruce.equipo1] && tabla[cruce.equipo2]) {
                         const pts1 = parseInt(cruce.resultado1) || 0; 
                         const pts2 = parseInt(cruce.resultado2) || 0;
+                        const sumaPuntos = pts1 + pts2;
+
                         if (pts1 > 0 || pts2 > 0) {
                             tabla[cruce.equipo1].partidos++; 
                             tabla[cruce.equipo1].puntosFavor += pts1; 
                             tabla[cruce.equipo1].puntosContra += pts2; 
                             tabla[cruce.equipo1].puntosTotales += pts1;
-                            tabla[cruce.equipo1].SJT++; // Se asumen terminados al ser manuales
                             
                             tabla[cruce.equipo2].partidos++; 
                             tabla[cruce.equipo2].puntosFavor += pts2; 
                             tabla[cruce.equipo2].puntosContra += pts1; 
                             tabla[cruce.equipo2].puntosTotales += pts2;
-                            tabla[cruce.equipo2].SJT++;
                             
                             if (pts1 >= 140) tabla[cruce.equipo1].seriesGanadas++; 
                             else if (pts2 >= 140) tabla[cruce.equipo2].seriesGanadas++;
 
                             tabla[cruce.equipo1].diferencia = tabla[cruce.equipo1].puntosFavor - tabla[cruce.equipo1].puntosContra; 
                             tabla[cruce.equipo2].diferencia = tabla[cruce.equipo2].puntosFavor - tabla[cruce.equipo2].puntosContra;
+
+                            // LÓGICA DE SERIE COMPLETA (270 PTS) O PENDIENTE
+                            if (sumaPuntos >= 270) {
+                                tabla[cruce.equipo1].SJT++;
+                                tabla[cruce.equipo2].SJT++;
+                            } else {
+                                const puntosPendientes = Math.max(0, 270 - sumaPuntos);
+                                tabla[cruce.equipo1].SPT++;
+                                tabla[cruce.equipo2].SPT++;
+                                tabla[cruce.equipo1].PPJ += puntosPendientes;
+                                tabla[cruce.equipo2].PPJ += puntosPendientes;
+                            }
                         }
                     }
                 });
