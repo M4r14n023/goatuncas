@@ -2625,7 +2625,7 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
     );
 }
 
-        function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales }) {
+   function TablasTab({ userRole, equipos, fechas, resultados, crucesFinales, setCrucesFinales }) {
     const [showCruceModal, setShowCruceModal] = useState(false);
     const [cruceActual, setCruceActual] = useState({ tipo: '', equipo1: '', equipo2: '', resultado1: '', resultado2: '' });
     const [editandoCruce, setEditandoCruce] = useState(null);
@@ -2642,7 +2642,7 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                 tabla[nombreLimpio] = { 
                     nombre: nombreLimpio, partidos: 0, seriesGanadas: 0, perdidos: 0, 
                     puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, 
-                    SJT: 0, SPT: 0, PPJ: 0,
+                    SJT: 0, SPT: 0, PPJ: 0, partPendientes: 0,
                     originalIndex: index 
                 }; 
             }
@@ -2657,6 +2657,7 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                 let puntosGOAT = 0; 
                 let puntosRival = 0;
                 let puntosPendientes = 0;
+                let partidosPendientesCount = 0;
                 let estaTerminada = true;
                 
                 fecha.partidos.forEach(partido => {
@@ -2672,12 +2673,14 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                     } else {
                         estaTerminada = false;
                         puntosPendientes += puntos;
+                        partidosPendientesCount++;
                     }
                 });
 
                 if (fecha.isClosed) {
                     estaTerminada = true;
                     puntosPendientes = 0;
+                    partidosPendientesCount = 0;
                 }
                 
                 if (puntosGOAT > 0 || puntosRival > 0 || fecha.isClosed || puntosPendientes > 0) {
@@ -2703,12 +2706,14 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                         tabla[rival].SPT++;
                         tabla['GOAT'].PPJ += puntosPendientes;
                         tabla[rival].PPJ += puntosPendientes;
+                        tabla['GOAT'].partPendientes += partidosPendientesCount;
+                        tabla[rival].partPendientes += partidosPendientesCount;
                     }
                 }
             }
         });
 
-        // 2. Procesar cruces adicionales entre los demás equipos
+        // 2. Procesar cruces adicionales entre los demás equipos (Fórmula unificada)
         crucesFinales.forEach(cruce => {
             const eq1 = (cruce.equipo1 || '').trim();
             const eq2 = (cruce.equipo2 || '').trim();
@@ -2728,23 +2733,27 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                     tabla[eq2].puntosFavor += pts2; 
                     tabla[eq2].puntosContra += pts1; 
                     tabla[eq2].puntosTotales += pts2;
-                    
-                    if (pts1 >= 140) tabla[eq1].seriesGanadas++; 
-                    else if (pts2 >= 140) tabla[eq2].seriesGanadas++;
 
                     tabla[eq1].diferencia = tabla[eq1].puntosFavor - tabla[eq1].puntosContra; 
                     tabla[eq2].diferencia = tabla[eq2].puntosFavor - tabla[eq2].puntosContra;
 
-                    // Deducción sobre los 270 puntos totales reglamentarios
                     if (sumaPuntos >= 270) {
+                        // SERIE CERRADA
                         tabla[eq1].SJT++;
                         tabla[eq2].SJT++;
+                        if (pts1 >= 140) tabla[eq1].seriesGanadas++; 
+                        else if (pts2 >= 140) tabla[eq2].seriesGanadas++;
                     } else {
+                        // SERIE PENDIENTE DE COMPLETAR
                         const puntosPendientes = Math.max(0, 270 - sumaPuntos);
+                        const partidosPendientes = Math.max(0, 26 - Math.floor(sumaPuntos / 10));
+
                         tabla[eq1].SPT++;
                         tabla[eq2].SPT++;
                         tabla[eq1].PPJ += puntosPendientes;
                         tabla[eq2].PPJ += puntosPendientes;
+                        tabla[eq1].partPendientes += partidosPendientes;
+                        tabla[eq2].partPendientes += partidosPendientes;
                     }
                 }
             }
@@ -2812,7 +2821,7 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                                     <td>{data.SJT}</td>
                                     <td>{data.SPT}</td>
                                     <td style={{color: data.PPJ > 0 ? '#b45309' : 'inherit', fontWeight: data.PPJ > 0 ? 'bold' : 'normal'}}>
-                                        {data.PPJ > 0 ? `+${data.PPJ}` : '0'}
+                                        {data.PPJ > 0 ? `+${data.PPJ} (${data.partPendientes} part.)` : '0'}
                                     </td>
                                     <td><strong>{data.seriesGanadas}</strong></td>
                                     <td>{data.puntosTotales}</td>
