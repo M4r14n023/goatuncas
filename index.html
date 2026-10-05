@@ -2635,7 +2635,12 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
             const calcularPosiciones = (filtroEquipos) => {
                 const tabla = {};
                 filtroEquipos.forEach((equipo, index) => { 
-                    if (equipo) tabla[equipo] = { nombre: equipo, partidos: 0, seriesGanadas: 0, perdidos: 0, puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, originalIndex: index }; 
+                    if (equipo) tabla[equipo] = { 
+                        nombre: equipo, partidos: 0, seriesGanadas: 0, perdidos: 0, 
+                        puntosFavor: 0, puntosContra: 0, diferencia: 0, puntosTotales: 0, 
+                        SJT: 0, SPT: 0, PPJ: 0, // <-- NUEVAS ESTADÍSTICAS
+                        originalIndex: index 
+                    }; 
                 });
 
                 fechas.forEach((fecha, fechaIdx) => {
@@ -2644,20 +2649,31 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                     const rival = fecha.rival;
                     if (tabla['GOAT'] && tabla[rival]) {
                         let puntosGOAT = 0; let puntosRival = 0;
+                        let puntosPendientes = 0;
+                        let estaTerminada = true;
                         
                         fecha.partidos.forEach(partido => {
-                            if ((partido.jugadores && partido.jugadores.length > 0) || partido.wo) {
-                                const key = `${fechaIdx}-${partido.id}`; 
-                                
-                                if (fecha.isClosed || resultados.hasOwnProperty(key) || partido.wo) {
+                            const key = `${fechaIdx}-${partido.id}`; 
+                            const resuelto = fecha.isClosed || resultados.hasOwnProperty(key) || partido.wo;
+                            const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
+
+                            if (resuelto) {
+                                if ((partido.jugadores && partido.jugadores.length > 0) || partido.wo) {
                                     const ganado = partido.wo === 'goat' ? true : (partido.wo === 'rival' || partido.wo === true ? false : (resultados[key] || false)); 
-                                    const puntos = (fecha.partidoBonus === partido.id) ? 20 : 10;
                                     if (ganado) puntosGOAT += puntos; else puntosRival += puntos;
                                 }
+                            } else {
+                                estaTerminada = false;
+                                puntosPendientes += puntos;
                             }
                         });
+
+                        if (fecha.isClosed) {
+                            estaTerminada = true;
+                            puntosPendientes = 0; // Si se cerró la fecha, se descartan los pendientes
+                        }
                         
-                        if (puntosGOAT > 0 || puntosRival > 0 || fecha.isClosed) {
+                        if (puntosGOAT > 0 || puntosRival > 0 || fecha.isClosed || puntosPendientes > 0) {
                             tabla['GOAT'].partidos++; 
                             tabla['GOAT'].puntosFavor += puntosGOAT; 
                             tabla['GOAT'].puntosContra += puntosRival; 
@@ -2671,6 +2687,17 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                             tabla[rival].puntosTotales += puntosRival;
                             if (puntosRival >= 140) tabla[rival].seriesGanadas++; 
                             tabla[rival].diferencia = tabla[rival].puntosFavor - tabla[rival].puntosContra;
+
+                            // ASIGNACIÓN DE SERIES Y PUNTOS PENDIENTES
+                            if (estaTerminada) {
+                                tabla['GOAT'].SJT++;
+                                tabla[rival].SJT++;
+                            } else {
+                                tabla['GOAT'].SPT++;
+                                tabla[rival].SPT++;
+                                tabla['GOAT'].PPJ += puntosPendientes;
+                                tabla[rival].PPJ += puntosPendientes;
+                            }
                         }
                     }
                 });
@@ -2684,11 +2711,13 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                             tabla[cruce.equipo1].puntosFavor += pts1; 
                             tabla[cruce.equipo1].puntosContra += pts2; 
                             tabla[cruce.equipo1].puntosTotales += pts1;
+                            tabla[cruce.equipo1].SJT++; // Se asumen terminados al ser manuales
                             
                             tabla[cruce.equipo2].partidos++; 
                             tabla[cruce.equipo2].puntosFavor += pts2; 
                             tabla[cruce.equipo2].puntosContra += pts1; 
                             tabla[cruce.equipo2].puntosTotales += pts2;
+                            tabla[cruce.equipo2].SJT++;
                             
                             if (pts1 >= 140) tabla[cruce.equipo1].seriesGanadas++; 
                             else if (pts2 >= 140) tabla[cruce.equipo2].seriesGanadas++;
@@ -2726,21 +2755,38 @@ function PartidoCard({ partido, fechaIndex, fecha, actualizarJugadores, contarPa
                     <div style={{marginBottom: '40px'}}>
                         <div className="table-container">
                             <table className="stats-table">
-                                <thead><tr><th>Pos</th><th>Equipo</th><th>SG</th><th>Pts Totales</th></tr></thead>
+                                <thead>
+                                    <tr>
+                                        <th>Pos</th>
+                                        <th>Equipo</th>
+                                        <th title="Series Jugadas Terminadas">SJT</th>
+                                        <th title="Series Pendientes de Terminar">SPT</th>
+                                        <th title="Puntos Pendientes de Jugar">PPJ</th>
+                                        <th title="Series Ganadas">SG</th>
+                                        <th>Pts Totales</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     {tablaGeneral.map((data, idx) => (
                                         <tr key={data.nombre} style={{
                                             background: idx < 5 ? '#ecfdf5' : idx < 11 ? '#f8fafc' : 'white',
                                             borderLeft: idx < 5 ? '4px solid #10b981' : idx < 11 ? '4px solid #3b82f6' : 'none'
                                         }}>
-                                            <td><strong>{idx + 1}</strong></td><td><strong>{data.nombre}</strong></td>
-                                            <td><strong>{data.seriesGanadas}</strong></td><td>{data.puntosTotales}</td>
+                                            <td><strong>{idx + 1}</strong></td>
+                                            <td><strong>{data.nombre}</strong></td>
+                                            <td>{data.SJT}</td>
+                                            <td>{data.SPT}</td>
+                                            <td style={{color: data.PPJ > 0 ? '#b45309' : 'inherit', fontWeight: data.PPJ > 0 ? 'bold' : 'normal'}}>
+                                                {data.PPJ > 0 ? `+${data.PPJ}` : '0'}
+                                            </td>
+                                            <td><strong>{data.seriesGanadas}</strong></td>
+                                            <td>{data.puntosTotales}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                        <div style={{display: 'flex', gap: '15px', marginTop: '10px', fontSize: '12px', color: '#64748b'}}>
+                        <div style={{display: 'flex', gap: '15px', marginTop: '10px', fontSize: '12px', color: '#64748b', flexWrap: 'wrap'}}>
                             <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}><span style={{width: '12px', height: '12px', background: '#10b981', display: 'inline-block', borderRadius: '2px'}}></span> Clasifican a Cuartos de Final (1° al 5°)</div>
                             <div style={{display: 'flex', alignItems: 'center', gap: '5px'}}><span style={{width: '12px', height: '12px', background: '#3b82f6', display: 'inline-block', borderRadius: '2px'}}></span> Juegan Octavos de Final (6° al 11°)</div>
                         </div>
