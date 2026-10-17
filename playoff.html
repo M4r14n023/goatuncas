@@ -116,15 +116,15 @@
 
     <script type="text/babel">
         // 1. CONFIGURACIÓN FIREBASE
-const firebaseConfig = {
-    apiKey: "AIzaSy" + "CF7n8W4aKKEeK7T_mUhO5MJLuTeP-YQT8",
-    authDomain: "hub-universitario.firebaseapp.com",
-    databaseURL: "https://hub-universitario-default-rtdb.firebaseio.com",
-    projectId: "hub-universitario",
-    storageBucket: "hub-universitario.firebasestorage.app",
-    messagingSenderId: "642915679228",
-    appId: "1:642915679228:web:e6e48b25869d74c14cfe87"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSy" + "CF7n8W4aKKEeK7T_mUhO5MJLuTeP-YQT8",
+            authDomain: "hub-universitario.firebaseapp.com",
+            databaseURL: "https://hub-universitario-default-rtdb.firebaseio.com",
+            projectId: "hub-universitario",
+            storageBucket: "hub-universitario.firebasestorage.app",
+            messagingSenderId: "642915679228",
+            appId: "1:642915679228:web:e6e48b25869d74c14cfe87"
+        };
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
@@ -171,66 +171,112 @@ const firebaseConfig = {
 
         const { useState, useEffect } = React;
 
+        // GRILLAS OFICIALES ACTUALIZADAS (GRILLAS 1 A 7 SEGÚN MATRIZ DE PROGRAMACIÓN)
         const GRILLAS_AUTOMATICAS = {
             1: [
                 { id: 3, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 14, dia: 'sabado', hora: '09:00', pos: 2 },
                 { id: 7, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 16, dia: 'sabado', hora: '10:30', pos: 2 },
-                { id: 17, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 5, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 17, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 18, dia: 'sabado', hora: '12:00', pos: 2 },
                 { id: 19, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 20, dia: 'sabado', hora: '13:30', pos: 2 },
                 { id: 21, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '15:00', pos: 2 },
-                { id: 12, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 23, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '16:30', pos: 2 },
                 { id: 25, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
                 { id: 22, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 2, dia: 'domingo', hora: '09:00', pos: 2 },
                 { id: 13, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 4, dia: 'domingo', hora: '10:30', pos: 2 },
-                { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 6, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 5, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 6, dia: 'domingo', hora: '12:00', pos: 2 },
                 { id: 15, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 8, dia: 'domingo', hora: '13:30', pos: 2 },
                 { id: 9, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 10, dia: 'domingo', hora: '15:00', pos: 2 },
-                { id: 11, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 23, dia: 'domingo', hora: '16:30', pos: 2 }
+                { id: 11, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 12, dia: 'domingo', hora: '16:30', pos: 2 }
             ],
             2: [
-                { id: 3, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 4, dia: 'sabado', hora: '09:00', pos: 2 },
-                { id: 26, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 2, dia: 'sabado', hora: '10:30', pos: 2 },
-                { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
-                { id: 12, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 14, dia: 'sabado', hora: '13:30', pos: 2 },
-                { id: 7, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 16, dia: 'sabado', hora: '15:00', pos: 2 },
-                { id: 6, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 5, dia: 'sabado', hora: '16:30', pos: 2 },
-                { id: 9, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 1, dia: 'sabado', hora: '17:45', pos: 2 },
-                { id: 11, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 25, dia: 'domingo', hora: '09:00', pos: 2 },
-                { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '10:30', pos: 2 },
-                { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 19, dia: 'domingo', hora: '12:00', pos: 2 },
-                { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 15, dia: 'domingo', hora: '13:30', pos: 2 },
-                { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 23, dia: 'domingo', hora: '15:00', pos: 2 },
-                { id: 8, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 10, dia: 'domingo', hora: '16:30', pos: 2 }
-            ],
-            3: [
                 { id: 5, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 6, dia: 'sabado', hora: '09:00', pos: 2 },
                 { id: 9, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 8, dia: 'sabado', hora: '10:30', pos: 2 },
-                { id: 7, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 10, dia: 'sabado', hora: '12:00', pos: 2 },
-                { id: 11, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 12, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 15, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 10, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 11, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 23, dia: 'sabado', hora: '13:30', pos: 2 },
                 { id: 1, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 25, dia: 'sabado', hora: '15:00', pos: 2 },
                 { id: 3, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 4, dia: 'sabado', hora: '16:30', pos: 2 },
                 { id: 2, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
                 { id: 21, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '09:00', pos: 2 },
-                { id: 23, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 24, dia: 'domingo', hora: '10:30', pos: 2 },
-                { id: 15, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 14, dia: 'domingo', hora: '12:00', pos: 2 },
-                { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
-                { id: 20, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 18, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 24, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 7, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 14, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 18, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 20, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 12, dia: 'domingo', hora: '15:00', pos: 2 },
                 { id: 17, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 16, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            3: [
+                { id: 3, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 4, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 26, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 2, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 14, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 16, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 6, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 18, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 9, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 1, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 11, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 25, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 5, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 19, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 7, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 12, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 8, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 10, dia: 'domingo', hora: '16:30', pos: 2 }
             ],
             4: [
                 { id: 1, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 19, dia: 'sabado', hora: '09:00', pos: 2 },
                 { id: 25, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 3, dia: 'sabado', hora: '10:30', pos: 2 },
-                { id: 12, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 21, dia: 'sabado', hora: '12:00', pos: 2 },
-                { id: 5, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 11, dia: 'sabado', hora: '13:30', pos: 2 },
-                { id: 7, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 23, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 21, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 18, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 11, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '15:00', pos: 2 },
                 { id: 2, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 26, dia: 'sabado', hora: '16:30', pos: 2 },
                 { id: 4, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 17, dia: 'sabado', hora: '17:45', pos: 2 },
                 { id: 10, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 8, dia: 'domingo', hora: '09:00', pos: 2 },
-                { id: 15, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '10:30', pos: 2 },
-                { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 13, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 7, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 5, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 13, dia: 'domingo', hora: '12:00', pos: 2 },
                 { id: 6, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '13:30', pos: 2 },
                 { id: 14, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '15:00', pos: 2 },
-                { id: 20, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 23, dia: 'domingo', hora: '16:30', pos: 2 }
+                { id: 20, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 12, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            5: [
+                { id: 26, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 23, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 4, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 10, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 6, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 11, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 20, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 18, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 1, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 2, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 15, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 3, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 8, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 16, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 17, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 7, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 14, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 5, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 9, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 21, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 12, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 25, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            6: [
+                { id: 17, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 22, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 4, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 5, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 26, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 2, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 15, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 19, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 13, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 25, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 21, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 11, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 12, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 20, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 14, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 23, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 3, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 6, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 18, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 8, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 7, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 10, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            7: [
+                { id: 16, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 15, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 14, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 23, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 22, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 7, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 25, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 3, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 6, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 8, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 18, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 26, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 10, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 23, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 21, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 4, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 2, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 11, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 21, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 1, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 18, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 15, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 19, dia: 'domingo', hora: '16:30', pos: 2 }
             ]
         };
 
@@ -654,6 +700,9 @@ const firebaseConfig = {
                                             <option value="2">Grilla 2</option>
                                             <option value="3">Grilla 3</option>
                                             <option value="4">Grilla 4</option>
+                                            <option value="5">Grilla 5</option>
+                                            <option value="6">Grilla 6</option>
+                                            <option value="7">Grilla 7</option>
                                         </select>
                                     </div>
                                     <button className="btn btn-warning" onClick={aplicarGrillaAutomatica} disabled={!grillaSeleccionada} style={{margin: 0, background: '#d4af37', color: '#000', fontWeight: 'bold'}}>
