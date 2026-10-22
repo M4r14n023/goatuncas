@@ -373,6 +373,18 @@
                 savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
             };
 
+            const resetearEstadoPartido = (matchId) => {
+                if (userRole === 'jugador') return;
+                mostrarConfirmacion('Resetear Partido', '¿Querés volver este partido a estado pendiente? Se quitará el estado "En cancha" y los parciales.', () => {
+                    const pData = cruce.partidos?.[matchId] || {};
+                    const nuevosPartidos = { 
+                        ...cruce.partidos, 
+                        [matchId]: { ...pData, estado: undefined, parciales: undefined, resultado: null } 
+                    };
+                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                });
+            };
+
             const setParcialSet = (matchId, valor) => {
                 if (userRole === 'jugador') return;
                 const pData = cruce.partidos?.[matchId] || {};
@@ -640,11 +652,12 @@
                                                                 )}
                                                             </div>
                                                             {estaEnCancha && (
-                                                                <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
-                                                                    <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
-                                                                    <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
-                                                                </div>
-                                                            )}
+    <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
+        <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: '#6b7280', color:'white'}} onClick={() => resetearEstadoPartido(p.id)}>↩️ Reset</button>
+        <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
+        <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
+    </div>
+)}
                                                         </div>
                                                     )
                                                 )}
