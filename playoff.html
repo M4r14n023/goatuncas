@@ -187,118 +187,118 @@
         const { useState, useEffect } = React;
 
         // GRILLAS OFICIALES ACTUALIZADAS (GRILLAS 1 A 7 SEGÚN MATRIZ DE PROGRAMACIÓN)
-        const GRILLAS_AUTOMATICAS = {
-    // GRILLA 1 (Foto Columna B-C)
+       const GRILLAS_AUTOMATICAS = {
+    // GRILLA 1
     1: [
-        { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 14, dia: 'sabado', hora: '09:00', pos: 2 }, // Dobles 5ta / Mixto A
-        { id: 15, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 16, dia: 'sabado', hora: '10:30', pos: 2 }, // Dobles 2da / Damas B
-        { id: 17, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 18, dia: 'sabado', hora: '12:00', pos: 2 }, // Dobles 4ta/5ta / Dobles 3ra
-        { id: 19, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 20, dia: 'sabado', hora: '13:30', pos: 2 }, // Mixto B / Singles 2da
-        { id: 21, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '15:00', pos: 2 },  // Damas A / Damas C
-        { id: 23, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '16:30', pos: 2 }, // Dobles 4ta / Singles 5ta
-        { id: 25, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 26, dia: 'sabado', hora: '17:45', pos: 2 }, // Dobles 2da/3ra / Damas B/C
-        { id: 22, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 2, dia: 'domingo', hora: '09:00', pos: 2 },  // Damas C / Dobles 3ra/4ta
-        { id: 13, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 4, dia: 'domingo', hora: '10:30', pos: 2 },  // Dobles 5ta / Mixto D
-        { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 6, dia: 'domingo', hora: '12:00', pos: 2 },  // Dobles 3ra / Singles 4ta
-        { id: 15, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 8, dia: 'domingo', hora: '13:30', pos: 2 },  // Dobles 2da / Mixto C
-        { id: 9, dia: 'domingo', hora: '15:00', pos: 1 },  { id: 10, dia: 'domingo', hora: '15:00', pos: 2 }, // Damas A/B / Singles 3ra
-        { id: 11, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 23, dia: 'domingo', hora: '16:30', pos: 2 } // Mixto E / Dobles 4ta
+        { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 14, dia: 'sabado', hora: '09:00', pos: 2 },
+        { id: 15, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 16, dia: 'sabado', hora: '10:30', pos: 2 },
+        { id: 17, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 18, dia: 'sabado', hora: '12:00', pos: 2 },
+        { id: 19, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 20, dia: 'sabado', hora: '13:30', pos: 2 },
+        { id: 21, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '15:00', pos: 2 },
+        { id: 23, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '16:30', pos: 2 },
+        { id: 25, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
+        { id: 22, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 2, dia: 'domingo', hora: '09:00', pos: 2 },
+        { id: 13, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 4, dia: 'domingo', hora: '10:30', pos: 2 },
+        { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 6, dia: 'domingo', hora: '12:00', pos: 2 },
+        { id: 7, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 8, dia: 'domingo', hora: '13:30', pos: 2 },
+        { id: 9, dia: 'domingo', hora: '15:00', pos: 1 },  { id: 10, dia: 'domingo', hora: '15:00', pos: 2 },
+        { id: 11, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 12, dia: 'domingo', hora: '16:30', pos: 2 }
     ],
-    // GRILLA 2 (Foto Columna E-F)
+    // GRILLA 2
     2: [
-        { id: 18, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 6, dia: 'sabado', hora: '09:00', pos: 2 },  // Dobles 3ra / Singles 4ta
-        { id: 9, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 8, dia: 'sabado', hora: '10:30', pos: 2 },  // Damas A/B / Mixto C
-        { id: 15, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 10, dia: 'sabado', hora: '12:00', pos: 2 }, // Dobles 2da / Singles 3ra
-        { id: 11, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 23, dia: 'sabado', hora: '13:30', pos: 2 }, // Mixto E / Dobles 4ta
-        { id: 1, dia: 'sabado', hora: '15:00', pos: 1 },  { id: 25, dia: 'sabado', hora: '15:00', pos: 2 }, // Damas C / Dobles 2da/3ra
-        { id: 13, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 4, dia: 'sabado', hora: '16:30', pos: 2 },  // Dobles 5ta / Mixto D
-        { id: 2, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 26, dia: 'sabado', hora: '17:45', pos: 2 }, // Dobles 3ra/4ta / Damas B/C
-        { id: 21, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '09:00', pos: 2 },// Damas A / Damas C
-        { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 24, dia: 'domingo', hora: '10:30', pos: 2 },// Dobles 4ta/5ta / Singles 5ta
-        { id: 15, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 14, dia: 'domingo', hora: '12:00', pos: 2 },// Dobles 2da / Mixto A
-        { id: 3, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },// Dobles 5ta / Mixto B
-        { id: 20, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 18, dia: 'domingo', hora: '15:00', pos: 2 },// Singles 2da / Dobles 3ra
-        { id: 17, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 16, dia: 'domingo', hora: '16:30', pos: 2 } // Dobles 4ta/5ta / Damas B
+        { id: 18, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 6, dia: 'sabado', hora: '09:00', pos: 2 },
+        { id: 9, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 8, dia: 'sabado', hora: '10:30', pos: 2 },
+        { id: 15, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 10, dia: 'sabado', hora: '12:00', pos: 2 },
+        { id: 11, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 23, dia: 'sabado', hora: '13:30', pos: 2 },
+        { id: 1, dia: 'sabado', hora: '15:00', pos: 1 },  { id: 25, dia: 'sabado', hora: '15:00', pos: 2 },
+        { id: 13, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 4, dia: 'sabado', hora: '16:30', pos: 2 },
+        { id: 2, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
+        { id: 21, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '09:00', pos: 2 },
+        { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 24, dia: 'domingo', hora: '10:30', pos: 2 },
+        { id: 7, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 14, dia: 'domingo', hora: '12:00', pos: 2 },
+        { id: 3, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
+        { id: 20, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 5, dia: 'domingo', hora: '15:00', pos: 2 },
+        { id: 12, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 16, dia: 'domingo', hora: '16:30', pos: 2 }
     ],
-    // GRILLA 3 (Foto Columna H-I)
+    // GRILLA 3
     3: [
-        { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 4, dia: 'sabado', hora: '09:00', pos: 2 },  // Dobles 5ta / Mixto D
-        { id: 26, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 2, dia: 'sabado', hora: '10:30', pos: 2 },  // Damas B/C / Dobles 3ra/4ta
-        { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 }, // Singles 2da / Singles 5ta
-        { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 14, dia: 'sabado', hora: '13:30', pos: 2 }, // Dobles 4ta / Mixto A
-        { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 16, dia: 'sabado', hora: '15:00', pos: 2 }, // Dobles 2da / Damas B
-        { id: 6, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 18, dia: 'sabado', hora: '16:30', pos: 2 }, // Singles 4ta / Dobles 3ra
-        { id: 9, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 1, dia: 'sabado', hora: '17:45', pos: 2 },  // Damas A/B / Damas C
-        { id: 11, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 25, dia: 'domingo', hora: '09:00', pos: 2 },// Mixto E / Dobles 2da/3ra
-        { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '10:30', pos: 2 },// Dobles 4ta/5ta / Damas C
-        { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 19, dia: 'domingo', hora: '12:00', pos: 2 },// Dobles 3ra / Mixto B
-        { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 15, dia: 'domingo', hora: '13:30', pos: 2 },// Dobles 5ta / Dobles 2da
-        { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 23, dia: 'domingo', hora: '15:00', pos: 2 },// Damas A / Dobles 4ta
-        { id: 8, dia: 'domingo', hora: '16:30', pos: 1 },  { id: 10, dia: 'domingo', hora: '16:30', pos: 2 } // Mixto C / Singles 3ra
+        { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 4, dia: 'sabado', hora: '09:00', pos: 2 },
+        { id: 26, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 2, dia: 'sabado', hora: '10:30', pos: 2 },
+        { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
+        { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 14, dia: 'sabado', hora: '13:30', pos: 2 },
+        { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 16, dia: 'sabado', hora: '15:00', pos: 2 },
+        { id: 6, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 18, dia: 'sabado', hora: '16:30', pos: 2 },
+        { id: 9, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 1, dia: 'sabado', hora: '17:45', pos: 2 },
+        { id: 11, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 25, dia: 'domingo', hora: '09:00', pos: 2 },
+        { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '10:30', pos: 2 },
+        { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 19, dia: 'domingo', hora: '12:00', pos: 2 },
+        { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 7, dia: 'domingo', hora: '13:30', pos: 2 },
+        { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 12, dia: 'domingo', hora: '15:00', pos: 2 },
+        { id: 8, dia: 'domingo', hora: '16:30', pos: 1 },  { id: 10, dia: 'domingo', hora: '16:30', pos: 2 }
     ],
-    // GRILLA 4 (Foto Columna K-L)
+    // GRILLA 4
     4: [
-        { id: 1, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 19, dia: 'sabado', hora: '09:00', pos: 2 },  // Damas C / Mixto B
-        { id: 25, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 3, dia: 'sabado', hora: '10:30', pos: 2 },  // Dobles 2da/3ra / Dobles 5ta
-        { id: 23, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 21, dia: 'sabado', hora: '12:00', pos: 2 }, // Dobles 4ta / Damas A
-        { id: 18, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 11, dia: 'sabado', hora: '13:30', pos: 2 }, // Dobles 3ra / Mixto E
-        { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '15:00', pos: 2 }, // Dobles 2da / Singles 5ta
-        { id: 2, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 26, dia: 'sabado', hora: '16:30', pos: 2 }, // Dobles 3ra/4ta / Damas B/C
-        { id: 4, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 17, dia: 'sabado', hora: '17:45', pos: 2 }, // Mixto D / Dobles 4ta/5ta
-        { id: 10, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 8, dia: 'domingo', hora: '09:00', pos: 2 },  // Singles 3ra / Mixto C
-        { id: 15, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '10:30', pos: 2 },  // Dobles 2da / Damas A/B
-        { id: 18, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 13, dia: 'domingo', hora: '12:00', pos: 2 }, // Dobles 3ra / Dobles 5ta
-        { id: 6, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 22, dia: 'domingo', hora: '13:30', pos: 2 }, // Singles 4ta / Damas C
-        { id: 14, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '15:00', pos: 2 }, // Mixto A / Damas B
-        { id: 20, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 23, dia: 'domingo', hora: '16:30', pos: 2 }  // Singles 2da / Dobles 4ta
+        { id: 1, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 19, dia: 'sabado', hora: '09:00', pos: 2 },
+        { id: 25, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 3, dia: 'sabado', hora: '10:30', pos: 2 },
+        { id: 23, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 21, dia: 'sabado', hora: '12:00', pos: 2 },
+        { id: 18, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 11, dia: 'sabado', hora: '13:30', pos: 2 },
+        { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '15:00', pos: 2 },
+        { id: 2, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 26, dia: 'sabado', hora: '16:30', pos: 2 },
+        { id: 4, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 17, dia: 'sabado', hora: '17:45', pos: 2 },
+        { id: 10, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 8, dia: 'domingo', hora: '09:00', pos: 2 },
+        { id: 7, dia: 'domingo', hora: '10:30', pos: 1 },  { id: 9, dia: 'domingo', hora: '10:30', pos: 2 },
+        { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 13, dia: 'domingo', hora: '12:00', pos: 2 },
+        { id: 6, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 22, dia: 'domingo', hora: '13:30', pos: 2 },
+        { id: 14, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '15:00', pos: 2 },
+        { id: 20, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 12, dia: 'domingo', hora: '16:30', pos: 2 }
     ],
-    // GRILLA 5 (Foto Columna N-O)
+    // GRILLA 5
     5: [
-        { id: 26, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 23, dia: 'sabado', hora: '09:00', pos: 2 },  // Damas B/C / Dobles 4ta
-        { id: 4, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 10, dia: 'sabado', hora: '10:30', pos: 2 },  // Mixto D / Singles 3ra
-        { id: 6, dia: 'sabado', hora: '12:00', pos: 1 },  { id: 11, dia: 'sabado', hora: '12:00', pos: 2 },  // Singles 4ta / Mixto E
-        { id: 20, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 18, dia: 'sabado', hora: '13:30', pos: 2 }, // Singles 2da / Dobles 3ra
-        { id: 1, dia: 'sabado', hora: '15:00', pos: 1 },  { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },   // Damas C / Damas A/B
-        { id: 2, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 15, dia: 'sabado', hora: '16:30', pos: 2 },  // Dobles 3ra/4ta / Dobles 2da
-        { id: 3, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 8, dia: 'sabado', hora: '17:45', pos: 2 },   // Dobles 5ta / Mixto C
-        { id: 16, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 17, dia: 'domingo', hora: '09:00', pos: 2 },// Damas B / Dobles 4ta/5ta
-        { id: 15, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 14, dia: 'domingo', hora: '10:30', pos: 2 },// Dobles 2da / Mixto A
-        { id: 13, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },// Dobles 5ta / Damas C
-        { id: 18, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },// Dobles 3ra / Mixto B
-        { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 24, dia: 'domingo', hora: '15:00', pos: 2 },// Damas A / Singles 5ta
-        { id: 23, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 25, dia: 'domingo', hora: '16:30', pos: 2 } // Dobles 4ta / Dobles 2da/3ra
+        { id: 26, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 23, dia: 'sabado', hora: '09:00', pos: 2 },
+        { id: 4, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 10, dia: 'sabado', hora: '10:30', pos: 2 },
+        { id: 6, dia: 'sabado', hora: '12:00', pos: 1 },  { id: 11, dia: 'sabado', hora: '12:00', pos: 2 },
+        { id: 20, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 18, dia: 'sabado', hora: '13:30', pos: 2 },
+        { id: 1, dia: 'sabado', hora: '15:00', pos: 1 },  { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },
+        { id: 2, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 15, dia: 'sabado', hora: '16:30', pos: 2 },
+        { id: 3, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 8, dia: 'sabado', hora: '17:45', pos: 2 },
+        { id: 16, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 17, dia: 'domingo', hora: '09:00', pos: 2 },
+        { id: 7, dia: 'domingo', hora: '10:30', pos: 1 },  { id: 14, dia: 'domingo', hora: '10:30', pos: 2 },
+        { id: 13, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },
+        { id: 5, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
+        { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 24, dia: 'domingo', hora: '15:00', pos: 2 },
+        { id: 12, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 25, dia: 'domingo', hora: '16:30', pos: 2 }
     ],
-    // GRILLA 6 (Foto Columna Q-R)
+    // GRILLA 6
     6: [
-        { id: 17, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '09:00', pos: 2 },   // Dobles 4ta/5ta / Damas C
-        { id: 4, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 18, dia: 'sabado', hora: '10:30', pos: 2 },  // Mixto D / Dobles 3ra
-        { id: 26, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 }, // Damas B/C / Singles 5ta
-        { id: 2, dia: 'sabado', hora: '13:30', pos: 1 },  { id: 15, dia: 'sabado', hora: '13:30', pos: 2 },  // Dobles 3ra/4ta / Dobles 2da
-        { id: 19, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 13, dia: 'sabado', hora: '15:00', pos: 2 }, // Mixto B / Dobles 5ta
-        { id: 25, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 21, dia: 'sabado', hora: '16:30', pos: 2 }, // Dobles 2da/3ra / Damas A
-        { id: 11, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 23, dia: 'sabado', hora: '17:45', pos: 2 }, // Mixto E / Dobles 4ta
-        { id: 20, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '09:00', pos: 2 },// Singles 2da / Damas B
-        { id: 14, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 23, dia: 'domingo', hora: '10:30', pos: 2 },// Mixto A / Dobles 4ta
-        { id: 3, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },// Dobles 5ta / Damas C
-        { id: 6, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 18, dia: 'domingo', hora: '13:30', pos: 2 },// Singles 4ta / Dobles 3ra
-        { id: 8, dia: 'domingo', hora: '15:00', pos: 1 },  { id: 15, dia: 'domingo', hora: '15:00', pos: 2 },// Mixto C / Dobles 2da
-        { id: 10, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '16:30', pos: 2 }  // Singles 3ra / Damas A/B
+        { id: 17, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '09:00', pos: 2 },
+        { id: 4, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 18, dia: 'sabado', hora: '10:30', pos: 2 },
+        { id: 26, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
+        { id: 2, dia: 'sabado', hora: '13:30', pos: 1 },  { id: 15, dia: 'sabado', hora: '13:30', pos: 2 },
+        { id: 19, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 13, dia: 'sabado', hora: '15:00', pos: 2 },
+        { id: 25, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 21, dia: 'sabado', hora: '16:30', pos: 2 },
+        { id: 11, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 23, dia: 'sabado', hora: '17:45', pos: 2 },
+        { id: 20, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '09:00', pos: 2 },
+        { id: 14, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 7, dia: 'domingo', hora: '10:30', pos: 2 },
+        { id: 3, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },
+        { id: 6, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 5, dia: 'domingo', hora: '13:30', pos: 2 },
+        { id: 8, dia: 'domingo', hora: '15:00', pos: 1 },  { id: 12, dia: 'domingo', hora: '15:00', pos: 2 },
+        { id: 10, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '16:30', pos: 2 }
     ],
-    // GRILLA 7 (Foto Columna T-U)
+    // GRILLA 7
     7: [
-        { id: 16, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 15, dia: 'sabado', hora: '09:00', pos: 2 },  // Damas B / Dobles 2da
-        { id: 14, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 17, dia: 'sabado', hora: '10:30', pos: 2 }, // Mixto A / Dobles 4ta/5ta
-        { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '12:00', pos: 2 },  // Singles 2da / Damas C
-        { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '13:30', pos: 2 }, // Dobles 4ta / Singles 5ta
-        { id: 25, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },  // Dobles 2da/3ra / Damas A/B
-        { id: 3, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 6, dia: 'sabado', hora: '16:30', pos: 2 },  // Dobles 5ta / Singles 4ta
-        { id: 8, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 18, dia: 'sabado', hora: '17:45', pos: 2 }, // Mixto C / Dobles 3ra
-        { id: 26, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 10, dia: 'domingo', hora: '09:00', pos: 2 },// Damas B/C / Singles 3ra
-        { id: 23, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 13, dia: 'domingo', hora: '10:30', pos: 2 },// Dobles 4ta / Dobles 5ta
-        { id: 4, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 2, dia: 'domingo', hora: '12:00', pos: 2 },  // Mixto D / Dobles 3ra/4ta
-        { id: 11, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 21, dia: 'domingo', hora: '13:30', pos: 2 },// Mixto E / Damas A
-        { id: 22, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 18, dia: 'domingo', hora: '15:00', pos: 2 },// Damas C / Dobles 3ra
-        { id: 15, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 19, dia: 'domingo', hora: '16:30', pos: 2 } // Dobles 2da / Mixto B
+        { id: 16, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 15, dia: 'sabado', hora: '09:00', pos: 2 },
+        { id: 14, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 17, dia: 'sabado', hora: '10:30', pos: 2 },
+        { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '12:00', pos: 2 },
+        { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '13:30', pos: 2 },
+        { id: 25, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },
+        { id: 3, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 6, dia: 'sabado', hora: '16:30', pos: 2 },
+        { id: 8, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 18, dia: 'sabado', hora: '17:45', pos: 2 },
+        { id: 26, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 10, dia: 'domingo', hora: '09:00', pos: 2 },
+        { id: 12, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 13, dia: 'domingo', hora: '10:30', pos: 2 },
+        { id: 4, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 2, dia: 'domingo', hora: '12:00', pos: 2 },
+        { id: 11, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 21, dia: 'domingo', hora: '13:30', pos: 2 },
+        { id: 22, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 5, dia: 'domingo', hora: '15:00', pos: 2 },
+        { id: 7, dia: 'domingo', hora: '16:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '16:30', pos: 2 }
     ]
 };
 
