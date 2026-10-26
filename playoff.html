@@ -375,11 +375,16 @@
 
             const resetearEstadoPartido = (matchId) => {
                 if (userRole === 'jugador') return;
-                mostrarConfirmacion('Resetear Partido', '¿Querés volver este partido a estado pendiente? Se quitará el estado "En cancha" y los parciales.', () => {
+                mostrarConfirmacion('Resetear Partido', '¿Querés volver este partido a estado pendiente?', () => {
                     const pData = cruce.partidos?.[matchId] || {};
                     const nuevosPartidos = { 
                         ...cruce.partidos, 
-                        [matchId]: { ...pData, estado: undefined, parciales: undefined, resultado: null } 
+                        [matchId]: { 
+                            ...pData, 
+                            estado: null, 
+                            parciales: null, 
+                            resultado: null 
+                        } 
                     };
                     savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
                 });
@@ -523,22 +528,38 @@
             };
 
             const addPlayer = (matchId, nombre, reqCat, partidoNumJugadores) => {
-                const pData = cruce.partidos[matchId] || {};
-                const jugSelec = pData.jugadores || [];
-                if (jugSelec.length >= partidoNumJugadores) return;
-                
-                const op = getOpciones(reqCat, jugSelec).find(j => j.nombre === nombre);
-                if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { mostrarAlerta('Límite alcanzado', `${nombre} ya tiene 3 partidos en esta serie.`); return; }
-                
-                const nuevos = [...jugSelec, nombre];
-                savePlayoff(cruceId, { ...cruce, partidos: { ...cruce.partidos, [matchId]: { ...pData, jugadores: nuevos } } });
-            };
+                    const pData = cruce.partidos[matchId] || {};
+                    const jugSelec = pData.jugadores || [];
+                    if (jugSelec.length >= partidoNumJugadores) return;
+                    
+                    const op = getOpciones(reqCat, jugSelec).find(j => j.nombre === nombre);
+                    if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { mostrarAlerta('Límite alcanzado', `${nombre} ya tiene 3 partidos en esta serie.`); return; }
+                    
+                    const nuevos = [...jugSelec, nombre];
+                    const nuevosPartidos = {
+                        ...cruce.partidos,
+                        [matchId]: {
+                            ...pData,
+                            estado: pData.estado || null,
+                            jugadores: nuevos
+                        }
+                    };
+                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                };
 
-            const removePlayer = (matchId, idx) => {
-                const pData = cruce.partidos[matchId] || {};
-                const nuevos = (pData.jugadores || []).filter((_, i) => i !== idx);
-                savePlayoff(cruceId, { ...cruce, partidos: { ...cruce.partidos, [matchId]: { ...pData, jugadores: nuevos } } });
-            };
+                const removePlayer = (matchId, idx) => {
+                    const pData = cruce.partidos[matchId] || {};
+                    const nuevos = (pData.jugadores || []).filter((_, i) => i !== idx);
+                    const nuevosPartidos = {
+                        ...cruce.partidos,
+                        [matchId]: {
+                            ...pData,
+                            estado: pData.estado || null,
+                            jugadores: nuevos
+                        }
+                    };
+                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                };
 
             const generarPDF = () => {
                 const { jsPDF } = window.jspdf; const doc = new jsPDF();
@@ -1119,7 +1140,11 @@
                                 <div className="custom-alert-title">{confirmState.title}</div>
                                 <div className="custom-alert-msg">{confirmState.msg}</div>
                                 <div className="custom-alert-btns">
-                                    <button className="btn btn-primary" onClick={() => { if(confirmState.onConfirm) confirmState.onConfirm(); setConfirmState({show: false, title:'', msg:'', onConfirm:null}); }}>Confirmar</button>
+                                    <button className="btn btn-primary" onClick={() => { 
+                                        const cb = confirmState.onConfirm;
+                                        setConfirmState({show: false, title:'', msg:'', onConfirm:null}); 
+                                        if (cb) cb();
+                                    }}>Confirmar</button>
                                     <button className="btn btn-danger" onClick={() => setConfirmState({show: false, title:'', msg:'', onConfirm:null})}>Cancelar</button>
                                 </div>
                             </div>
