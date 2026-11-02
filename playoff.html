@@ -124,6 +124,12 @@
         .custom-alert-title { color: #d4af37; font-size: 18px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; }
         .custom-alert-msg { color: #fff; font-size: 15px; margin-bottom: 25px; line-height: 1.4; }
         .custom-alert-btns { display: flex; gap: 10px; justify-content: center; }
+
+        /* TABLA EDITOR GRILLAS */
+        .grilla-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        .grilla-table th, .grilla-table td { padding: 8px; border: 1px solid #444; text-align: center; }
+        .grilla-table th { background: #333; color: #d4af37; }
+        .grilla-table select { padding: 4px; font-size: 12px; }
     </style>
 </head>
 <body>
@@ -186,121 +192,114 @@
 
         const { useState, useEffect } = React;
 
-        // GRILLAS OFICIALES ACTUALIZADAS (GRILLAS 1 A 7 SEGÚN MATRIZ DE PROGRAMACIÓN)
-       const GRILLAS_AUTOMATICAS = {
-    // GRILLA 1
-    1: [
-        { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 14, dia: 'sabado', hora: '09:00', pos: 2 },
-        { id: 15, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 16, dia: 'sabado', hora: '10:30', pos: 2 },
-        { id: 17, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 18, dia: 'sabado', hora: '12:00', pos: 2 },
-        { id: 19, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 20, dia: 'sabado', hora: '13:30', pos: 2 },
-        { id: 21, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '15:00', pos: 2 },
-        { id: 23, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '16:30', pos: 2 },
-        { id: 25, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
-        { id: 22, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 2, dia: 'domingo', hora: '09:00', pos: 2 },
-        { id: 13, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 4, dia: 'domingo', hora: '10:30', pos: 2 },
-        { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 6, dia: 'domingo', hora: '12:00', pos: 2 },
-        { id: 7, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 8, dia: 'domingo', hora: '13:30', pos: 2 },
-        { id: 9, dia: 'domingo', hora: '15:00', pos: 1 },  { id: 10, dia: 'domingo', hora: '15:00', pos: 2 },
-        { id: 11, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 12, dia: 'domingo', hora: '16:30', pos: 2 }
-    ],
-    // GRILLA 2
-    2: [
-        { id: 18, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 6, dia: 'sabado', hora: '09:00', pos: 2 },
-        { id: 9, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 8, dia: 'sabado', hora: '10:30', pos: 2 },
-        { id: 15, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 10, dia: 'sabado', hora: '12:00', pos: 2 },
-        { id: 11, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 23, dia: 'sabado', hora: '13:30', pos: 2 },
-        { id: 1, dia: 'sabado', hora: '15:00', pos: 1 },  { id: 25, dia: 'sabado', hora: '15:00', pos: 2 },
-        { id: 13, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 4, dia: 'sabado', hora: '16:30', pos: 2 },
-        { id: 2, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
-        { id: 21, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '09:00', pos: 2 },
-        { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 24, dia: 'domingo', hora: '10:30', pos: 2 },
-        { id: 7, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 14, dia: 'domingo', hora: '12:00', pos: 2 },
-        { id: 3, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
-        { id: 20, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 5, dia: 'domingo', hora: '15:00', pos: 2 },
-        { id: 12, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 16, dia: 'domingo', hora: '16:30', pos: 2 }
-    ],
-    // GRILLA 3
-    3: [
-        { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 4, dia: 'sabado', hora: '09:00', pos: 2 },
-        { id: 26, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 2, dia: 'sabado', hora: '10:30', pos: 2 },
-        { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
-        { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 14, dia: 'sabado', hora: '13:30', pos: 2 },
-        { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 16, dia: 'sabado', hora: '15:00', pos: 2 },
-        { id: 6, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 18, dia: 'sabado', hora: '16:30', pos: 2 },
-        { id: 9, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 1, dia: 'sabado', hora: '17:45', pos: 2 },
-        { id: 11, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 25, dia: 'domingo', hora: '09:00', pos: 2 },
-        { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '10:30', pos: 2 },
-        { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 19, dia: 'domingo', hora: '12:00', pos: 2 },
-        { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 7, dia: 'domingo', hora: '13:30', pos: 2 },
-        { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 12, dia: 'domingo', hora: '15:00', pos: 2 },
-        { id: 8, dia: 'domingo', hora: '16:30', pos: 1 },  { id: 10, dia: 'domingo', hora: '16:30', pos: 2 }
-    ],
-    // GRILLA 4
-    4: [
-        { id: 1, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 19, dia: 'sabado', hora: '09:00', pos: 2 },
-        { id: 25, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 3, dia: 'sabado', hora: '10:30', pos: 2 },
-        { id: 23, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 21, dia: 'sabado', hora: '12:00', pos: 2 },
-        { id: 18, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 11, dia: 'sabado', hora: '13:30', pos: 2 },
-        { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '15:00', pos: 2 },
-        { id: 2, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 26, dia: 'sabado', hora: '16:30', pos: 2 },
-        { id: 4, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 17, dia: 'sabado', hora: '17:45', pos: 2 },
-        { id: 10, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 8, dia: 'domingo', hora: '09:00', pos: 2 },
-        { id: 7, dia: 'domingo', hora: '10:30', pos: 1 },  { id: 9, dia: 'domingo', hora: '10:30', pos: 2 },
-        { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 13, dia: 'domingo', hora: '12:00', pos: 2 },
-        { id: 6, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 22, dia: 'domingo', hora: '13:30', pos: 2 },
-        { id: 14, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '15:00', pos: 2 },
-        { id: 20, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 12, dia: 'domingo', hora: '16:30', pos: 2 }
-    ],
-    // GRILLA 5
-    5: [
-        { id: 26, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 23, dia: 'sabado', hora: '09:00', pos: 2 },
-        { id: 4, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 10, dia: 'sabado', hora: '10:30', pos: 2 },
-        { id: 6, dia: 'sabado', hora: '12:00', pos: 1 },  { id: 11, dia: 'sabado', hora: '12:00', pos: 2 },
-        { id: 20, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 18, dia: 'sabado', hora: '13:30', pos: 2 },
-        { id: 1, dia: 'sabado', hora: '15:00', pos: 1 },  { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },
-        { id: 2, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 15, dia: 'sabado', hora: '16:30', pos: 2 },
-        { id: 3, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 8, dia: 'sabado', hora: '17:45', pos: 2 },
-        { id: 16, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 17, dia: 'domingo', hora: '09:00', pos: 2 },
-        { id: 7, dia: 'domingo', hora: '10:30', pos: 1 },  { id: 14, dia: 'domingo', hora: '10:30', pos: 2 },
-        { id: 13, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },
-        { id: 5, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
-        { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 24, dia: 'domingo', hora: '15:00', pos: 2 },
-        { id: 12, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 25, dia: 'domingo', hora: '16:30', pos: 2 }
-    ],
-    // GRILLA 6
-    6: [
-        { id: 17, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '09:00', pos: 2 },
-        { id: 4, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 18, dia: 'sabado', hora: '10:30', pos: 2 },
-        { id: 26, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
-        { id: 2, dia: 'sabado', hora: '13:30', pos: 1 },  { id: 15, dia: 'sabado', hora: '13:30', pos: 2 },
-        { id: 19, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 13, dia: 'sabado', hora: '15:00', pos: 2 },
-        { id: 25, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 21, dia: 'sabado', hora: '16:30', pos: 2 },
-        { id: 11, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 23, dia: 'sabado', hora: '17:45', pos: 2 },
-        { id: 20, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '09:00', pos: 2 },
-        { id: 14, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 7, dia: 'domingo', hora: '10:30', pos: 2 },
-        { id: 3, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },
-        { id: 6, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 5, dia: 'domingo', hora: '13:30', pos: 2 },
-        { id: 8, dia: 'domingo', hora: '15:00', pos: 1 },  { id: 12, dia: 'domingo', hora: '15:00', pos: 2 },
-        { id: 10, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '16:30', pos: 2 }
-    ],
-    // GRILLA 7
-    7: [
-        { id: 16, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 15, dia: 'sabado', hora: '09:00', pos: 2 },
-        { id: 14, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 17, dia: 'sabado', hora: '10:30', pos: 2 },
-        { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '12:00', pos: 2 },
-        { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '13:30', pos: 2 },
-        { id: 25, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },
-        { id: 3, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 6, dia: 'sabado', hora: '16:30', pos: 2 },
-        { id: 8, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 18, dia: 'sabado', hora: '17:45', pos: 2 },
-        { id: 26, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 10, dia: 'domingo', hora: '09:00', pos: 2 },
-        { id: 12, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 13, dia: 'domingo', hora: '10:30', pos: 2 },
-        { id: 4, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 2, dia: 'domingo', hora: '12:00', pos: 2 },
-        { id: 11, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 21, dia: 'domingo', hora: '13:30', pos: 2 },
-        { id: 22, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 5, dia: 'domingo', hora: '15:00', pos: 2 },
-        { id: 7, dia: 'domingo', hora: '16:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '16:30', pos: 2 }
-    ]
-};
+        // GRILLAS OFICIALES BASE
+        const GRILLAS_AUTOMATICAS = {
+            1: [
+                { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 14, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 15, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 16, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 17, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 18, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 19, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 20, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 21, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 23, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 25, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 22, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 2, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 4, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 6, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 7, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 8, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 9, dia: 'domingo', hora: '15:00', pos: 1 },  { id: 10, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 11, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 12, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            2: [
+                { id: 18, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 6, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 9, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 8, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 15, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 10, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 11, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 23, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 1, dia: 'sabado', hora: '15:00', pos: 1 },  { id: 25, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 13, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 4, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 2, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 26, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 21, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 24, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 7, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 14, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 3, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 20, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 5, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 12, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 16, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            3: [
+                { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 4, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 26, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 2, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 14, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 16, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 6, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 18, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 9, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 1, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 11, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 25, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 17, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 22, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 19, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 7, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 12, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 8, dia: 'domingo', hora: '16:30', pos: 1 },  { id: 10, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            4: [
+                { id: 1, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 19, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 25, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 3, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 23, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 21, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 18, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 11, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 15, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 2, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 26, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 4, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 17, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 10, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 8, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 7, dia: 'domingo', hora: '10:30', pos: 1 },  { id: 9, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 5, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 13, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 6, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 22, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 14, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 20, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 12, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            5: [
+                { id: 26, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 23, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 4, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 10, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 6, dia: 'sabado', hora: '12:00', pos: 1 },  { id: 11, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 20, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 18, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 1, dia: 'sabado', hora: '15:00', pos: 1 },  { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 2, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 15, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 3, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 8, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 16, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 17, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 7, dia: 'domingo', hora: '10:30', pos: 1 },  { id: 14, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 13, dia: 'domingo', hora: '12:00', pos: 1 }, { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 5, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 21, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 24, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 12, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 25, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            6: [
+                { id: 17, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 4, dia: 'sabado', hora: '10:30', pos: 1 },  { id: 18, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 26, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 24, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 2, dia: 'sabado', hora: '13:30', pos: 1 },  { id: 15, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 19, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 13, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 25, dia: 'sabado', hora: '16:30', pos: 1 }, { id: 21, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 11, dia: 'sabado', hora: '17:45', pos: 1 }, { id: 23, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 20, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 16, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 14, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 7, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 3, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 22, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 6, dia: 'domingo', hora: '13:30', pos: 1 },  { id: 5, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 8, dia: 'domingo', hora: '15:00', pos: 1 },  { id: 12, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 10, dia: 'domingo', hora: '16:30', pos: 1 }, { id: 9, dia: 'domingo', hora: '16:30', pos: 2 }
+            ],
+            7: [
+                { id: 16, dia: 'sabado', hora: '09:00', pos: 1 }, { id: 15, dia: 'sabado', hora: '09:00', pos: 2 },
+                { id: 14, dia: 'sabado', hora: '10:30', pos: 1 }, { id: 17, dia: 'sabado', hora: '10:30', pos: 2 },
+                { id: 20, dia: 'sabado', hora: '12:00', pos: 1 }, { id: 1, dia: 'sabado', hora: '12:00', pos: 2 },
+                { id: 23, dia: 'sabado', hora: '13:30', pos: 1 }, { id: 24, dia: 'sabado', hora: '13:30', pos: 2 },
+                { id: 25, dia: 'sabado', hora: '15:00', pos: 1 }, { id: 9, dia: 'sabado', hora: '15:00', pos: 2 },
+                { id: 3, dia: 'sabado', hora: '16:30', pos: 1 },  { id: 6, dia: 'sabado', hora: '16:30', pos: 2 },
+                { id: 8, dia: 'sabado', hora: '17:45', pos: 1 },  { id: 18, dia: 'sabado', hora: '17:45', pos: 2 },
+                { id: 26, dia: 'domingo', hora: '09:00', pos: 1 }, { id: 10, dia: 'domingo', hora: '09:00', pos: 2 },
+                { id: 12, dia: 'domingo', hora: '10:30', pos: 1 }, { id: 13, dia: 'domingo', hora: '10:30', pos: 2 },
+                { id: 4, dia: 'domingo', hora: '12:00', pos: 1 },  { id: 2, dia: 'domingo', hora: '12:00', pos: 2 },
+                { id: 11, dia: 'domingo', hora: '13:30', pos: 1 }, { id: 21, dia: 'domingo', hora: '13:30', pos: 2 },
+                { id: 22, dia: 'domingo', hora: '15:00', pos: 1 }, { id: 5, dia: 'domingo', hora: '15:00', pos: 2 },
+                { id: 7, dia: 'domingo', hora: '16:30', pos: 1 },  { id: 19, dia: 'domingo', hora: '16:30', pos: 2 }
+            ]
+        };
 
         const calcularPuntosCruce = (cruce) => {
             let ptsGoat = 0; let ptsRival = 0;
@@ -309,11 +308,97 @@
             Object.entries(cruce.partidos || {}).forEach(([pId, pData]) => {
                 if (pData && pData.estado === 'finalizado') {
                     const valor = (parseInt(pId) === cruce.partidoBonus) ? 20 : 10;
-                    if (pData.resultado === 'ganado') ptsGoat += valor; 
-                    else if (pData.resultado === 'perdido') ptsRival += valor;
+                    if (pData.resultado === 'ganado' || pData.resultado === 'wo_ganado') ptsGoat += valor; 
+                    else if (pData.resultado === 'perdido' || pData.resultado === 'wo_perdido') ptsRival += valor;
                 }
             });
             return { ptsGoat, ptsRival };
+        };
+
+        const EditorGrillasModal = ({ playoffData, onClose, mostrarAlerta }) => {
+            const [grillasConfig, setGrillasConfig] = useState(playoffData.grillas_config || JSON.parse(JSON.stringify(GRILLAS_AUTOMATICAS)));
+            const [selectedG, setSelectedG] = useState(1);
+
+            const handleChange = (idx, field, value) => {
+                const newG = { ...grillasConfig };
+                newG[selectedG][idx] = { ...newG[selectedG][idx], [field]: field === 'id' || field === 'pos' ? parseInt(value) || '' : value };
+                setGrillasConfig(newG);
+            };
+
+            const handleSave = () => {
+                database.ref('goat_playoff/grillas_config').set(grillasConfig)
+                    .then(() => {
+                        mostrarAlerta('Éxito', 'Las grillas oficiales fueron actualizadas.');
+                        onClose();
+                    })
+                    .catch(e => mostrarAlerta('Error', 'Fallo al guardar: ' + e.message));
+            };
+
+            return (
+                <div className="modal" onClick={onClose}>
+                    <div className="modal-content" style={{maxWidth: '800px'}} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header" style={{display:'flex', justifyContent:'space-between'}}>
+                            <span>⚙️ Editor de Grillas Maestras</span>
+                            <button className="btn btn-danger" style={{padding: '5px 10px'}} onClick={onClose}>✕</button>
+                        </div>
+                        <p style={{color: '#aaa', fontSize: '13px', marginBottom: '15px'}}>Modificá las matrices oficiales de programación. Los cambios aplicarán a futuros usos de asignación automática.</p>
+                        
+                        <div style={{display: 'flex', gap: '10px', marginBottom: '15px', overflowX: 'auto'}}>
+                            {[1, 2, 3, 4, 5, 6, 7].map(g => (
+                                <button key={g} className={`tab-btn ${selectedG === g ? 'active' : ''}`} onClick={() => setSelectedG(g)}>Grilla {g}</button>
+                            ))}
+                        </div>
+
+                        <div style={{maxHeight: '400px', overflowY: 'auto', marginBottom: '20px'}}>
+                            <table className="grilla-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Día</th>
+                                        <th>Hora</th>
+                                        <th>Cancha (Pos)</th>
+                                        <th>Partido (ID)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(grillasConfig[selectedG] || []).map((slot, idx) => (
+                                        <tr key={idx}>
+                                            <td style={{color: '#888'}}>{idx + 1}</td>
+                                            <td>
+                                                <select value={slot.dia} onChange={e => handleChange(idx, 'dia', e.target.value)}>
+                                                    <option value="sabado">Sábado</option><option value="domingo">Domingo</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select value={slot.hora} onChange={e => handleChange(idx, 'hora', e.target.value)}>
+                                                    <option value="09:00">09:00</option><option value="10:30">10:30</option>
+                                                    <option value="12:00">12:00</option><option value="13:30">13:30</option>
+                                                    <option value="15:00">15:00</option><option value="16:30">16:30</option>
+                                                    <option value="17:45">17:45</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select value={slot.pos} onChange={e => handleChange(idx, 'pos', e.target.value)}>
+                                                    <option value="1">1</option><option value="2">2</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select value={slot.id} onChange={e => handleChange(idx, 'id', e.target.value)}>
+                                                    {PARTIDOS.map(p => <option key={p.id} value={p.id}>{p.id} - {p.tipo}</option>)}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div style={{display: 'flex', justifyContent: 'flex-end', gap: '10px'}}>
+                            <button className="btn btn-primary" onClick={handleSave}>💾 Guardar Cambios en Servidor</button>
+                        </div>
+                    </div>
+                </div>
+            );
         };
 
         const MatchupCard = ({ cruceId, title, eq1, eq2, playoffData, savePlayoff, userRole, setSelectedCruce, mostrarGanadorModal }) => {
@@ -324,7 +409,7 @@
 
             const handleClick = () => {
                 if (hasGoat) setSelectedCruce({ id: cruceId, eq1, eq2, rival: eq1 === 'GOAT' ? eq2 : eq1 });
-                else if (userRole !== 'jugador' && eq1 && eq2 && !eq1.includes('Ganador') && !eq2.includes('Ganador')) {
+                else if (userRole === 'admin' && eq1 && eq2 && !eq1.includes('Ganador') && !eq2.includes('Ganador')) {
                     mostrarGanadorModal(title, eq1, eq2, (winner) => {
                         savePlayoff(cruceId, { ...cruce, ganador: winner });
                     });
@@ -406,17 +491,19 @@
 
             const deshacerResultado = (matchId) => {
                 if (userRole === 'jugador') return;
-                mostrarConfirmacion('Deshacer Resultado', '¿Estás seguro de deshacer este resultado? El partido volverá a figurar EN CANCHA y se restarán los puntos.', () => {
+                mostrarConfirmacion('Deshacer Resultado', '¿Estás seguro de deshacer este resultado? El partido volverá a figurar pendiente y se restarán los puntos.', () => {
                     const pData = cruce.partidos?.[matchId] || {};
-                    const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, resultado: null, estado: 'en_cancha' } };
+                    const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, resultado: null, estado: null } };
                     savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
                 });
             };
 
             const aplicarGrillaAutomatica = () => {
-                if (!GRILLAS_AUTOMATICAS[grillaSeleccionada]) return;
+                const configActiva = playoffData.grillas_config || GRILLAS_AUTOMATICAS;
+                if (!configActiva[grillaSeleccionada]) return;
+                
                 mostrarConfirmacion('Aplicar Grilla', `¿Aplicar Grilla ${grillaSeleccionada}? Esto borrará los horarios actuales y asignará los 26 partidos a sus canchas.`, () => {
-                    const grilla = GRILLAS_AUTOMATICAS[grillaSeleccionada];
+                    const grilla = configActiva[grillaSeleccionada];
                     let nuevosPartidos = { ...cruce.partidos };
 
                     Object.keys(nuevosPartidos).forEach(key => { 
@@ -528,38 +615,38 @@
             };
 
             const addPlayer = (matchId, nombre, reqCat, partidoNumJugadores) => {
-                    const pData = cruce.partidos[matchId] || {};
-                    const jugSelec = pData.jugadores || [];
-                    if (jugSelec.length >= partidoNumJugadores) return;
-                    
-                    const op = getOpciones(reqCat, jugSelec).find(j => j.nombre === nombre);
-                    if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { mostrarAlerta('Límite alcanzado', `${nombre} ya tiene 3 partidos en esta serie.`); return; }
-                    
-                    const nuevos = [...jugSelec, nombre];
-                    const nuevosPartidos = {
-                        ...cruce.partidos,
-                        [matchId]: {
-                            ...pData,
-                            estado: pData.estado || null,
-                            jugadores: nuevos
-                        }
-                    };
-                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+                const pData = cruce.partidos[matchId] || {};
+                const jugSelec = pData.jugadores || [];
+                if (jugSelec.length >= partidoNumJugadores) return;
+                
+                const op = getOpciones(reqCat, jugSelec).find(j => j.nombre === nombre);
+                if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { mostrarAlerta('Límite alcanzado', `${nombre} ya tiene 3 partidos en esta serie.`); return; }
+                
+                const nuevos = [...jugSelec, nombre];
+                const nuevosPartidos = {
+                    ...cruce.partidos,
+                    [matchId]: {
+                        ...pData,
+                        estado: pData.estado || null,
+                        jugadores: nuevos
+                    }
                 };
+                savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+            };
 
-                const removePlayer = (matchId, idx) => {
-                    const pData = cruce.partidos[matchId] || {};
-                    const nuevos = (pData.jugadores || []).filter((_, i) => i !== idx);
-                    const nuevosPartidos = {
-                        ...cruce.partidos,
-                        [matchId]: {
-                            ...pData,
-                            estado: pData.estado || null,
-                            jugadores: nuevos
-                        }
-                    };
-                    savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+            const removePlayer = (matchId, idx) => {
+                const pData = cruce.partidos[matchId] || {};
+                const nuevos = (pData.jugadores || []).filter((_, i) => i !== idx);
+                const nuevosPartidos = {
+                    ...cruce.partidos,
+                    [matchId]: {
+                        ...pData,
+                        estado: pData.estado || null,
+                        jugadores: nuevos
+                    }
                 };
+                savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
+            };
 
             const generarPDF = () => {
                 const { jsPDF } = window.jspdf; const doc = new jsPDF();
@@ -595,8 +682,8 @@
                             <button className={`tab-btn ${activeTab==='vivo'?'active':''}`} onClick={()=>setActiveTab('vivo')}>🔴 EN VIVO</button>
                             <button className={`tab-btn ${activeTab==='misPartidos'?'active':''}`} onClick={()=>setActiveTab('misPartidos')}>🎾 Mis Partidos</button>
                             
-                            {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='cronograma'?'active':''}`} onClick={()=>setActiveTab('cronograma')}>⌚ Cronograma</button>}
-                            {userRole !== 'jugador' && <button className={`tab-btn ${activeTab==='convocatoria'?'active':''}`} onClick={()=>setActiveTab('convocatoria')}>👥 Convocatoria</button>}
+                            {userRole === 'admin' && <button className={`tab-btn ${activeTab==='cronograma'?'active':''}`} onClick={()=>setActiveTab('cronograma')}>⌚ Cronograma</button>}
+                            {userRole === 'admin' && <button className={`tab-btn ${activeTab==='convocatoria'?'active':''}`} onClick={()=>setActiveTab('convocatoria')}>👥 Convocatoria</button>}
                         </div>
 
                         {activeTab === 'vivo' && (
@@ -617,6 +704,18 @@
                                 }).sort((a, b) => {
                                     const m1 = cruce.partidos?.[a.id] || {};
                                     const m2 = cruce.partidos?.[b.id] || {};
+
+                                    const getPriority = (m) => {
+                                        if (m.estado === 'en_cancha' || m.estado === 'en_juego') return 1;
+                                        if (m.estado === 'finalizado') return 3;
+                                        return 2;
+                                    };
+
+                                    const p1 = getPriority(m1);
+                                    const p2 = getPriority(m2);
+
+                                    if (p1 !== p2) return p1 - p2;
+
                                     if (!m1.horario && !m2.horario) return 0;
                                     if (!m1.horario) return 1;
                                     if (!m2.horario) return -1;
@@ -654,16 +753,24 @@
                                             <div style={{display:'flex', gap:'5px', flexDirection:'column', alignItems:'flex-end'}}>
                                                 {m.estado === 'finalizado' ? (
                                                     <div style={{display:'flex', flexDirection:'column', alignItems:'flex-end', gap:'5px'}}>
-                                                        <span style={{color: m.resultado==='ganado'?'#10b981':'#ef4444', fontWeight:'bold', fontSize:'16px'}}>{m.resultado === 'ganado' ? 'GOAT ✓' : 'RIVAL ✓'}</span>
-                                                        {userRole !== 'jugador' && (
+                                                        <span style={{color: (m.resultado==='ganado' || m.resultado==='wo_ganado') ? '#10b981' : '#ef4444', fontWeight:'bold', fontSize:'16px'}}>
+                                                            {m.resultado === 'ganado' ? 'GOAT ✓' : m.resultado === 'perdido' ? 'RIVAL ✓' : m.resultado === 'wo_ganado' ? 'GOAT (WO) ✓' : 'RIVAL (WO) ✓'}
+                                                        </span>
+                                                        {userRole === 'admin' && (
                                                             <button className="btn" style={{fontSize:'10px', padding:'2px 5px', background:'#444', color:'white', margin:0}} onClick={() => deshacerResultado(p.id)}>↩️ Deshacer</button>
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    userRole !== 'jugador' && !serieDefinida && (
+                                                    userRole === 'admin' && !serieDefinida && (
                                                         <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
                                                             <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
-                                                                {!estaEnCancha && <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: '#3b82f6', color:'white'}} onClick={() => iniciarPartido(p.id)}>▶️ Empezar</button>}
+                                                                {!estaEnCancha && (
+                                                                    <>
+                                                                        <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: '#3b82f6', color:'white'}} onClick={() => iniciarPartido(p.id)}>▶️ Empezar</button>
+                                                                        <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: '#10b981', color:'white'}} onClick={() => updateMatchResult(p.id, 'wo_ganado')}>WO G</button>
+                                                                        <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: '#ef4444', color:'white'}} onClick={() => updateMatchResult(p.id, 'wo_perdido')}>WO P</button>
+                                                                    </>
+                                                                )}
                                                                 {estaEnCancha && (
                                                                     <>
                                                                         <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: m.parciales==='1-up'?'#10b981':'#f1f5f9'}} onClick={() => setParcialSet(p.id, '1-up')}>1°↑</button>
@@ -673,12 +780,12 @@
                                                                 )}
                                                             </div>
                                                             {estaEnCancha && (
-                                                                                <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
-                                                                                    <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: '#6b7280', color:'white'}} onClick={() => resetearEstadoPartido(p.id)}>↩️ Reset</button>
-                                                                                    <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
-                                                                                    <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
-                                                                                </div>
-                                                                            )}
+                                                                <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
+                                                                    <button className="btn" style={{fontSize: '10px', padding: '4px 6px', margin:0, background: '#6b7280', color:'white'}} onClick={() => resetearEstadoPartido(p.id)}>↩️ Reset</button>
+                                                                    <button className="btn btn-success" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'ganado')}>G</button>
+                                                                    <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px', margin:0}} onClick={()=> updateMatchResult(p.id, 'perdido')}>P</button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     )
                                                 )}
@@ -729,8 +836,8 @@
                                                                 </div>
                                                             )}
                                                             {p.estado === 'finalizado' && (
-                                                                <div style={{marginTop: '10px', color: p.resultado === 'ganado' ? '#10b981' : '#ef4444', fontWeight: 'bold'}}>
-                                                                    {p.resultado === 'ganado' ? '✓ PARTIDO GANADO' : '✕ PARTIDO PERDIDO'}
+                                                                <div style={{marginTop: '10px', color: (p.resultado === 'ganado' || p.resultado === 'wo_ganado') ? '#10b981' : '#ef4444', fontWeight: 'bold'}}>
+                                                                    {(p.resultado === 'ganado' || p.resultado === 'wo_ganado') ? '✓ PARTIDO GANADO' : '✕ PARTIDO PERDIDO'}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -745,65 +852,59 @@
                             </div>
                         )}
 
-                       {activeTab === 'cronograma' && userRole !== 'jugador' && (
-    <div>
-        <div style={{background: '#1e3c72', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37', display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap'}}>
-            <div className="form-group" style={{marginBottom: 0, flex: 1, minWidth: '200px'}}>
-                <label style={{color: '#d4af37'}}>🎲 Asignación Automática (Grillas Oficiales)</label>
-                <select value={grillaSeleccionada} onChange={(e) => setGrillaSeleccionada(e.target.value)} style={{background: '#111'}}>
-                    <option value="">-- Seleccionar Grilla --</option>
-                    <option value="1">Grilla 1</option>
-                    <option value="2">Grilla 2</option>
-                    <option value="3">Grilla 3</option>
-                    <option value="4">Grilla 4</option>
-                    <option value="5">Grilla 5</option>
-                    <option value="6">Grilla 6</option>
-                    <option value="7">Grilla 7</option>
-                </select>
-            </div>
-            <button className="btn btn-warning" onClick={aplicarGrillaAutomatica} disabled={!grillaSeleccionada} style={{margin: 0, background: '#d4af37', color: '#000', fontWeight: 'bold'}}>
-                ⚡ Aplicar Grilla
-            </button>
-        </div>
+                       {activeTab === 'cronograma' && userRole === 'admin' && (
+                            <div>
+                                <div style={{background: '#1e3c72', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37', display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap'}}>
+                                    <div className="form-group" style={{marginBottom: 0, flex: 1, minWidth: '200px'}}>
+                                        <label style={{color: '#d4af37'}}>🎲 Asignación Automática (Grillas Oficiales)</label>
+                                        <select value={grillaSeleccionada} onChange={(e) => setGrillaSeleccionada(e.target.value)} style={{background: '#111'}}>
+                                            <option value="">-- Seleccionar Grilla --</option>
+                                            {[1, 2, 3, 4, 5, 6, 7].map(num => <option key={num} value={num}>Grilla {num}</option>)}
+                                        </select>
+                                    </div>
+                                    <button className="btn btn-warning" onClick={aplicarGrillaAutomatica} disabled={!grillaSeleccionada} style={{margin: 0, background: '#d4af37', color: '#000', fontWeight: 'bold'}}>
+                                        ⚡ Aplicar Grilla
+                                    </button>
+                                </div>
 
-        <div style={{background: '#333', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37'}}>
-            <label style={{color: '#d4af37', fontWeight: 'bold', fontSize: '14px'}}>⭐ Seleccionar Partido Bonus (20 pts)</label>
-            <select value={cruce.partidoBonus || ''} onChange={(e) => savePlayoff(cruceId, { ...cruce, partidoBonus: e.target.value ? parseInt(e.target.value) : null })}>
-                <option value="">Seleccionar partido bonus...</option>
-                {PARTIDOS.map(p => <option key={p.id} value={p.id}>{p.tipo}</option>)}
-            </select>
-        </div>
+                                <div style={{background: '#333', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37'}}>
+                                    <label style={{color: '#d4af37', fontWeight: 'bold', fontSize: '14px'}}>⭐ Seleccionar Partido Bonus (20 pts)</label>
+                                    <select value={cruce.partidoBonus || ''} onChange={(e) => savePlayoff(cruceId, { ...cruce, partidoBonus: e.target.value ? parseInt(e.target.value) : null })}>
+                                        <option value="">Seleccionar partido bonus...</option>
+                                        {PARTIDOS.map(p => <option key={p.id} value={p.id}>{p.tipo}</option>)}
+                                    </select>
+                                </div>
 
-        <button className="btn btn-primary" onClick={() => {
-            setEditandoHorario(null);
-            const horariosUsados = {}; Object.values(cruce.partidos||{}).forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
-            const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
-            const sig = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
-            if (sig) setHorarioActual({ dia: sig.dia, hora: sig.hora, partido1: '', partido2: '' });
-            else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
-            setShowHorarioModal(true);
-        }} style={{width: '100%', marginBottom: '20px'}}>➕ Agregar Horario Manual ({partidosSinAsignar.length} restantes)</button>
+                                <button className="btn btn-primary" onClick={() => {
+                                    setEditandoHorario(null);
+                                    const horariosUsados = {}; Object.values(cruce.partidos||{}).forEach(p => { if (p.horario) horariosUsados[`${p.dia}-${p.horario}`] = true; });
+                                    const horariosPosibles = [ { dia: 'sabado', hora: '09:00' }, { dia: 'sabado', hora: '10:30' }, { dia: 'sabado', hora: '12:00' }, { dia: 'sabado', hora: '13:30' }, { dia: 'sabado', hora: '15:00' }, { dia: 'sabado', hora: '16:30' }, { dia: 'sabado', hora: '17:45' }, { dia: 'domingo', hora: '09:00' }, { dia: 'domingo', hora: '10:30' }, { dia: 'domingo', hora: '12:00' }, { dia: 'domingo', hora: '13:30' }, { dia: 'domingo', hora: '15:00' } ];
+                                    const sig = horariosPosibles.find(h => !horariosUsados[`${h.dia}-${h.hora}`]);
+                                    if (sig) setHorarioActual({ dia: sig.dia, hora: sig.hora, partido1: '', partido2: '' });
+                                    else setHorarioActual({ dia: 'sabado', hora: '09:00', partido1: '', partido2: '' });
+                                    setShowHorarioModal(true);
+                                }} style={{width: '100%', marginBottom: '20px'}}>➕ Agregar Horario Manual ({partidosSinAsignar.length} restantes)</button>
 
-        {Object.values(partidosPorHorario).sort((a,b)=> { if(a.dia!==b.dia) return a.dia==='sabado'?-1:1; return a.hora.localeCompare(b.hora); }).map((h, idx) => (
-            <div key={idx} style={{ background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #444' }}>
-                <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
-                    <strong style={{color: '#d4af37'}}>{h.dia === 'sabado' ? 'Sábado' : 'Domingo'} - {h.hora} hs</strong>
-                    <div style={{display: 'flex', gap:'5px'}}>
-                        <button className="btn" style={{padding: '5px 10px', fontSize: '12px', background:'#444', color:'white'}} onClick={() => editarHorario(h.dia, h.hora)}>✏️</button>
-                        <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px'}} onClick={() => eliminarHorario(h.dia, h.hora)}>🗑️</button>
-                    </div>
-                </div>
-                {[...h.partidos].sort((a,b)=> (a.posicion||0)-(b.posicion||0)).map(p => (
-                    <div key={p.id} style={{ background: '#111', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: cruce.partidoBonus === p.id ? '1px solid #f59e0b' : 'none' }}>
-                        Partido {p.posicion}: <strong>{p.tipo}</strong> {cruce.partidoBonus === p.id && <span style={{color: '#f59e0b'}}>⭐</span>}
-                    </div>
-                ))}
-            </div>
-        ))}
-    </div>
-)}
+                                {Object.values(partidosPorHorario).sort((a,b)=> { if(a.dia!==b.dia) return a.dia==='sabado'?-1:1; return a.hora.localeCompare(b.hora); }).map((h, idx) => (
+                                    <div key={idx} style={{ background: '#222', padding: '15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #444' }}>
+                                        <div className="flex-mobile-col" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px'}}>
+                                            <strong style={{color: '#d4af37'}}>{h.dia === 'sabado' ? 'Sábado' : 'Domingo'} - {h.hora} hs</strong>
+                                            <div style={{display: 'flex', gap:'5px'}}>
+                                                <button className="btn" style={{padding: '5px 10px', fontSize: '12px', background:'#444', color:'white'}} onClick={() => editarHorario(h.dia, h.hora)}>✏️</button>
+                                                <button className="btn btn-danger" style={{padding: '5px 10px', fontSize: '12px'}} onClick={() => eliminarHorario(h.dia, h.hora)}>🗑️</button>
+                                            </div>
+                                        </div>
+                                        {[...h.partidos].sort((a,b)=> (a.posicion||0)-(b.posicion||0)).map(p => (
+                                            <div key={p.id} style={{ background: '#111', padding: '10px', borderRadius: '6px', marginBottom: '8px', border: cruce.partidoBonus === p.id ? '1px solid #f59e0b' : 'none' }}>
+                                                Partido {p.posicion}: <strong>{p.tipo}</strong> {cruce.partidoBonus === p.id && <span style={{color: '#f59e0b'}}>⭐</span>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
 
-                        {activeTab === 'convocatoria' && userRole !== 'jugador' && (
+                        {activeTab === 'convocatoria' && userRole === 'admin' && (
                             <div>
                                 <div style={{ marginBottom: '20px', padding: '15px', background: cruce.convocada ? '#10b981' : '#ef4444', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                                     <div style={{color: 'white', fontWeight: 'bold'}}>
@@ -966,6 +1067,8 @@
             const [torneoData, setTorneoData] = useState(null);
             const [playoffData, setPlayoffData] = useState({});
             const [selectedCruce, setSelectedCruce] = useState(null);
+            const [showGrillasEditor, setShowGrillasEditor] = useState(false);
+            
             const [alertState, setAlertState] = useState({ show: false, title: '', msg: '' });
             const [confirmState, setConfirmState] = useState({ show: false, title: '', msg: '', onConfirm: null });
             const [ganadorModal, setGanadorModal] = useState({ show: false, title: '', eq1: '', eq2: '', onSave: null });
@@ -1088,9 +1191,9 @@
             if (tablaGral.length < 11) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Tabla General Incompleta</h2><p style={{color:'#aaa'}}>Asegurate de haber cargado los 11 equipos en la pestaña Configuración de la Fase Regular.</p></div>;
 
             // OCTAVOS DE FINAL (6° al 11°)
-            const octC1 = tablaGral[5]; const octC2 = tablaGral[10]; // 8vos C: 6° vs 11°
-            const octB1 = tablaGral[6]; const octB2 = tablaGral[9];  // 8vos B: 7° vs 10°
-            const octA1 = tablaGral[7]; const octA2 = tablaGral[8];  // 8vos A: 8° vs 9°
+            const octC1 = tablaGral[5]; const octC2 = tablaGral[10];
+            const octB1 = tablaGral[6]; const octB2 = tablaGral[9];  
+            const octA1 = tablaGral[7]; const octA2 = tablaGral[8];  
             
             const getG = (id, fallback) => {
                 const mapAvances = {
@@ -1107,15 +1210,15 @@
             };
             
             // CUARTOS DE FINAL (1° al 5° + Ganadores 8vos)
-            const cua1_1 = tablaGral[0]; const cua1_2 = getG('octavos_a', 'Ganador 8vos A'); // Cruce 1: 1° vs 8vos A
-            const cua2_1 = tablaGral[1]; const cua2_2 = getG('octavos_b', 'Ganador 8vos B'); // Cruce 2: 2° vs 8vos B
-            const cua3_1 = tablaGral[2]; const cua3_2 = getG('octavos_c', 'Ganador 8vos C'); // Cruce 3: 3° vs 8vos C
-            const cua4_1 = tablaGral[3]; const cua4_2 = tablaGral[4];                        // Cruce 4: 4° vs 5°
+            const cua1_1 = tablaGral[0]; const cua1_2 = getG('octavos_a', 'Ganador 8vos A'); 
+            const cua2_1 = tablaGral[1]; const cua2_2 = getG('octavos_b', 'Ganador 8vos B'); 
+            const cua3_1 = tablaGral[2]; const cua3_2 = getG('octavos_c', 'Ganador 8vos C'); 
+            const cua4_1 = tablaGral[3]; const cua4_2 = tablaGral[4];                        
             
-            // SEMIS Y FINAL
-            const semi1_1 = getG('cuartos_1', 'Ganador Cruce 1'); const semi1_2 = getG('cuartos_3', 'Ganador Cruce 3');
-            const semi2_1 = getG('cuartos_2', 'Ganador Cruce 2'); const semi2_2 = getG('cuartos_4', 'Ganador Cruce 4');
-            const final_1 = getG('semi_1', 'Ganador Semi 1'); const final_2 = getG('semi_2', 'Ganador Semi 2');
+            // SEMIS Y FINAL (CORREGIDO)
+            const semi1_1 = getG('cuartos_1', 'Ganador Cruce 1'); const semi1_2 = getG('cuartos_2', 'Ganador Cruce 2');
+            const semi2_1 = getG('cuartos_3', 'Ganador Cruce 3'); const semi2_2 = getG('cuartos_4', 'Ganador Cruce 4');
+            const final_1 = getG('semi_1', 'Ganador Semi 1');     const final_2 = getG('semi_2', 'Ganador Semi 2');
 
             const forzarSubida = () => {
                 database.ref('goat_playoff').set(playoffData)
@@ -1164,19 +1267,25 @@
                         </div>
                     )}
 
+                    {showGrillasEditor && (
+                        <EditorGrillasModal playoffData={playoffData} onClose={() => setShowGrillasEditor(false)} mostrarAlerta={mostrarAlerta} />
+                    )}
+
                     <div className="header">
                         <div style={{display: 'flex', alignItems: 'center', gap: '15px'}}>
                             <img src="GOAT.jpeg" alt="Logo" style={{width: '60px', borderRadius: '50%'}} />
                             <div style={{textAlign: 'left'}}>
                                 <h1 style={{fontSize: '1.5rem', margin: 0, color: '#d4af37'}}>Mata-Mata V3</h1>
                                 <span style={{color: '#aaa', fontSize: '12px'}}>Instancias Finales UNCAS 2026</span>
-                                {userRole == 'admin' && (
-                                    <button 
-                                        onClick={forzarSubida}
-                                        style={{display: 'inline-block', marginLeft: '10px', padding: '4px 8px', fontSize: '10px', background: '#3b82f6', color: 'white', border: '1px solid #2563eb', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}
-                                    >
-                                        ☁️ Forzar Subida Nube
-                                    </button>
+                                {userRole === 'admin' && (
+                                    <>
+                                        <button onClick={forzarSubida} style={{display: 'inline-block', marginLeft: '10px', padding: '4px 8px', fontSize: '10px', background: '#3b82f6', color: 'white', border: '1px solid #2563eb', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}>
+                                            ☁️ Forzar Subida
+                                        </button>
+                                        <button onClick={() => setShowGrillasEditor(true)} style={{display: 'inline-block', marginLeft: '10px', padding: '4px 8px', fontSize: '10px', background: '#8b5cf6', color: 'white', border: '1px solid #7c3aed', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'}}>
+                                            ⚙️ Editor de Grillas
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -1213,7 +1322,6 @@
                         </div>
                         <div className="bracket-col col-octavos" style={{justifyContent: 'flex-start'}}>
                             <MatchupCard cruceId="octavos_b" title="8vos B (7° vs 10°)" eq1={octB1} eq2={octB2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} mostrarGanadorModal={mostrarGanadorModal} />
-                            {/* Espacio invisible para equilibrar el diseño con los 3 octavos */}
                             <div style={{height: '165px', margin: '10px 0'}}></div>
                         </div>
                     </div>
