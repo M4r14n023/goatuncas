@@ -24,7 +24,6 @@
         .header { background: rgba(0,0,0,0.7); border-bottom: 2px solid #d4af37; padding: 15px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
         .gold-text { color: #d4af37; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; }
         
-        /* --- LLAVE DEL TORNEO --- */
         .bracket-container { 
             display: flex; 
             gap: 12px; 
@@ -110,7 +109,6 @@
             .flex-mobile-col { flex-direction: column; gap: 10px; align-items: stretch; }
         }
 
-        /* ESTILOS ALERTAS PERSONALIZADAS */
         .custom-alert-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 9999;
@@ -125,7 +123,6 @@
         .custom-alert-msg { color: #fff; font-size: 15px; margin-bottom: 25px; line-height: 1.4; }
         .custom-alert-btns { display: flex; gap: 10px; justify-content: center; }
 
-        /* TABLA EDITOR GRILLAS */
         .grilla-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         .grilla-table th, .grilla-table td { padding: 8px; border: 1px solid #444; text-align: center; }
         .grilla-table th { background: #333; color: #d4af37; }
@@ -136,7 +133,6 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // 1. CONFIGURACIÓN FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSy" + "CF7n8W4aKKEeK7T_mUhO5MJLuTeP-YQT8",
             authDomain: "hub-universitario.firebaseapp.com",
@@ -150,7 +146,6 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        // 2. CONSTANTES DE PARTIDOS
         const PARTIDOS = [
             { id: 9, tipo: "Dobles Damas A/B", categorias: ["damas_a", "damas_b"], numJugadores: 2, grupo: "damas" },
             { id: 21, tipo: "Dobles Damas A", categorias: ["damas_a"], numJugadores: 2, grupo: "damas" },
@@ -192,7 +187,6 @@
 
         const { useState, useEffect } = React;
 
-        // GRILLAS OFICIALES BASE
         const GRILLAS_AUTOMATICAS = {
             1: [
                 { id: 3, dia: 'sabado', hora: '09:00', pos: 1 },  { id: 14, dia: 'sabado', hora: '09:00', pos: 2 },
@@ -443,6 +437,8 @@
             const [grillaSeleccionada, setGrillaSeleccionada] = useState('');
             const [jugadorSeleccionado, setJugadorSeleccionado] = useState('');
 
+            const esGestion = userRole === 'admin' || userRole === 'capitan';
+
             useEffect(() => {
                 if (serieDefinida && cruce.ganador !== (ptsGoat >= 140 ? 'GOAT' : rival)) {
                     savePlayoff(cruceId, { ...cruce, ganador: ptsGoat >= 140 ? 'GOAT' : rival });
@@ -452,14 +448,14 @@
             }, [serieDefinida, ptsGoat, ptsRival, cruce.ganador]); 
 
             const iniciarPartido = (matchId) => {
-                if (userRole === 'jugador') return;
+                if (!esGestion) return;
                 const pData = cruce.partidos?.[matchId] || {};
                 const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, estado: 'en_cancha' } };
                 savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
             };
 
             const resetearEstadoPartido = (matchId) => {
-                if (userRole === 'jugador') return;
+                if (!esGestion) return;
                 mostrarConfirmacion('Resetear Partido', '¿Querés volver este partido a estado pendiente?', () => {
                     const pData = cruce.partidos?.[matchId] || {};
                     const nuevosPartidos = { 
@@ -476,21 +472,21 @@
             };
 
             const setParcialSet = (matchId, valor) => {
-                if (userRole === 'jugador') return;
+                if (!esGestion) return;
                 const pData = cruce.partidos?.[matchId] || {};
                 const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, parciales: valor, estado: 'en_juego' } };
                 savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
             };
 
             const updateMatchResult = (matchId, resultado) => {
-                if (userRole === 'jugador') return;
+                if (!esGestion) return;
                 const pData = cruce.partidos?.[matchId] || {};
                 const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, resultado, estado: 'finalizado' } };
                 savePlayoff(cruceId, { ...cruce, partidos: nuevosPartidos });
             };
 
             const deshacerResultado = (matchId) => {
-                if (userRole === 'jugador') return;
+                if (!esGestion) return;
                 mostrarConfirmacion('Deshacer Resultado', '¿Estás seguro de deshacer este resultado? El partido volverá a figurar pendiente y se restarán los puntos.', () => {
                     const pData = cruce.partidos?.[matchId] || {};
                     const nuevosPartidos = { ...cruce.partidos, [matchId]: { ...pData, resultado: null, estado: null } };
@@ -499,6 +495,7 @@
             };
 
             const aplicarGrillaAutomatica = () => {
+                if (userRole !== 'admin') return;
                 const configActiva = playoffData.grillas_config || GRILLAS_AUTOMATICAS;
                 if (!configActiva[grillaSeleccionada]) return;
                 
@@ -682,8 +679,8 @@
                             <button className={`tab-btn ${activeTab==='vivo'?'active':''}`} onClick={()=>setActiveTab('vivo')}>🔴 EN VIVO</button>
                             <button className={`tab-btn ${activeTab==='misPartidos'?'active':''}`} onClick={()=>setActiveTab('misPartidos')}>🎾 Mis Partidos</button>
                             
-                            {userRole === 'admin' && <button className={`tab-btn ${activeTab==='cronograma'?'active':''}`} onClick={()=>setActiveTab('cronograma')}>⌚ Cronograma</button>}
-                            {userRole === 'admin' && <button className={`tab-btn ${activeTab==='convocatoria'?'active':''}`} onClick={()=>setActiveTab('convocatoria')}>👥 Convocatoria</button>}
+                            {esGestion && <button className={`tab-btn ${activeTab==='cronograma'?'active':''}`} onClick={()=>setActiveTab('cronograma')}>⌚ Cronograma</button>}
+                            {esGestion && <button className={`tab-btn ${activeTab==='convocatoria'?'active':''}`} onClick={()=>setActiveTab('convocatoria')}>👥 Convocatoria</button>}
                         </div>
 
                         {activeTab === 'vivo' && (
@@ -727,7 +724,7 @@
                                     if (!m.horario && !serieDefinida) return null; 
                                     const esBonus = cruce.partidoBonus === p.id;
                                     
-                                    const isOcultaParaJugador = userRole === 'jugador' && !cruce.convocada;
+                                    const isOcultaParaJugador = !esGestion && !cruce.convocada;
                                     const estaEnCancha = m.estado === 'en_cancha' || m.estado === 'en_juego';
                                     
                                     return (
@@ -756,12 +753,12 @@
                                                         <span style={{color: (m.resultado==='ganado' || m.resultado==='wo_ganado') ? '#10b981' : '#ef4444', fontWeight:'bold', fontSize:'16px'}}>
                                                             {m.resultado === 'ganado' ? 'GOAT ✓' : m.resultado === 'perdido' ? 'RIVAL ✓' : m.resultado === 'wo_ganado' ? 'GOAT (WO) ✓' : 'RIVAL (WO) ✓'}
                                                         </span>
-                                                        {userRole === 'admin' && (
+                                                        {esGestion && (
                                                             <button className="btn" style={{fontSize:'10px', padding:'2px 5px', background:'#444', color:'white', margin:0}} onClick={() => deshacerResultado(p.id)}>↩️ Deshacer</button>
                                                         )}
                                                     </div>
                                                 ) : (
-                                                    userRole === 'admin' && !serieDefinida && (
+                                                    esGestion && !serieDefinida && (
                                                         <div style={{display:'flex', flexDirection:'column', gap:'5px'}}>
                                                             <div style={{display: 'flex', gap: '5px', justifyContent:'flex-end'}}>
                                                                 {!estaEnCancha && (
@@ -811,7 +808,7 @@
                                 {jugadorSeleccionado && (
                                     <div>
                                         <h3 className="gold-text" style={{marginBottom: '15px'}}>Agenda de {jugadorSeleccionado}</h3>
-                                        {(!cruce.convocada && userRole === 'jugador') ? (
+                                        {(!cruce.convocada && !esGestion) ? (
                                             <div style={{background: '#ef4444', color: 'white', padding: '15px', borderRadius: '8px', textAlign: 'center'}}>
                                                 🔒 La convocatoria de este cruce aún está oculta.
                                             </div>
@@ -844,7 +841,7 @@
                                                     );
                                                 })
                                         )}
-                                        {cruce.convocada && Object.values(cruce.partidos || {}).filter(p => p.jugadores?.includes(jugadorSeleccionado)).length === 0 && (
+                                        {(cruce.convocada || esGestion) && Object.values(cruce.partidos || {}).filter(p => p.jugadores?.includes(jugadorSeleccionado)).length === 0 && (
                                             <div style={{color: '#aaa', textAlign: 'center', padding: '20px'}}>No tenés partidos asignados en este cruce todavía.</div>
                                         )}
                                     </div>
@@ -852,20 +849,22 @@
                             </div>
                         )}
 
-                       {activeTab === 'cronograma' && userRole === 'admin' && (
+                       {activeTab === 'cronograma' && esGestion && (
                             <div>
-                                <div style={{background: '#1e3c72', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37', display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap'}}>
-                                    <div className="form-group" style={{marginBottom: 0, flex: 1, minWidth: '200px'}}>
-                                        <label style={{color: '#d4af37'}}>🎲 Asignación Automática (Grillas Oficiales)</label>
-                                        <select value={grillaSeleccionada} onChange={(e) => setGrillaSeleccionada(e.target.value)} style={{background: '#111'}}>
-                                            <option value="">-- Seleccionar Grilla --</option>
-                                            {[1, 2, 3, 4, 5, 6, 7].map(num => <option key={num} value={num}>Grilla {num}</option>)}
-                                        </select>
+                                {userRole === 'admin' && (
+                                    <div style={{background: '#1e3c72', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37', display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap'}}>
+                                        <div className="form-group" style={{marginBottom: 0, flex: 1, minWidth: '200px'}}>
+                                            <label style={{color: '#d4af37'}}>🎲 Asignación Automática (Grillas Oficiales)</label>
+                                            <select value={grillaSeleccionada} onChange={(e) => setGrillaSeleccionada(e.target.value)} style={{background: '#111'}}>
+                                                <option value="">-- Seleccionar Grilla --</option>
+                                                {[1, 2, 3, 4, 5, 6, 7].map(num => <option key={num} value={num}>Grilla {num}</option>)}
+                                            </select>
+                                        </div>
+                                        <button className="btn btn-warning" onClick={aplicarGrillaAutomatica} disabled={!grillaSeleccionada} style={{margin: 0, background: '#d4af37', color: '#000', fontWeight: 'bold'}}>
+                                            ⚡ Aplicar Grilla
+                                        </button>
                                     </div>
-                                    <button className="btn btn-warning" onClick={aplicarGrillaAutomatica} disabled={!grillaSeleccionada} style={{margin: 0, background: '#d4af37', color: '#000', fontWeight: 'bold'}}>
-                                        ⚡ Aplicar Grilla
-                                    </button>
-                                </div>
+                                )}
 
                                 <div style={{background: '#333', padding: '15px', borderRadius: '8px', marginBottom: '20px', border: '1px solid #d4af37'}}>
                                     <label style={{color: '#d4af37', fontWeight: 'bold', fontSize: '14px'}}>⭐ Seleccionar Partido Bonus (20 pts)</label>
@@ -904,7 +903,7 @@
                             </div>
                         )}
 
-                        {activeTab === 'convocatoria' && userRole === 'admin' && (
+                        {activeTab === 'convocatoria' && esGestion && (
                             <div>
                                 <div style={{ marginBottom: '20px', padding: '15px', background: cruce.convocada ? '#10b981' : '#ef4444', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                                     <div style={{color: 'white', fontWeight: 'bold'}}>
@@ -1190,7 +1189,6 @@
 
             if (tablaGral.length < 11) return <div style={{textAlign: 'center', padding: '50px'}}><h2>Tabla General Incompleta</h2><p style={{color:'#aaa'}}>Asegurate de haber cargado los 11 equipos en la pestaña Configuración de la Fase Regular.</p></div>;
 
-            // OCTAVOS DE FINAL (6° al 11°)
             const octC1 = tablaGral[5]; const octC2 = tablaGral[10];
             const octB1 = tablaGral[6]; const octB2 = tablaGral[9];  
             const octA1 = tablaGral[7]; const octA2 = tablaGral[8];  
@@ -1209,20 +1207,19 @@
                 return playoffData[id]?.ganador || fallback;
             };
             
-            // CUARTOS DE FINAL (1° al 5° + Ganadores 8vos)
             const cua1_1 = tablaGral[0]; const cua1_2 = getG('octavos_a', 'Ganador 8vos A'); 
             const cua2_1 = tablaGral[1]; const cua2_2 = getG('octavos_b', 'Ganador 8vos B'); 
             const cua3_1 = tablaGral[2]; const cua3_2 = getG('octavos_c', 'Ganador 8vos C'); 
             const cua4_1 = tablaGral[3]; const cua4_2 = tablaGral[4];                        
             
-            // SEMIS Y FINAL (ESTRUCTURA DE TORNEO 100% GENÉRICA)
-            const semi1_1 = getG('cuartos_1', 'Ganador Cruce 1');
+            // SEMIS Y FINAL (LÓGICA GENÉRICA OFICIAL)
+            const semi1_1 = getG('cuartos_1', 'Ganador Cruce 1'); 
             const semi1_2 = getG('cuartos_4', 'Ganador Cruce 4');
-
-            const semi2_1 = getG('cuartos_3', 'Ganador Cruce 3');
+            
+            const semi2_1 = getG('cuartos_3', 'Ganador Cruce 3'); 
             const semi2_2 = getG('cuartos_2', 'Ganador Cruce 2');
 
-            const final_1 = getG('semi_1', 'Ganador Semi 1');
+            const final_1 = getG('semi_1', 'Ganador Semi 1');     
             const final_2 = getG('semi_2', 'Ganador Semi 2');
 
             const forzarSubida = () => {
@@ -1298,7 +1295,6 @@
                     </div>
 
                     <div className="bracket-container">
-                        {/* LADO IZQUIERDO */}
                         <div className="bracket-col col-octavos">
                             <MatchupCard cruceId="octavos_a" title="8vos A (8° vs 9°)" eq1={octA1} eq2={octA2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} mostrarGanadorModal={mostrarGanadorModal} />
                             <MatchupCard cruceId="octavos_c" title="8vos C (6° vs 11°)" eq1={octC1} eq2={octC2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} mostrarGanadorModal={mostrarGanadorModal} />
@@ -1311,13 +1307,11 @@
                             <MatchupCard cruceId="semi_1" title="Semi 1" eq1={semi1_1} eq2={semi1_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} mostrarGanadorModal={mostrarGanadorModal} />
                         </div>
                         
-                        {/* FINAL CENTRAL */}
                         <div className="bracket-col col-final">
                             <div className="final-cup">🏆</div>
                             <MatchupCard cruceId="final" title="GRAN FINAL" eq1={final_1} eq2={final_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} mostrarGanadorModal={mostrarGanadorModal} />
                         </div>
 
-                        {/* LADO DERECHO */}
                         <div className="bracket-col col-semis">
                             <MatchupCard cruceId="semi_2" title="Semi 2" eq1={semi2_1} eq2={semi2_2} playoffData={playoffData} savePlayoff={savePlayoff} userRole={userRole} setSelectedCruce={setSelectedCruce} mostrarGanadorModal={mostrarGanadorModal} />
                         </div>
