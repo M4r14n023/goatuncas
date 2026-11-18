@@ -1187,6 +1187,72 @@
         }
       };
 
+// 1. Estados para el alerta de Play-Offs en index.html
+const [playoffAlert, setPlayoffAlert] = useState({ show: false, instancia: '', cruceId: '' });
+
+// 2. Efecto que escucha goat_playoff y detecta la instancia de GOAT al abrir
+useEffect(() => {
+    // Evitar mostrarlo si el usuario ya lo cerró en esta sesión
+    if (sessionStorage.getItem('goat_playoff_alert_dismissed')) return;
+    if (!torneoData || !tablaGeneral || tablaGeneral.length < 11) return;
+
+    const refPlayoff = firebase.database().ref('goat_playoff');
+    refPlayoff.once('value', (snapshot) => {
+        const pData = snapshot.val() || {};
+        
+        // Verificar si los playoffs ya arrancaron (hay datos en goat_playoff o fechas regulares cerradas)
+        const hayActividadPlayoff = Object.keys(pData).some(k => k !== 'grillas_config');
+        const faseRegularTerminada = (torneoData.fechas || []).length > 0 && 
+                                     (torneoData.fechas || []).every(f => f.isClosed);
+
+        if (!hayActividadPlayoff && !faseRegularTerminada) return;
+
+        // Helper para obtener ganador de cada llave
+        const getG = (id) => {
+            const mapAvances = {
+                'octavos_a': 'octA', 'octavos_b': 'octB', 'octavos_c': 'octC',
+                'cuartos_1': 'cua1', 'cuartos_2': 'cua2', 'cuartos_3': 'cua3', 'cuartos_4': 'cua4',
+                'semi_1': 'semi1', 'semi_2': 'semi2', 'final': 'final'
+            };
+            return pData[id]?.ganador || torneoData?.playoffAvances?.[mapAvances[id]] || null;
+        };
+
+        // Reconstrucción exacta de las llaves según Tabla General
+        const pos = tablaGeneral.map(t => t.nombre); // Ordenada 1° a 11°
+        
+        const llaves = [
+            { id: 'octavos_a', nombre: 'Octavos de Final', eq1: pos[7], eq2: pos[8] },
+            { id: 'octavos_b', nombre: 'Octavos de Final', eq1: pos[6], eq2: pos[9] },
+            { id: 'octavos_c', nombre: 'Octavos de Final', eq1: pos[5], eq2: pos[10] },
+            { id: 'cuartos_1', nombre: 'Cuartos de Final', eq1: pos[0], eq2: getG('octavos_a') },
+            { id: 'cuartos_2', nombre: 'Cuartos de Final', eq1: pos[1], eq2: getG('octavos_b') },
+            { id: 'cuartos_3', nombre: 'Cuartos de Final', eq1: pos[2], eq2: getG('octavos_c') },
+            { id: 'cuartos_4', nombre: 'Cuartos de Final', eq1: pos[3], eq2: pos[4] },
+            { id: 'semi_1',    nombre: 'Semifinales',      eq1: getG('cuartos_1'), eq2: getG('cuartos_4') },
+            { id: 'semi_2',    nombre: 'Semifinales',      eq1: getG('cuartos_3'), eq2: getG('cuartos_2') },
+            { id: 'final',     nombre: 'la Gran Final',    eq1: getG('semi_1'),    eq2: getG('semi_2') }
+        ];
+
+        // Buscar el cruce actual de GOAT que todavía no tiene ganador definido
+        const cruceActivoGoat = llaves.find(l => 
+            (l.eq1 === 'GOAT' || l.eq2 === 'GOAT') && !getG(l.id)
+        );
+
+        if (cruceActivoGoat) {
+            setPlayoffAlert({
+                show: true,
+                instancia: cruceActivoGoat.nombre,
+                cruceId: cruceActivoGoat.id
+            });
+        }
+    });
+}, [torneoData, tablaGeneral]);
+
+
+
+
+
+
       function App() {
         const [userRole, setUserRole] = useState(
           localStorage.getItem("goat_user_role") || null,
@@ -2340,6 +2406,59 @@
                 </div>
               </div>
             )}
+
+
+              {playoffAlert.show && (
+                  <div style={{
+                      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                      background: 'rgba(0,0,0,0.88)', zIndex: 9999,
+                      display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px'
+                  }}>
+                      <div style={{
+                          background: 'linear-gradient(180deg, #1e1e1e 0%, #111 100%)',
+                          border: '2px solid #d4af37', borderRadius: '14px',
+                          padding: '28px 22px', width: '100%', maxWidth: '420px', textAlign: 'center',
+                          boxShadow: '0 0 35px rgba(212, 175, 55, 0.35)'
+                      }}>
+                          <div style={{ fontSize: '42px', marginBottom: '10px' }}>🏆</div>
+                          <div style={{ color: '#d4af37', fontSize: '18px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
+                              ¡Se están jugando los Play-Offs!
+                          </div>
+                          <p style={{ color: '#fff', fontSize: '15px', lineHeight: '1.5', marginBottom: '24px' }}>
+                              Estamos en <strong style={{ color: '#10b981', fontSize: '17px' }}>{playoffAlert.instancia}</strong>.
+                          </p>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <button 
+                                  onClick={() => window.location.href = `playoff.html?cruce=${playoffAlert.cruceId}`}
+                                  style={{
+                                      background: '#d4af37', color: '#000', border: 'none',
+                                      padding: '13px 20px', borderRadius: '8px', fontWeight: 'bold',
+                                      fontSize: '15px', cursor: 'pointer', textTransform: 'uppercase'
+                                  }}
+                              >
+                                  Ir a Play-Offs ➔
+                              </button>
+                              <button 
+                                  onClick={() => {
+                                      sessionStorage.setItem('goat_playoff_alert_dismissed', 'true');
+                                      setPlayoffAlert({ show: false, instancia: '', cruceId: '' });
+                                  }}
+                                  style={{
+                                      background: 'transparent', color: '#aaa', border: '1px solid #444',
+                                      padding: '10px', borderRadius: '8px', fontSize: '13px', cursor: 'pointer'
+                                  }}
+                              >
+                                  Quedarme en Fase Regular
+                              </button>
+                          </div>
+                      </div>
+                  </div>
+              )}
+
+
+
+
+
 
             {showPlayoffWelcome && (
               <div

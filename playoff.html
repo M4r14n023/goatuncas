@@ -1088,6 +1088,7 @@
             const [playoffData, setPlayoffData] = useState({});
             const [selectedCruce, setSelectedCruce] = useState(null);
             const [showGrillasEditor, setShowGrillasEditor] = useState(false);
+            const [autoOpened, setAutoOpened] = useState(false);
             
             const [alertState, setAlertState] = useState({ show: false, title: '', msg: '' });
             const [confirmState, setConfirmState] = useState({ show: false, title: '', msg: '', onConfirm: null });
@@ -1242,6 +1243,45 @@
 
             const final_1 = getG('semi_1', 'Ganador Semi 1');     
             const final_2 = getG('semi_2', 'Ganador Semi 2');
+
+
+
+                useEffect(() => {
+                    if (autoOpened) return;
+                    const params = new URLSearchParams(window.location.search);
+                    const targetCruceId = params.get('cruce');
+                    if (!targetCruceId) return;
+
+                    const mapaCruces = {
+                        'octavos_a': { eq1: octA1, eq2: octA2 },
+                        'octavos_b': { eq1: octB1, eq2: octB2 },
+                        'octavos_c': { eq1: octC1, eq2: octC2 },
+                        'cuartos_1': { eq1: cua1_1, eq2: cua1_2 },
+                        'cuartos_2': { eq1: cua2_1, eq2: cua2_2 },
+                        'cuartos_3': { eq1: cua3_1, eq2: cua3_2 },
+                        'cuartos_4': { eq1: cua4_1, eq2: cua4_2 },
+                        'semi_1':    { eq1: semi1_1, eq2: semi1_2 },
+                        'semi_2':    { eq1: semi2_1, eq2: semi2_2 },
+                        'final':     { eq1: final_1, eq2: final_2 }
+                    };
+
+                    const target = mapaCruces[targetCruceId];
+                    if (target && (target.eq1 === 'GOAT' || target.eq2 === 'GOAT')) {
+                        setSelectedCruce({
+                            id: targetCruceId,
+                            eq1: target.eq1,
+                            eq2: target.eq2,
+                            rival: target.eq1 === 'GOAT' ? target.eq2 : target.eq1
+                        });
+                        setAutoOpened(true);
+                        // Limpiar la URL para que si recarga manualmente no vuelva a forzarlo si lo cerró
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                }, [autoOpened, octA1, octB1, octC1, cua1_1, cua2_1, cua3_1, cua4_1, semi1_1, semi2_1, final_1]);
+
+
+
+
 
             const forzarSubida = () => {
                 database.ref('goat_playoff').set(playoffData)
