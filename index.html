@@ -1187,8 +1187,7 @@
         }
       };
 
-// 1. Estados para el alerta de Play-Offs en index.html
-const [playoffAlert, setPlayoffAlert] = useState({ show: false, instancia: '', cruceId: '' });
+
 
 // 2. Efecto que escucha goat_playoff y detecta la instancia de GOAT al abrir
 useEffect(() => {
@@ -1274,6 +1273,9 @@ useEffect(() => {
         const [playoffAvances, setPlayoffAvances] = useState({});
         const [syncStatus, setSyncStatus] = useState("local");
         const [lastSync, setLastSync] = useState(null);
+
+        // 1. Estados para el alerta de Play-Offs en index.html
+        const [playoffAlert, setPlayoffAlert] = useState({ show: false, instancia: '', cruceId: '' });
 
         const [showPlayoffWelcome, setShowPlayoffWelcome] = useState(false);
         const [showCronogramaVivo, setShowCronogramaVivo] = useState(false);
