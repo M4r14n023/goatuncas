@@ -1189,69 +1189,6 @@
 
 
 
-// 2. Efecto que escucha goat_playoff y detecta la instancia de GOAT al abrir
-useEffect(() => {
-    // Evitar mostrarlo si el usuario ya lo cerró en esta sesión
-    if (sessionStorage.getItem('goat_playoff_alert_dismissed')) return;
-    if (!torneoData || !tablaGeneral || tablaGeneral.length < 11) return;
-
-    const refPlayoff = firebase.database().ref('goat_playoff');
-    refPlayoff.once('value', (snapshot) => {
-        const pData = snapshot.val() || {};
-        
-        // Verificar si los playoffs ya arrancaron (hay datos en goat_playoff o fechas regulares cerradas)
-        const hayActividadPlayoff = Object.keys(pData).some(k => k !== 'grillas_config');
-        const faseRegularTerminada = (torneoData.fechas || []).length > 0 && 
-                                     (torneoData.fechas || []).every(f => f.isClosed);
-
-        if (!hayActividadPlayoff && !faseRegularTerminada) return;
-
-        // Helper para obtener ganador de cada llave
-        const getG = (id) => {
-            const mapAvances = {
-                'octavos_a': 'octA', 'octavos_b': 'octB', 'octavos_c': 'octC',
-                'cuartos_1': 'cua1', 'cuartos_2': 'cua2', 'cuartos_3': 'cua3', 'cuartos_4': 'cua4',
-                'semi_1': 'semi1', 'semi_2': 'semi2', 'final': 'final'
-            };
-            return pData[id]?.ganador || torneoData?.playoffAvances?.[mapAvances[id]] || null;
-        };
-
-        // Reconstrucción exacta de las llaves según Tabla General
-        const pos = tablaGeneral.map(t => t.nombre); // Ordenada 1° a 11°
-        
-        const llaves = [
-            { id: 'octavos_a', nombre: 'Octavos de Final', eq1: pos[7], eq2: pos[8] },
-            { id: 'octavos_b', nombre: 'Octavos de Final', eq1: pos[6], eq2: pos[9] },
-            { id: 'octavos_c', nombre: 'Octavos de Final', eq1: pos[5], eq2: pos[10] },
-            { id: 'cuartos_1', nombre: 'Cuartos de Final', eq1: pos[0], eq2: getG('octavos_a') },
-            { id: 'cuartos_2', nombre: 'Cuartos de Final', eq1: pos[1], eq2: getG('octavos_b') },
-            { id: 'cuartos_3', nombre: 'Cuartos de Final', eq1: pos[2], eq2: getG('octavos_c') },
-            { id: 'cuartos_4', nombre: 'Cuartos de Final', eq1: pos[3], eq2: pos[4] },
-            { id: 'semi_1',    nombre: 'Semifinales',      eq1: getG('cuartos_1'), eq2: getG('cuartos_4') },
-            { id: 'semi_2',    nombre: 'Semifinales',      eq1: getG('cuartos_3'), eq2: getG('cuartos_2') },
-            { id: 'final',     nombre: 'la Gran Final',    eq1: getG('semi_1'),    eq2: getG('semi_2') }
-        ];
-
-        // Buscar el cruce actual de GOAT que todavía no tiene ganador definido
-        const cruceActivoGoat = llaves.find(l => 
-            (l.eq1 === 'GOAT' || l.eq2 === 'GOAT') && !getG(l.id)
-        );
-
-        if (cruceActivoGoat) {
-            setPlayoffAlert({
-                show: true,
-                instancia: cruceActivoGoat.nombre,
-                cruceId: cruceActivoGoat.id
-            });
-        }
-    });
-}, [torneoData, tablaGeneral]);
-
-
-
-
-
-
       function App() {
         const [userRole, setUserRole] = useState(
           localStorage.getItem("goat_user_role") || null,
@@ -2720,7 +2657,7 @@ useEffect(() => {
                       ⚔️ IR A PLAY-OFF ⚔️
                     </button>
                     <button
-                      onClick={handlePermanecerEnZonas}
+                      onClick={() => setShowPlayoffWelcome(false)}
                       className="btn"
                       style={{
                         background: "transparent",
