@@ -599,7 +599,22 @@
             const partidosDisponiblesP2 = getPartidosDisponibles(parseInt(horarioActual.partido1));
 
             const contarEnCruce = (nombre) => {
-                let c = 0; Object.values(cruce.partidos || {}).forEach(part => { if (part.jugadores && part.jugadores.includes(nombre)) c++; }); return c;
+                const jObj = Object.values(JUGADORES_GOAT).flat().find(j => j.nombre === nombre);
+                if (!jObj) return 0;
+                const catBase = jObj.categoria;
+
+                let c = 0;
+                Object.entries(cruce.partidos || {}).forEach(([pId, part]) => {
+                    if (part.jugadores && part.jugadores.includes(nombre)) {
+                        const partidoDef = PARTIDOS.find(p => p.id === parseInt(pId));
+                        // Solo cuenta si el partido pertenece a su categoría base.
+                        // Si el partido es exclusivo de una categoría superior (ascenso), no suma al límite.
+                        if (partidoDef && partidoDef.categorias.includes(catBase)) {
+                            c++;
+                        }
+                    }
+                });
+                return c;
             };
 
             const getOpciones = (reqCat, jugSelec) => {
@@ -617,7 +632,11 @@
                 if (jugSelec.length >= partidoNumJugadores) return;
                 
                 const op = getOpciones(reqCat, jugSelec).find(j => j.nombre === nombre);
-                if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { mostrarAlerta('Límite alcanzado', `${nombre} ya tiene 3 partidos en esta serie.`); return; }
+                // Si no es ascenso (es su categoría base) y ya tiene 3 partidos en su categoría, bloquea
+                if (!op?.esHabilitado && contarEnCruce(nombre) >= 3) { 
+                    mostrarAlerta('Límite alcanzado', `${nombre} ya tiene 3 partidos en su categoría en esta serie.`); 
+                    return; 
+                }
                 
                 const nuevos = [...jugSelec, nombre];
                 const nuevosPartidos = {
@@ -976,7 +995,9 @@
                                                     {getOpciones(reqCat, jugSelec).map(j => <option key={j.nombre} value={j.nombre}>{j.nombre} {j.esHabilitado ? '(Ascenso)' : `(${contarEnCruce(j.nombre)}/3)`}</option>)}
                                                 </select>
                                             ))}
-                                            {jugSelec.some(j => !(cruce.jugadoresHabilitados||[]).some(jh=>jh.jugador===j) && contarEnCruce(j) > 3) && <div className="player-count-warning">⚠️ Algún jugador supera los 3 partidos</div>}
+                                            {jugSelec.some(j => contarEnCruce(j) > 3) && (
+                                                    <div className="player-count-warning">⚠️ Algún jugador supera los 3 partidos en su categoría</div>
+                                                )}
                                         </div>
                                     );
                                 })}
